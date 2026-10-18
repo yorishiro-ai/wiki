@@ -1,0 +1,29 @@
+{
+  "$schema": "./node_modules/@lunariajs/core/config.schema.json",
+  "repository": {
+    "name": "yorishiro-ai/wiki",
+    "branch": "main"
+  },
+  "files": [
+    {
+      "location": "src/content/docs/**/*.{md,mdx}",
+      "pattern": "src/content/docs/@lang/@path",
+      "type": "universal"
+    }
+  ],
+  "dashboard": {
+    "title": "Yorishiro Wiki Localization Status",
+    "description": "Localization status dashboard for the Yorishiro Wiki.",
+    "basesToHide": ["src/content/docs/"]
+  },
+  "defaultLocale": {
+    "label": "English",
+    "lang": "en"
+  },
+  "locales": [
+    {
+      "label": "日本語",
+      "lang": "ja"
+    }
+  ]
+}

@@ -1,6 +1,7 @@
 import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
 import starlightKbd from "starlight-kbd";
+import lunaria from "@lunariajs/starlight";
 import { base, locales, productRepo, repo, sidebar, site } from "./wiki.config.mjs";
 
 export default defineConfig({
@@ -13,6 +14,7 @@ export default defineConfig({
       defaultLocale: "root",
       locales,
       lastUpdated: true,
+      customCss: ["./src/styles/custom.css"],
       editLink: { baseUrl: `${repo}/edit/main/` },
       social: [{ icon: "github", label: "GitHub", href: productRepo }],
       sidebar,
@@ -21,6 +23,7 @@ export default defineConfig({
           globalPicker: false,
           types: [{ id: "linux", label: "Linux", default: true }],
         }),
+        ...(import.meta.env.PROD ? [lunaria({ route: "/localization" })] : []),
       ],
     }),
   ],
