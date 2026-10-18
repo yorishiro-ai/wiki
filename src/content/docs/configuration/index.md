@@ -5,7 +5,7 @@ sidebar:
   order: 1
 ---
 
-Yorishiro reads its settings from environment variables. For the settings on these pages you need no configuration file.
+Yorishiro reads its settings from environment variables. For the settings on these pages you need no configuration file. Only the mailer block and the time zone setting need a configuration file; the sections below say so.
 
 Related pages: [Embedding](embedding/), [Workers and queues](workers-and-queues/), and [Enterprise configuration](enterprise/).
 
