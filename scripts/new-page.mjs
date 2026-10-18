@@ -42,10 +42,10 @@ const fill = (tpl, title) =>
     .replaceAll("{{order}}", order);
 
 const targets = [
-  { path: join(docsDir, group, `${slug}.md`), template: "templates/page.en.md", title: titleEn },
+  { path: join(docsDir, group, `${slug}.mdx`), template: "templates/page.en.mdx", title: titleEn },
   ...translatedLocales.map((l) => ({
-    path: join(docsDir, l, group, `${slug}.md`),
-    template: `templates/page.${l}.md`,
+    path: join(docsDir, l, group, `${slug}.mdx`),
+    template: `templates/page.${l}.mdx`,
     title: titleJa,
   })),
 ];
