@@ -1,0 +1,50 @@
+---
+title: "Queue publisher cutover"
+description: "Switch the queue publisher to a new epoch and replay queued work."
+sidebar:
+  order: 2
+---
+
+Use this procedure when you cut over the queue provider. It moves queued work to the new publisher epoch.
+
+## How publishing works
+
+Application code commits a business change and a dispatch-outbox row in the same transaction. Only the dispatch relay publishes outbox rows to the queue. The relay calls the provider outside the database transaction. A provider timeout or a crash can still publish a job twice, so duplicate jobs are possible.
+
+## Steps
+
+1. Deploy the release that stops direct publishing by producers.
+2. Stop every old producer and worker. Record the operator attestation `old_workers_exited:true`.
+3. Pause publishing. This advances the epoch to E.
+
+   ```console
+   $ yorishiro task set_queue_publishing_epoch expected_epoch:<n> active:false
+   ```
+
+4. While publishing is paused, record the provider snapshot evidence, then prepare the replay.
+
+   ```console
+   $ yorishiro task replay_queue_dispatch_snapshot phase:prepare expected_epoch:<E> old_workers_exited:true cutoff_at:<RFC3339> snapshot_id:<evidence-id>
+   ```
+
+5. Start the new worker pool, then activate the prepared epoch.
+
+   ```console
+   $ yorishiro task replay_queue_dispatch_snapshot phase:activate expected_epoch:<E> old_workers_exited:true snapshot_id:<evidence-id>
+   ```
+
+   Activation checks that the epoch is still E. It enables the prepared E+1 without advancing the epoch again.
+
+6. Keep producers stopped until activation completes. Start them only after that.
+
+## What prepare does
+
+- It retags queued, retrying, running, and unexpired pending query-embedding work to E+1.
+- It includes work that was accepted while publishing was paused.
+- It leaves future `retry_at` values unchanged. It reclaims running rows without waiting for their old lease.
+
+## Limits
+
+- The attestation and the snapshot ID are evidence that you provide. Yorishiro does not verify them.
+- Quarantined, expired, and unrepresentable legacy rows are not replayed. Reconcile them separately.
+- A change of epoch cannot retract a message that the provider has already accepted. An enqueue whose outcome is unknown can duplicate work.

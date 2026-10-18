@@ -69,11 +69,11 @@ UI translation overrides live in `src/content/i18n/<language>.json`. The English
 
 ## MCP tool reference
 
-`reference/mcp-tools` is generated from the tool inventory that the Yorishiro server tests produce (`docs/en/mcp-tools.md` in the Yorishiro repository). Do not edit it by hand:
+`reference/mcp-tools` is generated from the tool inventory that the Yorishiro server tests produce (`tests/fixtures/mcp-inventory.md` in the Yorishiro repository). Do not edit it by hand:
 
 ```sh
 pnpm generate:mcp                              # reads the inventory from the develop branch
-pnpm generate:mcp -- ../yorishiro/docs/en/mcp-tools.md   # or from a local checkout
+pnpm generate:mcp -- ../yorishiro/tests/fixtures/mcp-inventory.md   # or from a local checkout
 ```
 
 ## Deployment

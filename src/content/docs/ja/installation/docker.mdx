@@ -5,7 +5,7 @@ sidebar:
   order: 2
 ---
 
-Dockerは、Yorishiroを最も手軽に試せる方法です。デフォルトの設定ではSQLiteを使うため、外部のデータベースは不要です。
+DockerはYorishiroを最も手軽に試せる方法です。デフォルトの設定ではSQLiteを使うため、外部のデータベースは不要です。
 
 試用を超える用途では、ワーカーとスケジューラーも起動する[Docker Compose](../docker-compose/)を使ってください。
 
@@ -61,8 +61,8 @@ $ docker run -d --name yorishiro-worker --restart unless-stopped \
 
 ## データと権限
 
-SQLiteのデータベースとキューは、`/var/lib/yorishiro`ボリュームに置きます。モデルキャッシュは`/home/yorishiro/.cache/yorishiro`です。コンテナは、権限のないユーザー`yorishiro`として動作します。名前付きボリュームの代わりにバインドマウントを使う場合は、そのユーザーが書き込めることを確認してください。
+SQLiteのデータベースとキューは`/var/lib/yorishiro`ボリュームに置きます。モデルキャッシュは`/home/yorishiro/.cache/yorishiro`です。コンテナは権限のないユーザー`yorishiro`として動作します。名前付きボリュームの代わりにバインドマウントを使う場合は、そのユーザーが書き込めることを確認してください。
 
 ## 設定
 
-すべての設定項目については[設定](../../configuration/)を参照してください。イメージは`/app/config/production.yaml`から設定を読み込みます。これを置き換えるには、完全なファイルをそのパスにマウントするか、ファイルを含む別のディレクトリを`LOCO_CONFIG_FOLDER`に設定します。このファイルは、組み込みの設定とマージされません。
+すべての設定項目については[設定](../../configuration/)を参照してください。イメージは`/app/config/production.yaml`から設定を読み込みます。これを置き換えるには、完全なファイルをそのパスにマウントするか、ファイルを含む別のディレクトリを`LOCO_CONFIG_FOLDER`に設定します。このファイルは組み込みの設定とマージされません。
