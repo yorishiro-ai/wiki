@@ -22,10 +22,10 @@ Do not use SQLite for multi-tenant hosting. It keeps all data in one file, with 
 
 ## What does not work
 
-- **More than one tenant.** SQLite supports exactly one tenant, and you cannot change this.
-- **Filtering on data fields.** The `filter` query parameter returns an error on SQLite.
-- **The template marketplace (Enterprise).** Its endpoints answer `501` with the code `backend_unsupported`, because the marketplace works across tenants.
-- **Named database locks.** SQLite has none. Infer-fill still allows only one running job per workspace.
+- More than one tenant is not supported. SQLite supports exactly one tenant, and you cannot change this.
+- Filtering on data fields is not supported. The `filter` query parameter returns an error on SQLite.
+- The template marketplace (Enterprise) is not supported. Its endpoints answer `501` with the code `backend_unsupported`, because the marketplace works across tenants.
+- SQLite has no named database locks. Infer-fill still allows only one running job per workspace.
 
 SQLite allows a single writer at a time, so many concurrent writes can wait on each other.
 

@@ -19,7 +19,7 @@ Set `YORISHIRO_LICENSE_KEY` to your licence key. Without a valid, unexpired lice
 | --------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | `YORISHIRO_WORKER_CLASS_SHARED_LIMIT`         | `1`     | Maximum concurrent shared jobs across the deployment                                                                                    |
 | `YORISHIRO_WORKER_CLASS_TENANT_PRIVATE_LIMIT` | `1`     | Maximum concurrent tenant-private jobs, counted for each tenant                                                                         |
-| `YORISHIRO_WORKER_OFFICIAL_LIMIT`             | By plan | Maximum concurrent Official jobs across the deployment. Without this variable, the limit follows the plan: Free `1`, Pro `4`, Team `8`. |
+| `YORISHIRO_WORKER_OFFICIAL_LIMIT`             | By plan | Maximum concurrent Official jobs across the deployment. Without this variable, the limit follows the plan. Free `1`, Pro `4`, Team `8`. |
 
 Each limit must be a positive integer. Start checks these values even when plan policy is off, but the limits apply only when it is on. All Official jobs share one count, whatever their plans.
 
