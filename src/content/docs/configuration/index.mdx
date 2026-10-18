@@ -19,12 +19,12 @@ Package installs read `/etc/yorishiro/production.yaml` if it exists, and the pac
 
 ## Server address
 
-| Variable | Default | Description |
-| --- | --- | --- |
-| `BINDING` | `0.0.0.0` (production), `localhost` (development) | Interface the server listens on |
-| `PORT` | `5150` | Listening port |
-| `HOST` | `http://localhost` | Public URL used in links. It is not the listening address. In development the value is fixed and the variable is ignored. |
-| `YORISHIRO_MCP_ALLOWED_HOSTS` | Unset | Extra `Host` values the `/mcp` endpoint accepts, comma-separated. By default it accepts `localhost`, `127.0.0.1`, and `::1`. Wildcards are not allowed. |
+| Variable                      | Default                                           | Description                                                                                                                                             |
+| ----------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `BINDING`                     | `0.0.0.0` (production), `localhost` (development) | Interface the server listens on                                                                                                                         |
+| `PORT`                        | `5150`                                            | Listening port                                                                                                                                          |
+| `HOST`                        | `http://localhost`                                | Public URL used in links. It is not the listening address. In development the value is fixed and the variable is ignored.                               |
+| `YORISHIRO_MCP_ALLOWED_HOSTS` | Unset                                             | Extra `Host` values the `/mcp` endpoint accepts, comma-separated. By default it accepts `localhost`, `127.0.0.1`, and `::1`. Wildcards are not allowed. |
 
 If clients reach the server through another hostname (for example behind a reverse proxy), add that hostname to `YORISHIRO_MCP_ALLOWED_HOSTS`. Otherwise MCP requests are rejected.
 
@@ -34,12 +34,12 @@ OAuth login, an Enterprise feature, also needs a public callback URL. See [Enter
 
 Application data uses SQLite or PostgreSQL. The queue is chosen separately. With nothing set, both use SQLite files, so you need no external service.
 
-| Variable | Default | Description |
-| --- | --- | --- |
-| `DATABASE_URL` | `sqlite:///var/lib/yorishiro/yorishiro.sqlite3?mode=rwc` (production) | Use a `postgres://` URI for PostgreSQL. In development the default is `sqlite://yorishiro.sqlite3?mode=rwc`. |
-| `YORISHIRO_QUEUE_KIND` | Follows `DATABASE_URL` | Queue type: `Sqlite`, `Postgres`, or `Redis` (any Redis-compatible service such as Valkey) |
-| `QUEUE_URL` | Provider default | Queue URI, for example `redis://valkey:6379` or `rediss://…` |
-| `DB_AUTO_MIGRATE` | `true` | Apply database migrations on start. Turn it off when you run several server instances and migrate separately. |
+| Variable               | Default                                                               | Description                                                                                                   |
+| ---------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`         | `sqlite:///var/lib/yorishiro/yorishiro.sqlite3?mode=rwc` (production) | Use a `postgres://` URI for PostgreSQL. In development the default is `sqlite://yorishiro.sqlite3?mode=rwc`.  |
+| `YORISHIRO_QUEUE_KIND` | Follows `DATABASE_URL`                                                | Queue type: `Sqlite`, `Postgres`, or `Redis` (any Redis-compatible service such as Valkey)                    |
+| `QUEUE_URL`            | Provider default                                                      | Queue URI, for example `redis://valkey:6379` or `rediss://…`                                                  |
+| `DB_AUTO_MIGRATE`      | `true`                                                                | Apply database migrations on start. Turn it off when you run several server instances and migrate separately. |
 
 Supported combinations are:
 
@@ -55,24 +55,24 @@ For queue sizing and worker processes, see [Workers and queues](workers-and-queu
 
 ## Tenants
 
-| Variable | Default | Description |
-| --- | --- | --- |
-| `YORISHIRO_MAX_TENANTS` | `1` | Maximum number of tenants. Only Enterprise with a valid licence honors other values. `0` means unlimited and turns off the first-run setup endpoint. Community and unlicensed Enterprise always allow one tenant and log a warning if you set another value. Negative values are rejected. |
+| Variable                | Default | Description                                                                                                                                                                                                                                                                                |
+| ----------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `YORISHIRO_MAX_TENANTS` | `1`     | Maximum number of tenants. Only Enterprise with a valid licence honors other values. `0` means unlimited and turns off the first-run setup endpoint. Community and unlicensed Enterprise always allow one tenant and log a warning if you set another value. Negative values are rejected. |
 
 SQLite always allows one tenant.
 
 ## Search quota
 
-| Variable | Default | Description |
-| --- | --- | --- |
+| Variable                             | Default  | Description                                                                                                                                                                                                                                                                                                      |
+| ------------------------------------ | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `YORISHIRO_SEARCH_TOKENS_PER_MINUTE` | `100000` | Search tokens a workspace can spend per minute. Each query is charged, and the API and MCP share the quota. The default is high and mainly stops runaway automated queries. With the default estimate, Japanese text costs about half as many tokens as English, so the same quota allows more Japanese queries. |
 
 ## Sign-in rate limit
 
-| Variable | Default | Description |
-| --- | --- | --- |
-| `YORISHIRO_AUTH_RATE_LIMIT_MAX` | `10` | Sign-in and sign-up requests allowed per window |
-| `YORISHIRO_AUTH_RATE_LIMIT_WINDOW_SECS` | `60` | Window length in seconds |
+| Variable                                | Default | Description                                     |
+| --------------------------------------- | ------- | ----------------------------------------------- |
+| `YORISHIRO_AUTH_RATE_LIMIT_MAX`         | `10`    | Sign-in and sign-up requests allowed per window |
+| `YORISHIRO_AUTH_RATE_LIMIT_WINDOW_SECS` | `60`    | Window length in seconds                        |
 
 Both must be greater than zero.
 
@@ -82,11 +82,11 @@ The load guard can switch a PostgreSQL deployment to read-only mode when the dat
 
 Set `YORISHIRO_DB_LOAD_THRESHOLD` to the number of active connections that counts as busy. The guard samples every 5 seconds. It turns on read-only mode when the count stays at or above the threshold for 30 seconds, and it turns it off again after the same quiet period. It never clears a read-only or full-lock state that an operator set. It does nothing on SQLite.
 
-| Variable | Default | Description |
-| --- | --- | --- |
-| `YORISHIRO_DB_LOAD_THRESHOLD` | `0` (off) | Active PostgreSQL connections at or above which the database counts as busy |
-| `YORISHIRO_DB_LOAD_SUSTAIN_SECS` | `30` | How long the busy or quiet state must last. Must be greater than zero. |
-| `YORISHIRO_DB_LOAD_POLL_SECS` | `5` | Seconds between samples. Must be greater than zero. |
+| Variable                         | Default   | Description                                                                 |
+| -------------------------------- | --------- | --------------------------------------------------------------------------- |
+| `YORISHIRO_DB_LOAD_THRESHOLD`    | `0` (off) | Active PostgreSQL connections at or above which the database counts as busy |
+| `YORISHIRO_DB_LOAD_SUSTAIN_SECS` | `30`      | How long the busy or quiet state must last. Must be greater than zero.      |
+| `YORISHIRO_DB_LOAD_POLL_SECS`    | `5`       | Seconds between samples. Must be greater than zero.                         |
 
 `yorishiro task db_load_guard` reports one sample without changing the maintenance state.
 

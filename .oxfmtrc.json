@@ -1,4 +1,9 @@
 {
   "$schema": "./node_modules/oxfmt/configuration_schema.json",
-  "ignorePatterns": ["dist", ".astro", "pnpm-lock.yaml", "src/content/docs/**/*.md"]
+  "ignorePatterns": [
+    "dist",
+    ".astro",
+    "pnpm-lock.yaml",
+    "src/content/docs/**/reference/mcp-tools.mdx"
+  ]
 }

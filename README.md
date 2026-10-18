@@ -33,9 +33,9 @@ pnpm preview
    pnpm new guides/backup "Back up and restore" "バックアップと復元" --order 3 --description "How to back up and restore Yorishiro."
    ```
 
-   This writes `src/content/docs/guides/backup.md` and `src/content/docs/ja/guides/backup.md`.
+   This writes `src/content/docs/guides/backup.mdx` and `src/content/docs/ja/guides/backup.mdx`.
 
-2. Replace the `TODO:` text in both files. Write the English page first; the Japanese page mirrors its structure.
+2. Replace the `TODO:` text in both files. Pages are MDX, so write `{` and a bare `<` in prose as `&#123;` and `&lt;`, or put them in backticks. Write the English page first; the Japanese page mirrors its structure.
 3. Run `pnpm check`. It fails on a missing title or description, a page outside a known section, a missing translation, or a leftover `TODO:`.
 
 The page appears in the sidebar automatically, ordered by `sidebar.order` and then by name. Use relative links between pages (for example `../docker/`). In Japanese pages, link anchors use the Japanese heading text.

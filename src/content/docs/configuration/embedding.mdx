@@ -27,24 +27,24 @@ In Docker, run it inside the container: `docker exec <container> yorishiro task 
 
 You can run a model on your own machine, or use an OpenAI-compatible service such as LM Studio, Ollama, vLLM, or OpenAI.
 
-| Variable | Description |
-| --- | --- |
-| `YORISHIRO_EMBEDDING_PROVIDER` | `local` runs a model on this machine (the default). `none` turns embeddings off. If you also set `YORISHIRO_EMBEDDING_BASE_URL` and `YORISHIRO_EMBEDDING_MODEL`, Yorishiro uses that OpenAI-compatible service instead. `openai` selects the same provider and requires both of those. |
-| `YORISHIRO_EMBEDDING_BASE_URL` | URL of an OpenAI-compatible embeddings endpoint, for example `http://localhost:11434`. Requires `YORISHIRO_EMBEDDING_MODEL`. |
-| `YORISHIRO_EMBEDDING_MODEL` | Model name for the OpenAI-compatible service |
-| `YORISHIRO_EMBEDDING_API_KEY` | API key for the service. Leave it empty for local services. |
-| `YORISHIRO_EMBEDDING_DIMENSIONS` | Vector size the model produces (default `768`). Supported sizes are `768`, `1024`, and `1536`. |
-| `YORISHIRO_EMBEDDING_SEND_DIMENSIONS_PARAM` | Send a `dimensions` field in requests (default `false`) |
-| `YORISHIRO_EMBEDDING_PROVIDER_CONCURRENCY` | Maximum simultaneous provider calls per worker process (default `1`). Must be greater than zero. |
+| Variable                                    | Description                                                                                                                                                                                                                                                                            |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `YORISHIRO_EMBEDDING_PROVIDER`              | `local` runs a model on this machine (the default). `none` turns embeddings off. If you also set `YORISHIRO_EMBEDDING_BASE_URL` and `YORISHIRO_EMBEDDING_MODEL`, Yorishiro uses that OpenAI-compatible service instead. `openai` selects the same provider and requires both of those. |
+| `YORISHIRO_EMBEDDING_BASE_URL`              | URL of an OpenAI-compatible embeddings endpoint, for example `http://localhost:11434`. Requires `YORISHIRO_EMBEDDING_MODEL`.                                                                                                                                                           |
+| `YORISHIRO_EMBEDDING_MODEL`                 | Model name for the OpenAI-compatible service                                                                                                                                                                                                                                           |
+| `YORISHIRO_EMBEDDING_API_KEY`               | API key for the service. Leave it empty for local services.                                                                                                                                                                                                                            |
+| `YORISHIRO_EMBEDDING_DIMENSIONS`            | Vector size the model produces (default `768`). Supported sizes are `768`, `1024`, and `1536`.                                                                                                                                                                                         |
+| `YORISHIRO_EMBEDDING_SEND_DIMENSIONS_PARAM` | Send a `dimensions` field in requests (default `false`)                                                                                                                                                                                                                                |
+| `YORISHIRO_EMBEDDING_PROVIDER_CONCURRENCY`  | Maximum simultaneous provider calls per worker process (default `1`). Must be greater than zero.                                                                                                                                                                                       |
 
 ## Local model
 
 With `YORISHIRO_EMBEDDING_PROVIDER=local`, Yorishiro uses `multilingual-e5-base` (768 dimensions), which works well for many languages including Japanese. It is the only local model.
 
-| Variable | Description |
-| --- | --- |
-| `YORISHIRO_LOCAL_MODEL` | Model name (default `multilingual-e5-base`). An unknown value prevents start. |
-| `YORISHIRO_LOCAL_MAX_SEQUENCE_LENGTH` | Maximum input length (default `512`). Must be greater than zero. |
+| Variable                              | Description                                                                   |
+| ------------------------------------- | ----------------------------------------------------------------------------- |
+| `YORISHIRO_LOCAL_MODEL`               | Model name (default `multilingual-e5-base`). An unknown value prevents start. |
+| `YORISHIRO_LOCAL_MAX_SEQUENCE_LENGTH` | Maximum input length (default `512`). Must be greater than zero.              |
 
 The model files (about 522 MiB) download on first use and are cached in `$HOME/.cache/yorishiro/models/`. The server needs a writable `HOME` for this. The first start waits for the download. Later starts use the cache. If a download fails, restart the service. Downloads are checked against a built-in checksum.
 
@@ -54,11 +54,11 @@ If you upgrade from an older release that used `YORISHIRO_ONNX_*`, `YORISHIRO_LO
 
 ## Search timing
 
-| Variable | Default | Description |
-| --- | --- | --- |
-| `YORISHIRO_QUERY_EMBEDDING_TIMEOUT_MS` | `15000` | How long a search waits for the query embedding before returning `503`. Maximum `120000`. |
-| `YORISHIRO_QUERY_EMBEDDING_POLL_INTERVAL_MS` | `100` | How often the server checks for the result. Must not exceed the timeout. |
-| `YORISHIRO_QUERY_EMBEDDING_RETENTION_SECS` | `300` | How long a query request is kept. Must cover the timeout. |
+| Variable                                     | Default | Description                                                                               |
+| -------------------------------------------- | ------- | ----------------------------------------------------------------------------------------- |
+| `YORISHIRO_QUERY_EMBEDDING_TIMEOUT_MS`       | `15000` | How long a search waits for the query embedding before returning `503`. Maximum `120000`. |
+| `YORISHIRO_QUERY_EMBEDDING_POLL_INTERVAL_MS` | `100`   | How often the server checks for the result. Must not exceed the timeout.                  |
+| `YORISHIRO_QUERY_EMBEDDING_RETENTION_SECS`   | `300`   | How long a query request is kept. Must cover the timeout.                                 |
 
 ## Change the embedding model
 

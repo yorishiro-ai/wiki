@@ -31,15 +31,15 @@ $ sudo dnf install ./yorishiro-ce-<VERSION>-amd64.rpm
 
 ## インストールされるファイル
 
-| ファイル | 説明 |
-| --- | --- |
-| `/usr/bin/yorishiro` | バイナリ |
-| `/lib/systemd/system/yorishiro.service` | サーバー |
-| `/lib/systemd/system/yorishiro-worker.service` | バックグラウンドワーカー（sharedターゲット） |
-| `/lib/systemd/system/yorishiro-scheduler.service` | スケジューラー |
-| `/etc/yorishiro/production.yaml.example` | パッケージに含まれるデフォルト設定。アップグレードのたびに更新されます |
-| `/etc/yorishiro/production.yaml` | 任意で用意する設定 |
-| `/var/lib/yorishiro` | データディレクトリ。`yorishiro`ユーザーが所有します |
+| ファイル                                          | 説明                                                                   |
+| ------------------------------------------------- | ---------------------------------------------------------------------- |
+| `/usr/bin/yorishiro`                              | バイナリ                                                               |
+| `/lib/systemd/system/yorishiro.service`           | サーバー                                                               |
+| `/lib/systemd/system/yorishiro-worker.service`    | バックグラウンドワーカー（sharedターゲット）                           |
+| `/lib/systemd/system/yorishiro-scheduler.service` | スケジューラー                                                         |
+| `/etc/yorishiro/production.yaml.example`          | パッケージに含まれるデフォルト設定。アップグレードのたびに更新されます |
+| `/etc/yorishiro/production.yaml`                  | 任意で用意する設定                                                     |
+| `/var/lib/yorishiro`                              | データディレクトリ。`yorishiro`ユーザーが所有します                    |
 
 Enterpriseパッケージは、`/etc/yorishiro/LICENSE.enterprise`もインストールします。
 
