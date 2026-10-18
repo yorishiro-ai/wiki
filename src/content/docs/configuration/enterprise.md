@@ -1,0 +1,98 @@
+---
+title: "Enterprise configuration"
+description: "Settings for Enterprise edition features."
+sidebar:
+  order: 4
+---
+
+This page covers features of the Enterprise edition. It needs a licence key. Everything in Community is also available in Enterprise.
+
+## Licence
+
+Set `YORISHIRO_LICENSE_KEY` to your licence key. Without a valid, unexpired licence, the Enterprise edition behaves like Community and allows one tenant.
+
+## Plan policy and job limits
+
+`YORISHIRO_PLAN_POLICY_ENABLED` is `false` by default and accepts only `true` or `false`. When it is `true`, subscription plans enforce workspace and entity limits, and limit how many background jobs run at once for each target.
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `YORISHIRO_WORKER_CLASS_SHARED_LIMIT` | `1` | Maximum concurrent shared jobs across the deployment |
+| `YORISHIRO_WORKER_CLASS_TENANT_PRIVATE_LIMIT` | `1` | Maximum concurrent tenant-private jobs, counted for each tenant |
+| `YORISHIRO_WORKER_OFFICIAL_LIMIT` | By plan | Maximum concurrent Official jobs across the deployment. Without this variable, the limit follows the plan: Free `1`, Pro `4`, Team `8`. |
+
+Each limit must be a positive integer. Start checks these values even when plan policy is off, but the limits apply only when it is on. All Official jobs share one count, whatever their plans.
+
+These limits do not change the number of workers or the embedding provider's own limits. Allowing more concurrent jobs can add database contention and memory use without more throughput.
+
+Stripe plan prices are mapped with `YORISHIRO_STRIPE_PRICE_PRO` and `YORISHIRO_STRIPE_PRICE_TEAM`. Leave a variable unset to skip that mapping.
+
+## Stripe webhooks
+
+Set `YORISHIRO_STRIPE_WEBHOOK_SECRET` to process Stripe webhooks. Each request's `Stripe-Signature` is verified against the raw body, with a 300-second timestamp tolerance.
+
+## OAuth2 and OIDC sign-in
+
+Set `YORISHIRO_OAUTH_ISSUER_URL`, `YORISHIRO_OAUTH_CLIENT_ID`, and `YORISHIRO_OAUTH_CLIENT_SECRET` to enable sign-in with your identity provider. The provider must use HTTPS unless it runs on a loopback address.
+
+Set `YORISHIRO_OAUTH_REDIRECT_URI` to the public callback URL, especially behind a reverse proxy or on a different external port. If it is unset, the callback is `http://<BINDING>:<PORT>/auth/oauth/callback`, where a wildcard address such as `0.0.0.0` becomes `localhost`. `YORISHIRO_BIND` changes only this fallback and does not change where the server listens.
+
+## Per-workspace embedding provider
+
+A workspace can use its own embedding endpoint. Assign it with `PUT /api/workspace/embedding-key`.
+
+| Field | Description |
+| --- | --- |
+| `base_url` | Embeddings endpoint URL |
+| `model` | Model name |
+| `api_key` | API key (never returned by `GET`) |
+| `dimensions` | Vector size the model produces |
+| `send_dimensions_param` | Send `dimensions` in requests (default `false`) |
+
+## Worker class per workspace
+
+`PUT /api/workspace/worker-class` assigns a workspace's background jobs to a pool.
+
+| Field | Description |
+| --- | --- |
+| `worker_class` | `tenant_private`, `official`, or `shared` |
+
+Run workers for the target you choose. See [Workers and queues](../workers-and-queues/#worker-targets).
+
+## Asynchronous infer-fill
+
+Infer-fill uses an LLM to propose values for fields. You review each proposal before it changes anything.
+
+1. Set a workspace LLM key with `PUT /api/workspace/llm-key`. Without it, the request is rejected before a job is created.
+2. Start a fill with `POST /api/schemas/active/{name}/infer-fill`. The response contains a `job_id` and the status `queued`.
+3. Poll `GET /api/inference-jobs/{job_id}` with a `read` key until the status is `completed` or `failed`. The job record keeps its status, the counts of proposed, applied, and skipped values, and any error message, so polling still works after a server restart.
+4. List the proposals with `GET /api/inference-jobs/{job_id}/proposals`.
+5. Confirm, reject, or discard them with `POST /api/inference-jobs/{job_id}/confirm`, `/reject`, or `/discard`. These need the `schema` scope, and listing needs `read`.
+
+Each model answer is stored as a pending proposal. It does not write guessed data to the entity. Confirming validates the merged entity against the schema, takes a snapshot you can undo with `POST /api/migration-jobs/{job_id}/undo`, and marks stale or invalid proposals without changing the entity.
+
+You can act on proposals only after the job is `completed`. If a job fails, its pending proposals are discarded automatically. Completed proposals stay reviewable until you act on them. Jobs cannot be cancelled and do not expire.
+
+If a worker stops while it runs a job, the job stays `running` and is not retried automatically, because a retry could start a second inference while the first is still active. Check such a job before you start it again.
+
+## Schema origin updates
+
+A workspace schema created from a template can follow later template updates. When a template changes, the linked schema is marked as having a pending update. Use the MCP tools `list_upstream_changes`, `merge_preview`, and `merge_apply` to review and apply it. See [MCP tools](../../reference/mcp-tools/).
+
+The preview shows total fields, automatic additions and updates, local fields, and conflicts. A merge without conflicts creates the new schema version and clears the pending mark together. A merge that has conflicts or fails leaves the update pending.
+
+## Schema forks
+
+An Enterprise workspace can copy an exact active schema version from another workspace of the same tenant with `POST /api/schema-forks`. The fork is detached from the template origin and keeps its own schema history.
+
+`PUT /api/schema-forks/{fork_id}` either updates the local definition or, with `action=follow`, brings the fork in line with its source again. Following is synchronous. It needs `force=true` when it would discard local edits.
+
+## SQLite vector search benchmark
+
+On SQLite with many embedded entities, vector search scans every vector and can become slow. This task measures your real latency:
+
+```console
+$ yorishiro task sqlite_ann_benchmark workspace_id:<uuid>
+```
+
+It reports the median, minimum, and maximum of five searches. When the workspace has at least 1000 entities and the median is over 200 ms, it recommends an indexed vector table. Change the thresholds with the `min_entities` and `max_latency_ms` arguments. The task only measures. It changes no schema or setting.

@@ -1,0 +1,46 @@
+---
+title: Yorishiro Wiki
+description: User guide, configuration, and operations for Yorishiro.
+template: splash
+hero:
+  tagline: MCP-native, multi-tenant knowledge store with user-defined schemas.
+  actions:
+    - text: Install
+      link: installation/
+      icon: right-arrow
+    - text: Configure
+      link: configuration/
+      variant: minimal
+---
+
+import { CardGrid, LinkCard } from "@astrojs/starlight/components";
+
+<CardGrid>
+  <LinkCard
+    title="Installation"
+    href="installation/"
+    description="Docker, Docker Compose, deb/rpm packages, and building from source."
+  />
+  <LinkCard
+    title="Configuration"
+    href="configuration/"
+    description="Server address, embedding, quotas, queues, and Enterprise settings."
+  />
+  <LinkCard
+    title="Guides"
+    href="guides/sqlite/"
+    description="SQLite mode and built-in templates."
+  />
+  <LinkCard
+    title="Operations"
+    href="operations/queue-start-objectives/"
+    description="Queue start objectives and worker capacity."
+  />
+  <LinkCard
+    title="Reference"
+    href="reference/mcp-tools/"
+    description="MCP tool names and inputs."
+  />
+</CardGrid>
+
+Developer documentation (architecture, testing, contribution) stays in the [Yorishiro repository](https://github.com/yorishiro-ai/yorishiro/tree/develop/docs).

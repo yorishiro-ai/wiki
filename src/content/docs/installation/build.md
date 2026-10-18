@@ -1,0 +1,50 @@
+---
+title: "Build from source"
+description: "Build and run Yorishiro from source."
+sidebar:
+  order: 5
+---
+
+Build from source when you need a custom build. For development setup, see the developer documentation in the [Yorishiro repository](https://github.com/yorishiro-ai/yorishiro/tree/develop/docs).
+
+## Requirements
+
+- The Rust toolchain from [rustup](https://rustup.rs/). The repository pins the toolchain version, and rustup picks it up automatically.
+- A C/C++ toolchain, `pkg-config`, and OpenSSL development headers.
+- For PostgreSQL: a server with the `vector` and `pg_trgm` extensions.
+
+## Build
+
+Pick the edition with Cargo features. Without them, the build includes Enterprise.
+
+```console
+$ git clone https://github.com/yorishiro-ai/yorishiro && cd yorishiro
+$ cargo build --release --bin yorishiro --no-default-features --features community
+```
+
+For the Enterprise edition, build with `cargo build --release --bin yorishiro`. The binary is `target/release/yorishiro`.
+
+## Run
+
+A source run uses the `development` configuration and needs a server and a worker as separate processes:
+
+```console
+$ target/release/yorishiro start
+$ target/release/yorishiro start --worker=worker-target:shared
+```
+
+To use the `production` configuration that packages and Docker use, set `LOCO_ENV=production`.
+
+Then follow [First run](../first-run/); the URL there is `http://localhost:5150`.
+
+## Use PostgreSQL or a Valkey queue
+
+```console
+$ DATABASE_URL=postgres://user:pass@host:5432/yorishiro \
+  YORISHIRO_QUEUE_KIND=Redis \
+  QUEUE_URL=redis://host:6379 \
+  LOCO_ENV=production \
+  target/release/yorishiro start
+```
+
+Start the worker with the same variables. See [Configuration](../../configuration/) for all settings.

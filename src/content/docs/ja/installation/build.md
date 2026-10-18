@@ -1,0 +1,50 @@
+---
+title: "ソースからのビルド"
+description: "ソースからYorishiroをビルドして実行します。"
+sidebar:
+  order: 5
+---
+
+カスタムビルドが必要な場合は、ソースからビルドします。開発環境のセットアップについては、[Yorishiroリポジトリ](https://github.com/yorishiro-ai/yorishiro/tree/develop/docs)の開発者向けドキュメントを参照してください。
+
+## 必要なもの
+
+- [rustup](https://rustup.rs/)のRustツールチェーン。リポジトリがツールチェーンのバージョンを固定しており、rustupが自動で取得します。
+- C/C++ツールチェーン、`pkg-config`、OpenSSLの開発用ヘッダー。
+- PostgreSQLを使う場合: `vector`拡張と`pg_trgm`拡張を備えたサーバー。
+
+## ビルド
+
+エディションはCargoのfeatureで選びます。指定しない場合、ビルドにはEnterpriseが含まれます。
+
+```console
+$ git clone https://github.com/yorishiro-ai/yorishiro && cd yorishiro
+$ cargo build --release --bin yorishiro --no-default-features --features community
+```
+
+Enterpriseエディションの場合は、`cargo build --release --bin yorishiro`でビルドします。バイナリは`target/release/yorishiro`です。
+
+## 実行
+
+ソースから実行する場合は`development`設定を使い、サーバーとワーカーを別々のプロセスとして起動する必要があります。
+
+```console
+$ target/release/yorishiro start
+$ target/release/yorishiro start --worker=worker-target:shared
+```
+
+パッケージとDockerが使う`production`設定を使うには、`LOCO_ENV=production`を設定します。
+
+続けて[初回起動](../first-run/)に進んでください。そこでのURLは`http://localhost:5150`です。
+
+## PostgreSQLまたはValkeyのキューを使う
+
+```console
+$ DATABASE_URL=postgres://user:pass@host:5432/yorishiro \
+  YORISHIRO_QUEUE_KIND=Redis \
+  QUEUE_URL=redis://host:6379 \
+  LOCO_ENV=production \
+  target/release/yorishiro start
+```
+
+ワーカーも同じ変数を指定して起動します。すべての設定項目については[設定](../../configuration/)を参照してください。

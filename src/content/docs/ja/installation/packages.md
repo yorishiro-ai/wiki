@@ -1,0 +1,85 @@
+---
+title: "パッケージ（deb / rpm）"
+description: "systemdを使って、debまたはrpmパッケージからYorishiroをインストールします。"
+sidebar:
+  order: 4
+---
+
+リリースパッケージは、各Dockerイメージと並べて[Releases](https://github.com/yorishiro-ai/yorishiro/releases)ページで公開されています。対応するのはUbuntu 24.04とAlmaLinux 10（glibc 2.39以降）で、`amd64`と`arm64`向けです。
+
+パッケージはエディションごとに1つずつあります。`yorishiro-ce`（Community）と`yorishiro-ee`（Enterprise。ライセンスキーが必要）です。2つのパッケージは競合するため、インストールできるのは一方だけです。もう一方のエディションをインストールすると、現在のものが置き換わります。
+
+## インストール
+
+`<VERSION>`をリリースタグ（例: `20261015-1`）に置き換えます。
+
+DebianとUbuntuの場合:
+
+```console
+$ wget https://github.com/yorishiro-ai/yorishiro/releases/download/<VERSION>/yorishiro-ce-<VERSION>-amd64.deb
+$ sudo apt install ./yorishiro-ce-<VERSION>-amd64.deb
+```
+
+AlmaLinuxなどrpmベースのシステムの場合:
+
+```console
+$ wget https://github.com/yorishiro-ai/yorishiro/releases/download/<VERSION>/yorishiro-ce-<VERSION>-amd64.rpm
+$ sudo dnf install ./yorishiro-ce-<VERSION>-amd64.rpm
+```
+
+各リリースには、ダウンロードしたファイルを検証するための`checksums.txt`も含まれています。
+
+## インストールされるファイル
+
+| ファイル | 説明 |
+| --- | --- |
+| `/usr/bin/yorishiro` | バイナリ |
+| `/lib/systemd/system/yorishiro.service` | サーバー |
+| `/lib/systemd/system/yorishiro-worker.service` | バックグラウンドワーカー（sharedターゲット） |
+| `/lib/systemd/system/yorishiro-scheduler.service` | スケジューラー |
+| `/etc/yorishiro/production.yaml.example` | パッケージに含まれるデフォルト設定。アップグレードのたびに更新されます |
+| `/etc/yorishiro/production.yaml` | 任意で用意する設定 |
+| `/var/lib/yorishiro` | データディレクトリ。`yorishiro`ユーザーが所有します |
+
+Enterpriseパッケージは、`/etc/yorishiro/LICENSE.enterprise`もインストールします。
+
+## 起動
+
+```console
+$ sudo systemctl enable --now yorishiro yorishiro-worker yorishiro-scheduler
+$ sudo systemctl status yorishiro
+```
+
+続けて[初回起動](../first-run/)に進んでください。サーバーはポート`5150`で待ち受けるため、そこでのURLは`http://localhost:5150`です。
+
+サービスが繰り返し失敗すると、systemdは5分間に5回の試行で再起動をやめます。原因を修正してから`sudo systemctl reset-failed yorishiro`（またはワーカーやスケジューラーのユニット）を実行し、再度起動してください。
+
+## 設定
+
+`/etc/yorishiro/production.yaml`がない場合、サービスはパッケージのデフォルトを使います。SQLiteのデータベースとキューは`/var/lib/yorishiro`以下に保存されます。`DATABASE_URL`、`QUEUE_URL`、`HOST`、`PORT`、`BINDING`などの環境変数を設定すると、デフォルトより優先されます。
+
+設定をファイルで変更するには、`/etc/yorishiro/production.yaml`を作成します。このファイルはパッケージのデフォルトを完全に置き換えます。Yorishiroは両者をマージしません。`production.yaml.example`をもとに作成し、アップグレードのたびに新しい例と比較してください。例はリリースごとに変わるためです。バックアップも取っておきます。
+
+```console
+$ sudo cp -a /etc/yorishiro/production.yaml /etc/yorishiro/production.yaml.backup
+```
+
+サービスが書き込みアクセスを持つのは`/var/lib/yorishiro`だけです。SQLiteのファイルとモデルキャッシュはここに置いてください。
+
+Communityエディションで使えるテナントは1つです。Enterpriseエディションでは、有効なライセンスと`YORISHIRO_MAX_TENANTS`がある場合にだけ、それ以上のテナントを使えます。SQLiteでは常にテナントは1つです。[設定](../../configuration/)を参照してください。
+
+PostgreSQLを使うには、データベースとキューの設定を含む`production.yaml`を作成します。
+
+```yaml
+database:
+  uri: postgres://user:pass@host:5432/yorishiro
+queue:
+  kind: Postgres
+  uri: postgres://user:pass@host:5432/yorishiro
+server:
+  host: https://yorishiro.example.com
+```
+
+Redis互換のキューを使う場合は、`queue`ブロックの代わりに、サービスの環境で`YORISHIRO_QUEUE_KIND=Redis`と`QUEUE_URL`を設定します。
+
+サービスの環境変数を変更するには、`sudo systemctl edit yorishiro`（およびワーカーとスケジューラーのユニット）を実行します。3つのプロセスはすべて、同じデータベースとキューの設定が必要です。

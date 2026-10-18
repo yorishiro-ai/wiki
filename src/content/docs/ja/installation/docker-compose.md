@@ -1,0 +1,160 @@
+---
+title: "Docker Compose"
+description: "Docker Composeでサーバー、ワーカー、スケジューラーを動かします。"
+sidebar:
+  order: 3
+---
+
+以下のいずれかのファイルを`compose.yml`にコピーし、そのディレクトリで実行します。`<VERSION>`を[Releases](https://github.com/yorishiro-ai/yorishiro/releases)ページのリリースタグ（例: `20261015-1`）に置き換えます。
+
+どの構成も、1つのイメージから3つのサービス（サーバー（`app`）、ワーカー、スケジューラー）を起動します。[動かすプロセス](../#動かすプロセス)を参照してください。`80:5150`のマッピングで、サーバーをホストのポート`80`に公開します。
+
+起動は`docker compose up -d`、停止は`docker compose down`で行います。続けて[初回起動](../first-run/)に進んでください。そこでのURLは`http://localhost`です。
+
+ローカルの埋め込みプロバイダーは初回の利用時にモデルをダウンロード（約522 MiB）するため、初回の起動はダウンロードが終わるまで待機します。ダウンロードを省略するには、`x-yorishiro`の環境変数に`YORISHIRO_EMBEDDING_PROVIDER=none`を設定します。
+
+## SQLite
+
+```yaml
+x-yorishiro: &yorishiro
+  image: ghcr.io/yorishiro-ai/yorishiro:<VERSION>-ce
+  restart: unless-stopped
+  volumes:
+    - data:/var/lib/yorishiro
+    - model-cache:/home/yorishiro/.cache/yorishiro
+
+services:
+  app:
+    <<: *yorishiro
+    ports:
+      - "80:5150"
+
+  worker:
+    <<: *yorishiro
+    command: ["start", "--worker=worker-target:shared"]
+    healthcheck:
+      disable: true
+    depends_on:
+      - app
+
+  scheduler:
+    <<: *yorishiro
+    command: ["scheduler"]
+    healthcheck:
+      disable: true
+    depends_on:
+      - app
+
+volumes:
+  data:
+  model-cache:
+```
+
+SQLiteはデータベースとキューの両方をファイルに保存するため、3つのサービスは1つのボリュームを共有します。SQLiteで使えるテナントは1つだけで、評価や個人での利用向けです。[SQLiteモード](../../guides/sqlite/)を参照してください。
+
+## PostgreSQLとValkey
+
+マルチテナントのホスティング（ライセンス付きのEnterpriseエディション）の場合や、複数のワーカーで1つのキューを共有する場合に、この構成を使います。PostgreSQLがデータを保存し、Valkey（Redis互換）がジョブキューを保持します。
+
+`compose.yml`と同じ場所に`init-extensions.sql`を作成します。PostgreSQLは、データボリュームを最初に作成するときに一度だけこのファイルを実行します。
+
+```sql
+CREATE EXTENSION IF NOT EXISTS vector;
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+```
+
+```yaml
+x-yorishiro: &yorishiro
+  image: ghcr.io/yorishiro-ai/yorishiro:<VERSION>-ce
+  restart: unless-stopped
+  volumes:
+    - model-cache:/home/yorishiro/.cache/yorishiro
+  environment:
+    DATABASE_URL: postgres://yorishiro:change-me@db:5432/yorishiro
+    YORISHIRO_QUEUE_KIND: Redis
+    QUEUE_URL: redis://valkey:6379
+
+services:
+  db:
+    image: pgvector/pgvector:pg18
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: yorishiro
+      POSTGRES_PASSWORD: change-me
+      POSTGRES_DB: yorishiro
+    volumes:
+      - pg-data:/var/lib/postgresql
+      - ./init-extensions.sql:/docker-entrypoint-initdb.d/init-extensions.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U yorishiro"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  valkey:
+    image: valkey/valkey:9.1
+    restart: unless-stopped
+    volumes:
+      - valkey-data:/data
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  app:
+    <<: *yorishiro
+    ports:
+      - "80:5150"
+    healthcheck:
+      start_period: 15m
+    depends_on:
+      db:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+
+  worker:
+    <<: *yorishiro
+    command: ["start", "--worker=worker-target:shared"]
+    healthcheck:
+      disable: true
+    depends_on:
+      app:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+
+  scheduler:
+    <<: *yorishiro
+    command: ["scheduler"]
+    healthcheck:
+      disable: true
+    depends_on:
+      app:
+        condition: service_healthy
+
+volumes:
+  pg-data:
+  valkey-data:
+  model-cache:
+```
+
+ローカルでの試用を超えて使う前に、パスワードを変更してください。サーバーは起動時にデータベースのマイグレーションを適用するため、ワーカーはサーバーが正常になるまで待機します。
+
+キューにもPostgreSQLを使うには、`YORISHIRO_QUEUE_KIND`と`QUEUE_URL`を削除し、`valkey`サービスも削除します。データベースがPostgreSQLの場合は、キューもPostgreSQLを使うようになります。
+
+## ローカルの埋め込みモデルをオフラインで使う
+
+ホストにモデルファイルがすでにある場合は、`model.safetensors`と`tokenizer.json`を`models/`ディレクトリに置き、必要な各サービスにマウントします。
+
+```yaml
+volumes:
+  - ./models:/app/models:ro
+```
+
+2つのファイルは両方を用意するか、どちらも置かないでください。片方だけがある場合、サーバーは起動に失敗します。
+
+## 設定
+
+すべての設定項目については[設定](../../configuration/)を参照してください。

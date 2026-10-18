@@ -1,0 +1,46 @@
+---
+title: "SQLite mode"
+description: "What SQLite mode supports and where it has limits."
+sidebar:
+  order: 1
+---
+
+Yorishiro can store its data in SQLite instead of PostgreSQL. SQLite is the default, and it suits local evaluation, personal use, and a single-person workspace that shares data with no one.
+
+Do not use SQLite for multi-tenant hosting. It keeps all data in one file, with no isolation between tenants. When two or more tenants share a deployment, use PostgreSQL.
+
+## What works
+
+- Creating, reading, updating, and deleting entities
+- Similarity search over embeddings. It scans every vector, so it can slow down with very large workspaces. Entities without an embedding are found by text search instead.
+- Text search with fuzzy matching on character sequences
+- API key sign-in
+- Embedding sync, the same as on PostgreSQL
+- The template library, and creating schemas from templates
+- `recall_context`, which finds related entities across several hops
+- Enterprise features such as column preferences and inference proposals
+
+## What does not work
+
+- **More than one tenant.** SQLite supports exactly one tenant, and you cannot change this.
+- **Filtering on data fields.** The `filter` query parameter returns an error on SQLite.
+- **The template marketplace (Enterprise).** Its endpoints answer `501` with the code `backend_unsupported`, because the marketplace works across tenants.
+- **Named database locks.** SQLite has none. Infer-fill still allows only one running job per workspace.
+
+SQLite allows a single writer at a time, so many concurrent writes can wait on each other.
+
+## Settings
+
+Select SQLite with a `sqlite:` URL:
+
+```console
+$ export DATABASE_URL='sqlite:///var/lib/yorishiro/yorishiro.sqlite3?mode=rwc'
+```
+
+Background jobs use a separate SQLite file by default, `sqlite:///var/lib/yorishiro/yorishiro_queue.sqlite3?mode=rwc`. The database and the queue must not share a file, because their connection pools can block each other. If `QUEUE_URL` points to the database file, finish or move pending jobs, then set a separate queue file before you start the server.
+
+A SQLite database works with a SQLite queue or a Valkey queue. A PostgreSQL queue with a SQLite database is rejected at start. With a Valkey queue, keep the workers on the database's host.
+
+The database pool needs at least 2 connections. The server refuses to start with fewer.
+
+There is no separate SQLite configuration file. Use the normal configuration and set `DATABASE_URL`. See [Configuration](../../configuration/).

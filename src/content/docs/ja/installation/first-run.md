@@ -1,0 +1,47 @@
+---
+title: "初回起動"
+description: "最初のアカウントとAPIキーを作成します。"
+sidebar:
+  order: 6
+---
+
+Yorishiroには、Webのセットアップ画面がありません。最初のアカウントと最初のAPIキーは、APIを通じて作成します。
+
+例では、サーバーが`http://localhost:5150`で応答するものとしています。これらのページのDockerの例ではコンテナのポートをポート`80`で公開しているため、代わりに`http://localhost`を使ってください。
+
+## 1. サーバーを確認する
+
+```console
+$ curl http://localhost:5150/_ping
+```
+
+このコマンドが成功すれば、サーバーは利用できる状態です。ローカルの埋め込みモデルは初回の利用時にダウンロードされる（約522 MiB）ため、初回の起動には時間がかかることがあります。ダウンロードを省略するには、`YORISHIRO_EMBEDDING_PROVIDER=none`を設定します。[埋め込み](../../configuration/embedding/)を参照してください。
+
+## 2. 最初のアカウントを作成する
+
+```console
+$ curl http://localhost:5150/setup/status
+{"setup_required":true}
+
+$ curl -X POST http://localhost:5150/setup \
+    -H 'Content-Type: application/json' \
+    -d '{"email":"you@example.com","password":"choose-a-password","display_name":"You"}'
+```
+
+レスポンスには`user_id`、`tenant_id`、`workspace_id`、`api_key`が含まれます。**APIキーが表示されるのは一度だけです。今すぐ保管してください。**
+
+セットアップを実行できるのは、デプロイメントにテナントがない間の一度だけです。2回目の呼び出しは`409`を返します。`YORISHIRO_MAX_TENANTS=0`の場合（ライセンス付きのEnterprise）も、セットアップは利用できません。[設定](../../configuration/)を参照してください。
+
+## 3. APIキーを使う
+
+キーをBearerトークンとして送信します。
+
+```console
+$ curl http://localhost:5150/api/api-keys -H 'Authorization: Bearer <api-key>'
+```
+
+オーナーと管理者は、`POST /api/api-keys`でキーを追加で作成し、`GET /api/api-keys`で一覧を取得し、`DELETE /api/api-keys/{id}`で失効させることができます。新しいキーが返されるのは、そのキーを作成したレスポンスだけです。一覧にキーのシークレットは含まれません。
+
+## 4. MCPクライアントを接続する
+
+MCPクライアントの接続先を`http://localhost:5150/mcp`に設定し、`Authorization: Bearer <api-key>`ヘッダーでAPIキーを送信します。利用できるツールと、各ツールに必要なスコープについては[MCPツール](../../reference/mcp-tools/)を参照してください。

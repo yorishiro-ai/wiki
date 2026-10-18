@@ -1,0 +1,68 @@
+---
+title: "Docker"
+description: "docker runでYorishiroを動かします。"
+sidebar:
+  order: 2
+---
+
+Dockerは、Yorishiroを最も手軽に試せる方法です。デフォルトの設定ではSQLiteを使うため、外部のデータベースは不要です。
+
+試用を超える用途では、ワーカーとスケジューラーも起動する[Docker Compose](../docker-compose/)を使ってください。
+
+## クイックスタート
+
+`<VERSION>`を[Releases](https://github.com/yorishiro-ai/yorishiro/releases)ページのリリースタグ（例: `20261015-1`）に置き換えます。
+
+```console
+$ docker volume create yorishiro-data
+$ docker volume create yorishiro-model-cache
+
+$ docker run -d --name yorishiro --restart unless-stopped -p 80:5150 \
+    -v yorishiro-data:/var/lib/yorishiro \
+    -v yorishiro-model-cache:/home/yorishiro/.cache/yorishiro \
+    ghcr.io/yorishiro-ai/yorishiro:<VERSION>-ce
+
+$ docker run -d --name yorishiro-worker --restart unless-stopped \
+    --no-healthcheck \
+    -v yorishiro-data:/var/lib/yorishiro \
+    -v yorishiro-model-cache:/home/yorishiro/.cache/yorishiro \
+    ghcr.io/yorishiro-ai/yorishiro:<VERSION>-ce \
+    start --worker=worker-target:shared
+```
+
+1つ目のコンテナはホストのポート`80`でAPIを提供します。2つ目はバックグラウンドジョブを実行します。サーバーだけではジョブを実行しないため、ワーカーがないと埋め込みの同期などのタスクはキューに入ったままになります。2つのコンテナは同じボリュームを共有しており、それによってSQLiteのデータベースとキューも共有されます。
+
+続けて[初回起動](../first-run/)に進んでください。そこでのURLは`http://localhost`です。
+
+スケジュールされたタスクと中断したジョブの復旧も必要な場合は、コマンド`scheduler`と`--no-healthcheck`を指定して3つ目のコンテナを起動します（[Docker Compose](../docker-compose/)を参照してください）。
+
+## PostgreSQLを使う
+
+両方のコンテナに`DATABASE_URL`を設定します。PostgreSQLを使う場合は、キューもPostgreSQLを使います。
+
+```console
+-e DATABASE_URL=postgres://user:pass@host:5432/yorishiro
+```
+
+データベースには`vector`拡張と`pg_trgm`拡張が必要です。動作する構成例は[Docker Compose](../docker-compose/#postgresqlとvalkey)を参照してください。
+
+## キューにValkey（Redis）を使う
+
+両方のコンテナに次を設定します。
+
+```console
+-e YORISHIRO_QUEUE_KIND=Redis
+-e QUEUE_URL=redis://user:pass@host:6379
+```
+
+## 公開URLを選ぶ
+
+`HOST`は、Yorishiroがリンクに使う公開URLです。デフォルトは`http://localhost`です。別のアドレスやポートでコンテナを公開する場合は、それに合わせて`HOST`を設定します（例: `-e HOST=http://localhost:5150`）。
+
+## データと権限
+
+SQLiteのデータベースとキューは、`/var/lib/yorishiro`ボリュームに置きます。モデルキャッシュは`/home/yorishiro/.cache/yorishiro`です。コンテナは、権限のないユーザー`yorishiro`として動作します。名前付きボリュームの代わりにバインドマウントを使う場合は、そのユーザーが書き込めることを確認してください。
+
+## 設定
+
+すべての設定項目については[設定](../../configuration/)を参照してください。イメージは`/app/config/production.yaml`から設定を読み込みます。これを置き換えるには、完全なファイルをそのパスにマウントするか、ファイルを含む別のディレクトリを`LOCO_CONFIG_FOLDER`に設定します。このファイルは、組み込みの設定とマージされません。

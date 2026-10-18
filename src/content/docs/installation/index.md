@@ -1,0 +1,35 @@
+---
+title: "Installation"
+description: "Choose how to install Yorishiro."
+sidebar:
+  order: 1
+---
+
+Yorishiro runs as a single binary. Pick the method that fits your environment:
+
+- [Docker](docker/): the quickest way to try it. Defaults to SQLite.
+- [Docker Compose](docker-compose/): server, worker, and scheduler together, with SQLite or PostgreSQL and Valkey.
+- [Package (deb / rpm)](packages/): systemd-managed services.
+- [Build from source](build/): for custom builds.
+
+After installing, follow [First run](first-run/) to create the first account and an API key.
+
+## What runs
+
+A working installation has up to three processes, all from the same binary:
+
+| Process | Command | Purpose |
+| --- | --- | --- |
+| Server | `yorishiro start` | Serves the REST API and the MCP endpoint. It does not run background jobs. |
+| Worker | `yorishiro start --worker=worker-target:shared` | Runs background jobs such as embedding sync and reindexing. Without a worker, queued jobs wait forever. |
+| Scheduler | `yorishiro scheduler` | Recovers interrupted jobs and runs scheduled tasks. |
+
+The Docker Compose examples and the deb/rpm packages start all three for you. With a plain `docker run`, you start each one yourself.
+
+## Editions and versions
+
+Yorishiro is published in two editions: Community (`ce`) and Enterprise (`ee`). Enterprise adds features such as OAuth2/OIDC login and per-workspace providers, and it needs a licence key. Community runs without a licence. See [Enterprise configuration](../configuration/enterprise/) for the Enterprise features.
+
+Releases are currently published as prereleases. Each release has a tag such as `20261015-1`. Find the latest tag on the [Releases](https://github.com/yorishiro-ai/yorishiro/releases) page and use it wherever these pages show `<VERSION>`.
+
+Docker images are named `ghcr.io/yorishiro-ai/yorishiro:<VERSION>-ce` and `ghcr.io/yorishiro-ai/yorishiro:<VERSION>-ee`. There is no `latest` tag. Images and packages are built for `amd64` and `arm64`.

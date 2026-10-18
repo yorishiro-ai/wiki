@@ -1,0 +1,35 @@
+---
+title: "インストール"
+description: "Yorishiroのインストール方法を選びます。"
+sidebar:
+  order: 1
+---
+
+Yorishiroは単一のバイナリで動作します。環境に合う方法を選んでください。
+
+- [Docker](docker/): 最も手軽に試せる方法です。デフォルトはSQLiteです。
+- [Docker Compose](docker-compose/): サーバー、ワーカー、スケジューラーをまとめて起動します。SQLite、またはPostgreSQLとValkeyを使えます。
+- [パッケージ（deb / rpm）](packages/): systemdで管理するサービスとして動かします。
+- [ソースからのビルド](build/): カスタムビルドが必要な場合に使います。
+
+インストール後は[初回起動](first-run/)に従って、最初のアカウントとAPIキーを作成します。
+
+## 動かすプロセス
+
+動作する環境では、同じバイナリから最大3つのプロセスを起動します。
+
+| プロセス | コマンド | 用途 |
+| --- | --- | --- |
+| サーバー | `yorishiro start` | REST APIとMCPエンドポイントを提供します。バックグラウンドジョブは実行しません。 |
+| ワーカー | `yorishiro start --worker=worker-target:shared` | 埋め込みの同期や再インデックスなどのバックグラウンドジョブを実行します。ワーカーがないと、キューに入ったジョブは永久に待機したままになります。 |
+| スケジューラー | `yorishiro scheduler` | 中断したジョブを復旧し、スケジュールされたタスクを実行します。 |
+
+Docker Composeの例とdeb/rpmパッケージでは、3つすべてが自動で起動します。単純な`docker run`では、それぞれを自分で起動します。
+
+## エディションとバージョン
+
+Yorishiroは、Community（`ce`）とEnterprise（`ee`）の2つのエディションで公開されています。EnterpriseにはOAuth2/OIDCログインやワークスペースごとのプロバイダーなどの機能が加わり、ライセンスキーが必要です。Communityはライセンスなしで動作します。Enterpriseの機能については[Enterpriseの設定](../configuration/enterprise/)を参照してください。
+
+リリースは現在プレリリースとして公開されています。各リリースには`20261015-1`のようなタグが付きます。最新のタグは[Releases](https://github.com/yorishiro-ai/yorishiro/releases)ページで確認し、これらのページの`<VERSION>`にそのタグを指定してください。
+
+Dockerイメージの名前は`ghcr.io/yorishiro-ai/yorishiro:<VERSION>-ce`と`ghcr.io/yorishiro-ai/yorishiro:<VERSION>-ee`です。`latest`タグはありません。イメージとパッケージは`amd64`と`arm64`向けにビルドされています。
