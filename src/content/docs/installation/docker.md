@@ -1,57 +1,68 @@
 ---
-title: "Docker Installation"
+title: "Docker"
+description: "Run Yorishiro with docker run."
 sidebar:
   order: 2
 ---
 
-Yorishiro ships as a single binary. Docker is the simplest option.
+Docker is the quickest way to try Yorishiro. The default configuration uses SQLite, so you need no external database.
+
+For anything beyond a trial, use [Docker Compose](../docker-compose/), which also runs the worker and scheduler.
 
 ## Quick start
 
-The default configuration uses SQLite, so no external database is required.
+Replace `<VERSION>` with a release tag from the [Releases](https://github.com/yorishiro-ai/yorishiro/releases) page, for example `20261015-1`.
 
 ```console
-$ docker run -d --name yorishiro --restart unless-stopped -p 80:5150 \
-    ghcr.io/yorishiro-ai/yorishiro:latest
-```
+$ docker volume create yorishiro-data
+$ docker volume create yorishiro-model-cache
 
-1. Open `http://localhost/` (host port `80`, container port `5150`) and create an account through the setup wizard.
-2. Generate an API key and start creating entities.
-
-## Switching to PostgreSQL
-
-For multi-tenant hosting:
-
-```console
-$ docker run -d --name yorishiro --restart unless-stopped -p 80:5150 \
-    -e DATABASE_URL=postgres://user:pass@host:5432/yorishiro \
-    ghcr.io/yorishiro-ai/yorishiro:latest
-```
-
-## Switching to Valkey (Redis)
-
-For distributed queue processing:
-
-```console
-$ docker run -d --name yorishiro --restart unless-stopped -p 80:5150 \
-    -e YORISHIRO_QUEUE_KIND=Redis \
-    -e QUEUE_URL=redis://user:pass@host:6379 \
-    ghcr.io/yorishiro-ai/yorishiro:latest
-```
-
-## Volume persistence
-
-By default Docker stores data inside the container. To persist data:
-
-```console
 $ docker run -d --name yorishiro --restart unless-stopped -p 80:5150 \
     -v yorishiro-data:/var/lib/yorishiro \
     -v yorishiro-model-cache:/home/yorishiro/.cache/yorishiro \
-    ghcr.io/yorishiro-ai/yorishiro:latest
+    ghcr.io/yorishiro-ai/yorishiro:<VERSION>-ce
+
+$ docker run -d --name yorishiro-worker --restart unless-stopped \
+    --no-healthcheck \
+    -v yorishiro-data:/var/lib/yorishiro \
+    -v yorishiro-model-cache:/home/yorishiro/.cache/yorishiro \
+    ghcr.io/yorishiro-ai/yorishiro:<VERSION>-ce \
+    start --worker=worker-target:shared
 ```
+
+The first container serves the API on host port `80`. The second runs background jobs. The server alone does not run jobs, so without the worker, tasks such as embedding sync stay queued. Both containers share the same volumes, which is how they share the SQLite database and queue.
+
+Then follow [First run](../first-run/). The URL there is `http://localhost`.
+
+If you also need scheduled tasks and recovery of interrupted jobs, run a third container with the command `scheduler` and `--no-healthcheck` (see [Docker Compose](../docker-compose/)).
+
+## Use PostgreSQL
+
+Set `DATABASE_URL` on both containers. With PostgreSQL, the queue uses PostgreSQL too.
+
+```console
+-e DATABASE_URL=postgres://user:pass@host:5432/yorishiro
+```
+
+The database needs the `vector` and `pg_trgm` extensions. See [Docker Compose](../docker-compose/#postgresql-and-valkey) for a working setup.
+
+## Use Valkey (Redis) for the queue
+
+Set these on both containers:
+
+```console
+-e YORISHIRO_QUEUE_KIND=Redis
+-e QUEUE_URL=redis://user:pass@host:6379
+```
+
+## Choose a public URL
+
+`HOST` is the public URL that Yorishiro puts in links. It defaults to `http://localhost`. If you publish the container on another address or port, set `HOST` to match, for example `-e HOST=http://localhost:5150`.
+
+## Data and permissions
+
+Keep the SQLite database and queue in the `/var/lib/yorishiro` volume. The model cache is `/home/yorishiro/.cache/yorishiro`. The container runs as the unprivileged user `yorishiro`. If you use a bind mount instead of a named volume, make sure that user can write to it.
 
 ## Configuration
 
-See [Configuration](../../configuration/) for all settings.
-The image owns and loads `/app/config/production.yaml` at runtime.
-Mount a replacement there or point `LOCO_CONFIG_FOLDER` at another configuration directory.
+See [Configuration](../../configuration/) for all settings. The image loads its configuration from `/app/config/production.yaml`. To replace it, mount a complete file at that path, or set `LOCO_CONFIG_FOLDER` to another directory that contains one. The file is not merged with the built-in one.

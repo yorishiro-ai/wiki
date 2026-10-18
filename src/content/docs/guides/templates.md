@@ -1,18 +1,25 @@
 ---
-title: "Built-in Templates"
+title: "Built-in templates"
+description: "The templates that ship with Yorishiro."
+sidebar:
+  order: 2
 ---
 
-Yorishiro ships eight built-in templates.
+Yorishiro ships eight templates. Create a schema from one to start with a ready-made set of entity types and relations. Use the MCP tools `list_templates` and `list_template_library`, or the REST API, to browse them. See [MCP tools](../../reference/mcp-tools/).
 
-- `general-notes`: Any persona can use this template for generic notes.
-- `software-adr`: A software engineer can use this template for architecture decision records.
-- `task-management`: A person working with AI can use this template for projects, tasks, clients, milestones, assignments, work sessions, and handoffs.
-- `research-knowledge-base`: A researcher can use this template for papers, authors, concepts, experiments, and datasets.
-- `game-dev-lore`: A game development team can use this template for shared canon, glossary terms, and setting assets.
-- `creative-writing`: An author of a long novel can use this template for characters, locations, organizations, chapters, scenes, plot threads, and events.
-- `trpg-campaign`: A TRPG game master can use this template for characters, locations, factions, items, sessions, quests, and encounters.
-- `worldbuilding`: Existing users can keep using this deprecated template for characters, locations, factions, and items.
+| Template | For | Entity types |
+| --- | --- | --- |
+| `general-notes` | General notes with tags and links | note |
+| `software-adr` | Architecture decisions, a service catalog, and the tech stack of a software project | decision, service, incident |
+| `task-management` | Projects and tasks with deadlines, dependencies, clients, milestones, assignments, work sessions, and handoffs | project, task, client, milestone, assignee, work_session, handoff |
+| `research-knowledge-base` | Papers, authors, concepts, experiments, and datasets | paper, author, concept, experiment, dataset |
+| `game-dev-lore` | Shared canon for a game: characters, locations, factions, items, events, glossary terms, and assets | character, location, faction, item, event, term, asset |
+| `creative-writing` | Long-form writing: characters, places, organizations, items, chapters, scenes, plot threads, and events | character, location, organization, item, chapter, scene, plot_thread, event |
+| `trpg-campaign` | Running a TRPG campaign: characters, locations, factions, items, sessions, quests, and encounters | character, location, faction, item, session, quest, encounter |
+| `worldbuilding` | Deprecated: characters, locations, factions, and items | character, location, faction, item |
 
-`worldbuilding` is deprecated.
-Use `creative-writing`, `trpg-campaign`, or `game-dev-lore` for new work.
-The `template_id` value `worldbuilding` continues to work, and existing schemas remain unchanged.
+Each template also defines relation types between its entities.
+
+## Deprecated template
+
+`worldbuilding` is deprecated. For new work, use `creative-writing`, `trpg-campaign`, or `game-dev-lore`. The `template_id` value `worldbuilding` keeps working, and existing schemas stay unchanged.

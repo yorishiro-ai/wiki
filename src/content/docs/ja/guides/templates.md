@@ -1,18 +1,25 @@
 ---
 title: "組み込みテンプレート"
+description: "Yorishiroに同梱されているテンプレート。"
+sidebar:
+  order: 2
 ---
 
-Yorishiroには8つの組み込みテンプレートがあります。
+Yorishiroには8つのテンプレートが同梱されています。テンプレートからスキーマを作成すると、あらかじめ用意されたエンティティタイプとリレーションのセットから始められます。テンプレートの一覧は、MCPツールの `list_templates` と `list_template_library`、またはREST APIで確認できます。[MCPツール](../../reference/mcp-tools/)を参照してください。
 
-- `general-notes`：あらゆるペルソナが一般的なメモに使えます。
-- `software-adr`：ソフトウェアエンジニアがアーキテクチャ決定記録に使えます。
-- `task-management`：AIと協働する人がプロジェクト、タスク、顧客、マイルストーン、担当者、作業セッション、引き継ぎに使えます。
-- `research-knowledge-base`：研究者が論文、著者、概念、実験、データセットに使えます。
-- `game-dev-lore`：ゲーム開発チームが共有カノン、用語集、設定アセットに使えます。
-- `creative-writing`：長編小説の著者が登場人物、場所、組織、章、場面、プロットスレッド、出来事に使えます。
-- `trpg-campaign`：TRPGゲームマスターが登場人物、場所、勢力、アイテム、セッション、クエスト、遭遇に使えます。
-- `worldbuilding`：既存の利用者は、登場人物、場所、勢力、アイテム向けの非推奨テンプレートを引き続き使えます。
+| テンプレート | 用途 | エンティティタイプ |
+| --- | --- | --- |
+| `general-notes` | タグとリンクを持つ一般的なノート | note |
+| `software-adr` | ソフトウェアプロジェクトのアーキテクチャ決定、サービスカタログ、技術スタック | decision, service, incident |
+| `task-management` | 期限、依存関係、クライアント、マイルストーン、担当、作業セッション、引き継ぎを持つプロジェクトとタスク | project, task, client, milestone, assignee, work_session, handoff |
+| `research-knowledge-base` | 論文、著者、概念、実験、データセット | paper, author, concept, experiment, dataset |
+| `game-dev-lore` | ゲームで共有する設定資料。キャラクター、場所、勢力、アイテム、イベント、用語集の項目、アセット | character, location, faction, item, event, term, asset |
+| `creative-writing` | 長編の執筆。キャラクター、場所、組織、アイテム、章、シーン、プロットスレッド、イベント | character, location, organization, item, chapter, scene, plot_thread, event |
+| `trpg-campaign` | TRPGキャンペーンの運営。キャラクター、場所、勢力、アイテム、セッション、クエスト、遭遇 | character, location, faction, item, session, quest, encounter |
+| `worldbuilding` | 非推奨。キャラクター、場所、勢力、アイテム | character, location, faction, item |
 
-`worldbuilding` は非推奨です。
-新しい作業には `creative-writing`、`trpg-campaign`、または `game-dev-lore` を使ってください。
-`template_id` の値 `worldbuilding` は引き続き動作し、既存のスキーマは変更されません。
+各テンプレートは、エンティティ間のリレーションタイプも定義しています。
+
+## 非推奨のテンプレート
+
+`worldbuilding` は非推奨です。新しく作成する場合は、`creative-writing`、`trpg-campaign`、`game-dev-lore` のいずれかを使ってください。`template_id` の値 `worldbuilding` は引き続き使え、既存のスキーマも変更されません。

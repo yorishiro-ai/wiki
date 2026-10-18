@@ -1,56 +1,74 @@
 ---
-title: "Package Installation (deb / rpm)"
+title: "Packages (deb / rpm)"
+description: "Install Yorishiro from deb or rpm packages with systemd."
 sidebar:
   order: 4
 ---
 
-Prerelease packages are published on the [Releases](https://github.com/yorishiro-ai/yorishiro/releases) page alongside each Docker image.
+Release packages are published on the [Releases](https://github.com/yorishiro-ai/yorishiro/releases) page next to each Docker image. They support Ubuntu 24.04 and AlmaLinux 10 (glibc 2.39 or later), on `amd64` and `arm64`.
 
-They support Ubuntu 24.04 and AlmaLinux 10 (glibc 2.39+).
-
-Releases publish separate `yorishiro-ce` and `yorishiro-ee` packages.
-CE provides Community features, while EE includes Enterprise features and requires a licence for production use.
-The packages conflict with each other, so both editions cannot be installed at once.
-Installing the other edition replaces the current package.
+There is one package per edition: `yorishiro-ce` (Community) and `yorishiro-ee` (Enterprise, which needs a licence key). The two packages conflict, so only one can be installed. Installing the other edition replaces the current one.
 
 ## Install
 
+Replace `<VERSION>` with the release tag, for example `20261015-1`.
+
+On Debian and Ubuntu:
+
 ```console
 $ wget https://github.com/yorishiro-ai/yorishiro/releases/download/<VERSION>/yorishiro-ce-<VERSION>-amd64.deb
-$ sudo dpkg -i yorishiro-ce-<VERSION>-amd64.deb
+$ sudo apt install ./yorishiro-ce-<VERSION>-amd64.deb
 ```
 
-## Installed files (CE)
+On AlmaLinux and other rpm-based systems:
+
+```console
+$ wget https://github.com/yorishiro-ai/yorishiro/releases/download/<VERSION>/yorishiro-ce-<VERSION>-amd64.rpm
+$ sudo dnf install ./yorishiro-ce-<VERSION>-amd64.rpm
+```
+
+Each release also includes `checksums.txt` for verifying downloads.
+
+## Installed files
 
 | File | Description |
-|---|---|
+| --- | --- |
 | `/usr/bin/yorishiro` | The binary |
-| `/lib/systemd/system/yorishiro.service` | Systemd unit |
-| `/lib/systemd/system/yorishiro-worker.service` | Tagged background worker unit |
-| `/etc/yorishiro/production.yaml.example` | Latest packaged production defaults, refreshed on every upgrade |
-| `/etc/yorishiro/production.yaml` | Optional administrator-owned override |
+| `/lib/systemd/system/yorishiro.service` | The server |
+| `/lib/systemd/system/yorishiro-worker.service` | The background worker (shared target) |
+| `/lib/systemd/system/yorishiro-scheduler.service` | The scheduler |
+| `/etc/yorishiro/production.yaml.example` | Packaged default configuration, refreshed on every upgrade |
+| `/etc/yorishiro/production.yaml` | Optional configuration you provide |
+| `/var/lib/yorishiro` | Data directory, owned by the `yorishiro` user |
 
-The EE package installs the same shared paths and additionally installs `/etc/yorishiro/LICENSE.enterprise`.
-CE does not install the enterprise licence file.
+The Enterprise package also installs `/etc/yorishiro/LICENSE.enterprise`.
+
+## Start
+
+```console
+$ sudo systemctl enable --now yorishiro yorishiro-worker yorishiro-scheduler
+$ sudo systemctl status yorishiro
+```
+
+Then follow [First run](../first-run/). The server listens on port `5150`, so the URL there is `http://localhost:5150`.
+
+If a service fails repeatedly, systemd stops restarting it after five attempts in five minutes. Fix the cause, then run `sudo systemctl reset-failed yorishiro` (or the worker or scheduler unit) and start it again.
 
 ## Configuration
 
-When `/etc/yorishiro/production.yaml` is absent, the service uses the packaged `/etc/yorishiro/production.yaml.example` defaults, including SQLite database and queue files under `/var/lib/yorishiro` by default.
-Tera `get_env` expressions let environment variables such as `DATABASE_URL`, `QUEUE_URL`, `HOST`, `PORT`, and `BINDING` override template defaults.
-Create `/etc/yorishiro/production.yaml` only when you need an administrator-owned override.
-Package upgrades refresh `/etc/yorishiro/production.yaml.example` from the latest defaults.
-Review the packaged defaults before making or changing an administrator-owned override.
-If the file exists, make a backup before an upgrade:
+Without `/etc/yorishiro/production.yaml`, the services use the packaged defaults. They store the SQLite database and queue under `/var/lib/yorishiro`. Environment variables such as `DATABASE_URL`, `QUEUE_URL`, `HOST`, `PORT`, and `BINDING` override the defaults.
+
+To change settings in a file, create `/etc/yorishiro/production.yaml`. It replaces the packaged defaults entirely; Yorishiro does not merge the two. Start from `production.yaml.example`, and compare it with the new example after each upgrade, because the example changes between releases. Keep a backup:
 
 ```console
 $ sudo cp -a /etc/yorishiro/production.yaml /etc/yorishiro/production.yaml.backup
 ```
 
-CE/EE edition switches use the same package-owned example path and do not install or own the administrator override path.
-Community edition enforces a maximum of one tenant regardless of `YORISHIRO_MAX_TENANTS` or the YAML setting, and warns when either requests another value.
-Enterprise edition honors `YORISHIRO_MAX_TENANTS` only with a valid, unexpired licence; `0` means unlimited, and without a licence it warns and enforces one tenant.
-SQLite remains limited to one tenant in either edition.
-The application database can use SQLite or PostgreSQL; queue storage is selected separately.
+The services run with write access to `/var/lib/yorishiro` only. Keep the SQLite files and the model cache there.
+
+Community edition allows one tenant. Enterprise edition allows more only with a valid licence and `YORISHIRO_MAX_TENANTS`. SQLite always allows one tenant. See [Configuration](../../configuration/).
+
+To use PostgreSQL, create `production.yaml` with the database and queue settings:
 
 ```yaml
 database:
@@ -62,24 +80,6 @@ server:
   host: https://yorishiro.example.com
 ```
 
-For a Redis-compatible queue service, set `YORISHIRO_QUEUE_KIND=Redis` and its `QUEUE_URL` in the service environment instead of using the PostgreSQL queue block.
+For a Redis-compatible queue, set `YORISHIRO_QUEUE_KIND=Redis` and `QUEUE_URL` in the service environment instead of the `queue` block.
 
-See [Configuration](../../configuration/) for all settings.
-
-## Start
-
-```console
-$ sudo systemctl enable --now yorishiro
-$ sudo systemctl enable --now yorishiro-worker
-$ sudo systemctl status yorishiro
-$ sudo systemctl status yorishiro-worker
-```
-
-The worker runs as a separate service and selects `worker-target:shared`.
-Configure additional target-specific services if needed.
-
-## Directory integrity
-
-The state directory `/var/lib/yorishiro` is owned by `root:yorishiro` with mode `1770` (sticky bit + group-writable).
-The `yorishiro` user can create and update state files inside the directory but cannot replace or rename root-owned files.
-The sticky bit ensures each user can only remove its own files, even though the directory is group-writable.
+To change service environment variables, run `sudo systemctl edit yorishiro` (and the worker and scheduler units). All three processes need the same database and queue settings.

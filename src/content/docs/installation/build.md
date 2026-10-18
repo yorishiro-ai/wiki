@@ -1,50 +1,50 @@
 ---
-title: "Build from Source"
+title: "Build from source"
+description: "Build and run Yorishiro from source."
 sidebar:
   order: 5
 ---
 
-## Prerequisites
+Build from source when you need a custom build. For development setup, see the developer documentation in the [Yorishiro repository](https://github.com/yorishiro-ai/yorishiro/tree/develop/docs).
 
-- Rust 1.94 is the supported MSRV. Normal production builds use the pinned Rust 1.97 toolchain (`rustup` recommended).
-- Cargo
-- For PostgreSQL development: a running PostgreSQL instance with `vector` and `pg_trgm` extensions
-- For SQLite development: `sqlite3`
+## Requirements
+
+- The Rust toolchain from [rustup](https://rustup.rs/). The repository pins the toolchain version, and rustup picks it up automatically.
+- A C/C++ toolchain, `pkg-config`, and OpenSSL development headers.
+- For PostgreSQL: a server with the `vector` and `pg_trgm` extensions.
 
 ## Build
 
+Pick the edition with Cargo features. Without them, the build includes Enterprise.
+
 ```console
 $ git clone https://github.com/yorishiro-ai/yorishiro && cd yorishiro
-$ make build
+$ cargo build --release --bin yorishiro --no-default-features --features community
 ```
+
+For the Enterprise edition, build with `cargo build --release --bin yorishiro`. The binary is `target/release/yorishiro`.
 
 ## Run
 
-```console
-$ cargo run -- start
-```
-
-## Release build
+A source run uses the `development` configuration and needs a server and a worker as separate processes:
 
 ```console
-$ cargo build --release --bin yorishiro
+$ target/release/yorishiro start
+$ target/release/yorishiro start --worker=worker-target:shared
 ```
 
-The binary is at `target/release/yorishiro`.
+To use the `production` configuration that packages and Docker use, set `LOCO_ENV=production`.
 
-## Run with PostgreSQL
+Then follow [First run](../first-run/); the URL there is `http://localhost:5150`.
 
-```console
-$ DATABASE_URL=postgres://user:pass@host:5432/yorishiro cargo run -- start
-```
-
-## Run with Valkey queue
+## Use PostgreSQL or a Valkey queue
 
 ```console
 $ DATABASE_URL=postgres://user:pass@host:5432/yorishiro \
   YORISHIRO_QUEUE_KIND=Redis \
   QUEUE_URL=redis://host:6379 \
-  cargo run -- start
+  LOCO_ENV=production \
+  target/release/yorishiro start
 ```
 
-See [Configuration](../../configuration/) for all settings.
+Start the worker with the same variables. See [Configuration](../../configuration/) for all settings.

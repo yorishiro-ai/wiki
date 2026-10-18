@@ -1,72 +1,50 @@
 ---
-title: "Queue Start Objectives"
+title: "Queue start times"
+description: "How Yorishiro measures how long background jobs wait, and how to monitor it."
+sidebar:
+  order: 1
 ---
 
-Yorishiro records a lifecycle row for each job it submits through its workers.
+Yorishiro records the life of every background job it submits: when it was queued, when a worker started it, and how it ended. You can use this to see whether jobs start as fast as you expect.
 
-## Semantics
+## How timing is measured
 
-`enqueue_at` is the timestamp recorded before Yorishiro submits a job to the queue.
+- **Queued time** is recorded just before Yorishiro submits the job to the queue.
+- **Start time** is when a worker first receives the job. The queue reports no separate claim time, so claim and start are the same moment.
+- **Queue start time** is start time minus queued time.
 
-`claim_at` and `start_at` record when a worker first receives the job.
-They have the same value because the queue does not report a separate claim time.
+A retry or redelivery keeps the original queued time. The queue start time therefore includes the time a job spent waiting for another attempt.
 
-Queue-start latency is `start_at - enqueue_at`.
-Retries and redeliveries keep the original `enqueue_at`, so start latency includes time spent waiting for another attempt.
+## Job status
 
-The lifecycle status is `queued`, `running`, `retrying`, `completed`, `failed`, `cancelled`, or `unavailable`.
-Missing queue capacity and provider failures are not counted as successful starts.
-Duplicate delivery is ignored after the lifecycle row is running or terminal.
-Running rows carry a five-minute lease.
-Redelivery during the lease is ignored as a duplicate.
-After the lease expires, the next delivery increments `attempt`, and the previous worker cannot complete or retry the job.
+A job is `queued`, `running`, `retrying`, `completed`, `failed`, `cancelled`, or `unavailable`. Missing queue capacity and provider failures do not count as successful starts. If the queue is unavailable when a request submits a job, the job becomes `unavailable` and the request gets an error.
 
-## Capacity and diagnostics
+A running job holds a lease. A worker renews the lease about once a minute while it works, and a lease not renewed for five minutes counts as expired. A duplicate delivery during the lease is ignored. After the lease expires, the next delivery counts as a new attempt, and the previous worker can no longer complete or retry the job.
 
-Each job has one worker target: `worker-target:shared`, `worker-target:official`, or `worker-target:tenant:<tenant-id>`.
-The lifecycle row records the class, plan (if present), target key, and limit (if enabled) alongside the timing data.
-An empty limit means no target admission cap applies.
-The `attempt` counter increments only when a delivery is admitted to running work.
+The job records stay in the application database, even when the queue itself is in Valkey. When you diagnose a job, check both the queue and the job record.
 
-Lifecycle records remain in the application database, even when Redis stores the queue.
-Check both the queue's job status and the lifecycle record when diagnosing a job.
+## Monitor start times
 
-If an entity write fails after a lifecycle record is saved, the dispatch failure appears in lifecycle diagnostics and logs.
-If the queue is unavailable, the job is marked `unavailable` and the request receives an error.
+When a job starts, the log contains the message `queue job admitted` with the fields `queue_start_seconds` and `lifecycle_id`. Filter for these events in your logging system to chart start times.
 
-## Operations
+Terminal failures log `terminal worker failure`. With Enterprise plan policy on, a job held back by its target limit logs `worker capacity saturated`, with fields such as `worker_class`, `scheduling_priority`, `capacity_limit`, and `active_capacity`.
 
-Run workers with explicit target tags.
-A worker started without a target is rejected.
-When a job starts, logs include `queue_start_seconds` and `lifecycle_id`.
-Filter these tracing events in your logging system to monitor queue start times.
-When Enterprise plan policy is enabled, a job delayed by its target limit emits `worker capacity saturated`.
-Retries emit `retrying`; provider or policy failures emit `unavailable` with a diagnostic field.
-Inspect lifecycle rows grouped by `worker_class` and `status`, then compare recorded start times with the plan objective.
-If `queued`, `retrying`, or `unavailable` keeps increasing, check worker capacity and queue health before assessing start times.
+If more and more jobs stay `queued`, `retrying`, or `unavailable`, check worker capacity and queue health before you judge start times.
 
+## Objectives by plan
 
-## Priority and capacity
+Enterprise plans define these objectives for how long a job should wait before it starts:
 
-PostgreSQL and SQLite select eligible jobs by priority, scheduled time, then ID.
-Redis checks only the first 1000 jobs by priority before matching worker targets.
-If earlier jobs belong to other targets, a matching job beyond that window can wait for another polling cycle.
+| Plan | Objective |
+| --- | --- |
+| Free | Best effort |
+| Pro | 60 seconds |
+| Team | 15 seconds |
 
-Yorishiro assigns `tenant_private` priority 300, `official` priority 200, and `shared` priority 100.
+Yorishiro records the timings but does not enforce the objectives. Compare your recorded start times with them. Automatic Official bursts and compute charging are not available.
 
-When Enterprise plan policy is enabled, Shared and Official limits apply across the deployment; tenant-private limits apply separately to each tenant.
-Without plan policy, target admission has no concurrency cap.
+## Capacity
 
-The `enterprise` plan uses the Team limits.
+Run workers for the targets you need to reserve capacity for. See [Workers and queues](../../configuration/workers-and-queues/). A worker that serves several targets shares its slots across them and reserves none.
 
-When a target reaches its limit, the job waits for another attempt at its original priority and target instead of moving to another worker target.
-
-Run target-specific processes to reserve worker capacity: `--worker=worker-target:shared`, `--worker=worker-target:official`, and `--worker=worker-target:tenant:<tenant-id>`.
-
-A worker serving several targets shares its `num_workers` slots across them; it does not reserve a slot per target.
-
-When a lower-priority job waits in `queued` or `retrying` for one minute, new higher-priority jobs sharing its workers receive priority 50 until the waiting job starts.
-This does not change the priority of jobs already in the queue.
-Separate workers for each target reserve worker capacity for that target.
-
-Logs include scheduling decisions, job class, priority, configured limit, active jobs, and any capacity deferral.
+When a target reaches its limit, the job waits and tries again at its original priority and target. It does not move to another target. The Enterprise limits are described in [Enterprise configuration](../../configuration/enterprise/#plan-policy-and-job-limits).

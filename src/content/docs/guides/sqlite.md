@@ -1,62 +1,46 @@
 ---
 title: "SQLite mode"
+description: "What SQLite mode supports and where it has limits."
+sidebar:
+  order: 1
 ---
 
-Yorishiro can run on SQLite instead of PostgreSQL.
-Use this for local evaluation, personal use, or a single-person workspace that does not share data with anyone else.
+Yorishiro can store its data in SQLite instead of PostgreSQL. SQLite is the default, and it suits local evaluation, personal use, and a single-person workspace that shares data with no one.
 
-Do not use SQLite for multi-tenant hosting.
-It stores all data in a single file with no database-level tenant isolation.
-PostgreSQL is required when two or more tenants share the same deployment.
+Do not use SQLite for multi-tenant hosting. It keeps all data in one file, with no isolation between tenants. When two or more tenants share a deployment, use PostgreSQL.
 
-## What works on SQLite
+## What works
 
-- **Entity CRUD.** Create, read, update, and delete content entities.
-- **Vector search.** Similarity search using embedded vectors (sqlite-vec).
-- **Full-text search.** Text search with character-n-gram fuzzy matching via FTS5 `tokenize='trigram'`.
-- **API key authentication.** Create and use API keys.
-- **Embedding sync.** Generate and store vectors the same way as PostgreSQL.
-- **Template library and schema origin.** Create schemas from templates and review or merge template updates.
-- **Recall.** `recall_context` finds related entities across multiple hops.
-- **Column preferences and inference proposals** (enterprise).
-- **Snapshots and undo.** Restore entities from a snapshot (requires a prior snapshot created on PostgreSQL).
+- Creating, reading, updating, and deleting entities
+- Similarity search over embeddings. It scans every vector, so it can slow down with very large workspaces. Entities without an embedding are found by text search instead.
+- Text search with fuzzy matching on character sequences
+- API key sign-in
+- Embedding sync, the same as on PostgreSQL
+- The template library, and creating schemas from templates
+- `recall_context`, which finds related entities across several hops
+- Enterprise features such as column preferences and inference proposals
 
-## What does not work on SQLite
+## What does not work
 
-- **Multiple tenants.** SQLite supports exactly one tenant. The tenant cap is hardcoded to 1 and cannot be changed.
-- **Content filtering.** The `filter` query parameter (JSONB containment) returns an error on SQLite.
-- **The marketplace** (enterprise). It lists and publishes across tenants, so its endpoints answer `501` with the `backend_unsupported` code on SQLite.
-- **Named advisory locks.** SQLite does not provide them; infer-fill still runs only one job per workspace at a time.
-- **SQLite snapshots.** Creating snapshots is not supported on SQLite. A snapshot created on PostgreSQL can be restored on SQLite.
+- **More than one tenant.** SQLite supports exactly one tenant, and you cannot change this.
+- **Filtering on data fields.** The `filter` query parameter returns an error on SQLite.
+- **The template marketplace (Enterprise).** Its endpoints answer `501` with the code `backend_unsupported`, because the marketplace works across tenants.
+- **Named database locks.** SQLite has none. Infer-fill still allows only one running job per workspace.
 
-## Configuration
+SQLite allows a single writer at a time, so many concurrent writes can wait on each other.
 
-Supported queue configurations for SQLite are a separate SQLite queue file or a Redis-compatible (Valkey) queue.
-A PostgreSQL queue with a SQLite database is forbidden and rejected before boot with `ValidationFailed`.
-If an upgrade reports multiple running infer-fill jobs in one workspace, let the active workers finish, resolve any duplicates, and retry the upgrade.
-Do not mark jobs stopped while their workers are still running.
+## Settings
 
-All `sqlite:` URL forms, including `sqlite:/path` and `sqlite::memory:`, select SQLite defaults:
+Select SQLite with a `sqlite:` URL:
 
-```sh
-export DATABASE_URL='sqlite:///var/lib/yorishiro/yorishiro.sqlite3?mode=rwc'
-cargo run
+```console
+$ export DATABASE_URL='sqlite:///var/lib/yorishiro/yorishiro.sqlite3?mode=rwc'
 ```
 
-SQLite background jobs use a separate file, `sqlite:///var/lib/yorishiro/yorishiro_queue.sqlite3?mode=rwc`, by default.
-The application database and queue must not share a file because their independent connection pools can hold SQLite locks against each other while a worker dequeues a job.
-If `QUEUE_URL` points to the application file, drain or move pending jobs and configure a separate queue file before starting the server.
+Background jobs use a separate SQLite file by default, `sqlite:///var/lib/yorishiro/yorishiro_queue.sqlite3?mode=rwc`. The database and the queue must not share a file, because their connection pools can block each other. If `QUEUE_URL` points to the database file, finish or move pending jobs, then set a separate queue file before you start the server.
 
-At least 2 connections are required.
-The server refuses to start if `max_connections` is less than 2.
+A SQLite database works with a SQLite queue or a Valkey queue. A PostgreSQL queue with a SQLite database is rejected at start. With a Valkey queue, keep the workers on the database's host.
 
-## Configuration files
+The database pool needs at least 2 connections. The server refuses to start with fewer.
 
-There is no separate SQLite production config file; use `config/production.yaml` and set `DATABASE_URL` to a `sqlite://` URL.
-Set `QUEUE_URL` to another SQLite file when using a custom application path.
-
-## Authentication
-
-Authentication bypasses the tenant pool and connects directly to the database.
-There is no row-level security.
-Use SQLite only with a single tenant.
+There is no separate SQLite configuration file. Use the normal configuration and set `DATABASE_URL`. See [Configuration](../../configuration/).

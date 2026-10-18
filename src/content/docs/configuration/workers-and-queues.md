@@ -1,0 +1,71 @@
+---
+title: "Workers and queues"
+description: "Run background workers and the scheduler, and choose a queue."
+sidebar:
+  order: 3
+---
+
+Yorishiro runs slow work, such as embedding sync and reindexing, as background jobs. The server puts jobs in a queue, and separate worker processes run them.
+
+## Processes
+
+Run the HTTP server and the workers as separate processes. A plain `yorishiro start` runs only the server and never consumes jobs.
+
+| Process | Command |
+| --- | --- |
+| Server | `yorishiro start` |
+| Worker | `yorishiro start --worker=worker-target:shared` |
+| Scheduler | `yorishiro scheduler` |
+
+The packages and the Docker Compose examples start all three. They are enough for a personal installation. The scheduler recovers interrupted jobs and runs scheduled tasks. Run it as its own process.
+
+A bare `--worker`, `--all`, or `--server-and-worker` is rejected.
+
+Every process needs the same database, queue, and embedding settings that its jobs use. Workers can run on the server's host or on another machine. Workers on another machine must use the same `QUEUE_URL`. If that URL points to a shared SQLite file, use an absolute path, because each host resolves a relative path on its own.
+
+## Worker targets
+
+Each job belongs to one target, and each worker serves the targets you choose:
+
+- `worker-target:shared`: the default pool. Query embedding and Enterprise infer-fill always run here.
+- `worker-target:official`: Official jobs (Enterprise).
+- `worker-target:tenant:<tenant-id>`: jobs of one tenant. Use the tenant's lowercase, hyphenated UUID, not a workspace ID.
+
+```console
+$ yorishiro start --worker=worker-target:official
+$ yorishiro start --worker=worker-target:tenant:0198f3a0-0000-7000-8000-00000000000a
+```
+
+One process can serve several targets if you list them with commas. That does not reserve capacity for any target. Start Official and tenant workers yourself, for example from your process manager. Yorishiro does not start them for you.
+
+Enterprise can assign a workspace's jobs to a pool. See [Enterprise configuration](../enterprise/#worker-class-per-workspace).
+
+### Change worker routing safely
+
+Before you change which workers serve which targets, stop whatever creates jobs, and let the matching workers finish all queued, running, and retrying jobs. Then start the workers with the new routing. If producers and workers use different routing at the same time, jobs can stay unprocessed.
+
+With Valkey, each tenant target gets its own queue when its first job arrives. Deleting a tenant does not remove its queue. Remove an unused tenant queue yourself, after it is empty and the tenant is no longer served.
+
+## Worker settings
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `YORISHIRO_QUEUE_WORKERS` | `1` for a SQLite queue, `2` otherwise | Concurrent job loops in one worker process |
+| `YORISHIRO_QUEUE_REAPER_AGE_MINUTES` | `30` | How long a job can stay in processing before it is recovered |
+| `DB_MAX_CONNECTIONS` | `10` for SQLite, `100` for PostgreSQL | Database connection pool size |
+
+These variables apply to the production configuration. The development configuration uses fixed values.
+
+SQLite has a single writer. More workers on a SQLite queue add contention, not speed, and start logs a warning. A warning also appears when a SQLite pool is larger than 16. SQLite with a Valkey queue works, but keep the workers on the database's host, because remote workers cannot open a SQLite file.
+
+For the most throughput, use PostgreSQL for data and Valkey for the queue. PostgreSQL for both comes next, and SQLite for both is the slowest. With PostgreSQL, several worker processes can take jobs at the same time. With SQLite, taking jobs is serialized.
+
+## Queue priorities
+
+When jobs wait, Yorishiro picks higher priorities first: tenant-private jobs (300), Official jobs (200), then shared jobs (100). If a lower-priority job has waited one minute, new higher-priority jobs that use the same workers are lowered to priority 50 until the waiting job starts. Jobs already in the queue keep their priority.
+
+## Limit concurrent jobs
+
+Community does not limit concurrent jobs by target. Enterprise can. See [Enterprise configuration](../enterprise/#plan-policy-and-job-limits).
+
+To see how long jobs wait and how to read the logs, see [Queue start objectives](../../operations/queue-start-objectives/).

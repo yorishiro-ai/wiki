@@ -9,7 +9,11 @@
     "preview": "astro preview",
     "lint": "oxlint",
     "format": "oxfmt",
-    "format:check": "oxfmt --check"
+    "format:check": "oxfmt --check",
+    "new": "node scripts/new-page.mjs",
+    "check": "node scripts/check-pages.mjs",
+    "generate:mcp": "node scripts/generate-mcp-reference.mjs",
+    "check:links": "node scripts/check-links.mjs"
   },
   "dependencies": {
     "@astrojs/starlight": "0.42.6",
