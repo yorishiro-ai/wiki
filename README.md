@@ -36,11 +36,34 @@ pnpm preview
 2. Replace the `TODO:` text in both files. Pages are MDX, so write `{` and a bare `<` in prose as `&#123;` and `&lt;`, or put them in backticks. Write the English page first; the Japanese page mirrors its structure.
 3. Run `pnpm check:pages`. It fails on a missing title or description, a page outside a known section, a missing translation, or a leftover `TODO:`.
 
-The page appears in the sidebar automatically, ordered by `sidebar.order` and then by name. Use relative links between pages (for example `../docker/`). In Japanese pages, link anchors use the Japanese heading text.
+The page appears in the sidebar, home page directory, and search index automatically. No route registration or link list needs updating. Add matching English and Japanese MDX files under an existing section; `pnpm new` is optional. A page only needs `title`, `description`, and its body:
+
+```mdx
+---
+title: Back up and restore
+description: How to back up and restore Yorishiro.
+---
+
+Write the instructions here.
+```
+
+Set `sidebar.order` to control ordering; otherwise the lists sort by title after explicitly ordered pages. Use relative links between pages (for example `../docker/`). In Japanese pages, link anchors use the Japanese heading text.
+
+### Automatic Page Lists
+
+`src/components/PageList.astro` renders cards from each page's `title` and `description`, filtered to the current language. The home pages use it to list all sections. A section landing page can use it without maintaining links by hand:
+
+```mdx
+import PageList from "../../../components/PageList.astro";
+
+<PageList section="guides" />
+```
+
+This import path is for `src/content/docs/guides/index.mdx`; Japanese pages need one extra `../`. The list excludes the current page, drafts, and pages with `sidebar.hidden: true`. Grouping follows the source directory, and links respect custom `slug` values. Omit `section` to list all configured sections. The component uses Starlight's existing cards and needs no client-side JavaScript.
 
 ## Add a section
 
-Add one entry to `groups` in `wiki.config.mjs` (folder name, English label, Japanese label), and create the folder. Locales, the sidebar, and site URLs are all defined in that file.
+Add one entry to `groups` in `wiki.config.mjs` (folder name, English label, Japanese label), and add MDX pages in that folder for both languages. The sidebar and home page directory pick up the section automatically; an `index.mdx` landing page is optional. Locales, the sidebar, and site URLs are all defined in that file.
 
 ## MCP tool reference
 

@@ -13,34 +13,8 @@ hero:
       variant: minimal
 ---
 
-import { CardGrid, LinkCard } from "@astrojs/starlight/components";
+import PageList from "../../components/PageList.astro";
 
-<CardGrid>
-  <LinkCard
-    title="Installation"
-    href="installation/"
-    description="Docker, Docker Compose, deb/rpm packages, and building from source."
-  />
-  <LinkCard
-    title="Configuration"
-    href="configuration/"
-    description="Server address, embedding, quotas, queues, and Enterprise settings."
-  />
-  <LinkCard
-    title="Guides"
-    href="guides/sqlite/"
-    description="SQLite mode and built-in templates."
-  />
-  <LinkCard
-    title="Operations"
-    href="operations/queue-start-objectives/"
-    description="Queue start objectives and worker capacity."
-  />
-  <LinkCard
-    title="Reference"
-    href="reference/mcp-tools/"
-    description="MCP tool names and inputs."
-  />
-</CardGrid>
+<PageList />
 
 Developer documentation (architecture, testing, contribution) stays in the [Yorishiro repository](https://github.com/yorishiro-ai/yorishiro/tree/develop/docs).
