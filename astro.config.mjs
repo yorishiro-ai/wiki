@@ -9,7 +9,6 @@ export default defineConfig({
     starlight({
       title: "Yorishiro Wiki",
       description: "User guide, configuration, and operations for Yorishiro (依り代).",
-      favicon: "/favicon.svg",
       defaultLocale: "root",
       locales,
       lastUpdated: true,
