@@ -1,0 +1,25 @@
+---
+title: "組み込みテンプレート"
+description: "Yorishiroに同梱されているテンプレート。"
+sidebar:
+  order: 2
+---
+
+Yorishiroには8つのテンプレートが同梱されています。テンプレートからスキーマを作成すると、あらかじめ用意されたエンティティタイプとリレーションのセットから始められます。テンプレートの一覧は、MCPツールの `list_templates` と `list_template_library`、またはREST APIで確認できます。[MCPツール](../../reference/mcp-tools/)を参照してください。
+
+| テンプレート              | 用途                                                                                                   | エンティティタイプ                                                          |
+| ------------------------- | ------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------- |
+| `general-notes`           | タグとリンクを持つ一般的なノート                                                                       | note                                                                        |
+| `software-adr`            | ソフトウェアプロジェクトのアーキテクチャ決定、サービスカタログ、技術スタック                           | decision, service, incident                                                 |
+| `task-management`         | 期限、依存関係、クライアント、マイルストーン、担当、作業セッション、引き継ぎを持つプロジェクトとタスク | project, task, client, milestone, assignee, work_session, handoff           |
+| `research-knowledge-base` | 論文、著者、概念、実験、データセット                                                                   | paper, author, concept, experiment, dataset                                 |
+| `game-dev-lore`           | ゲームで共有する設定資料。キャラクター、場所、勢力、アイテム、イベント、用語集の項目、アセット         | character, location, faction, item, event, term, asset                      |
+| `creative-writing`        | 長編の執筆。キャラクター、場所、組織、アイテム、章、シーン、プロットスレッド、イベント                 | character, location, organization, item, chapter, scene, plot_thread, event |
+| `trpg-campaign`           | TRPGキャンペーンの運営。キャラクター、場所、勢力、アイテム、セッション、クエスト、遭遇                 | character, location, faction, item, session, quest, encounter               |
+| `worldbuilding`           | 非推奨。キャラクター、場所、勢力、アイテム                                                             | character, location, faction, item                                          |
+
+各テンプレートは、エンティティ間のリレーションタイプも定義しています。
+
+## 非推奨のテンプレート
+
+`worldbuilding` は非推奨です。新しく作成する場合は、`creative-writing`、`trpg-campaign`、`game-dev-lore` のいずれかを使ってください。`template_id` の値 `worldbuilding` は引き続き使え、既存のスキーマも変更されません。

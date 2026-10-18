@@ -11,11 +11,11 @@ Yorishiro runs slow work, such as embedding sync and reindexing, as background j
 
 Run the HTTP server and the workers as separate processes. A plain `yorishiro start` runs only the server and never consumes jobs.
 
-| Process | Command |
-| --- | --- |
-| Server | `yorishiro start` |
-| Worker | `yorishiro start --worker=worker-target:shared` |
-| Scheduler | `yorishiro scheduler` |
+| Process   | Command                                         |
+| --------- | ----------------------------------------------- |
+| Server    | `yorishiro start`                               |
+| Worker    | `yorishiro start --worker=worker-target:shared` |
+| Scheduler | `yorishiro scheduler`                           |
 
 The packages and the Docker Compose examples start all three. They are enough for a personal installation. The scheduler recovers interrupted jobs and runs scheduled tasks. Run it as its own process.
 
@@ -48,11 +48,11 @@ With Valkey, each tenant target gets its own queue when its first job arrives. D
 
 ## Worker settings
 
-| Variable | Default | Description |
-| --- | --- | --- |
-| `YORISHIRO_QUEUE_WORKERS` | `1` for a SQLite queue, `2` otherwise | Concurrent job loops in one worker process |
-| `YORISHIRO_QUEUE_REAPER_AGE_MINUTES` | `30` | How long a job can stay in processing before it is recovered |
-| `DB_MAX_CONNECTIONS` | `10` for SQLite, `100` for PostgreSQL | Database connection pool size |
+| Variable                             | Default                               | Description                                                  |
+| ------------------------------------ | ------------------------------------- | ------------------------------------------------------------ |
+| `YORISHIRO_QUEUE_WORKERS`            | `1` for a SQLite queue, `2` otherwise | Concurrent job loops in one worker process                   |
+| `YORISHIRO_QUEUE_REAPER_AGE_MINUTES` | `30`                                  | How long a job can stay in processing before it is recovered |
+| `DB_MAX_CONNECTIONS`                 | `10` for SQLite, `100` for PostgreSQL | Database connection pool size                                |
 
 These variables apply to the production configuration. The development configuration uses fixed values.
 

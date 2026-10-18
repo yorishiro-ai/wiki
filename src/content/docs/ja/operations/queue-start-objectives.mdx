@@ -27,7 +27,7 @@ Yorishiroは、投入するすべてのバックグラウンドジョブにつ�
 
 ジョブが開始されると、ログに `queue job admitted` というメッセージが、`queue_start_seconds` と `lifecycle_id` のフィールドとともに出力されます。ログ基盤でこれらのイベントを絞り込むと、開始時間をグラフにできます。
 
-終端的な失敗は `terminal worker failure` として記録されます。Enterpriseのプランポリシーが有効な場合、ターゲットの上限によって保留されたジョブは `worker capacity saturated` として記録され、`worker_class`、`scheduling_priority`、`capacity_limit`、`active_capacity` などのフィールドが付きます。
+最終的な失敗は `terminal worker failure` として記録されます。Enterpriseのプランポリシーが有効な場合、ターゲットの上限によって保留されたジョブは `worker capacity saturated` として記録され、`worker_class`、`scheduling_priority`、`capacity_limit`、`active_capacity` などのフィールドが付きます。
 
 `queued`、`retrying`、`unavailable` のまま残るジョブが増え続ける場合は、開始時間を評価する前に、ワーカーの容量とキューの状態を確認してください。
 
@@ -35,11 +35,11 @@ Yorishiroは、投入するすべてのバックグラウンドジョブにつ�
 
 Enterpriseのプランでは、ジョブが開始されるまでの待ち時間について、次の目標が定義されています。
 
-| プラン | 目標 |
-| --- | --- |
-| Free | ベストエフォート |
-| Pro | 60秒 |
-| Team | 15秒 |
+| プラン | 目標             |
+| ------ | ---------------- |
+| Free   | ベストエフォート |
+| Pro    | 60秒             |
+| Team   | 15秒             |
 
 Yorishiroは時間を記録しますが、目標の達成を強制しません。記録された開始時間を、この目標と比較してください。Officialへの自動的なバーストと、計算量に応じた課金は利用できません。
 
@@ -47,4 +47,4 @@ Yorishiroは時間を記録しますが、目標の達成を強制しません�
 
 容量を確保したいターゲットごとに、ワーカーを実行してください。[ワーカーとキュー](../../configuration/workers-and-queues/)を参照してください。複数のターゲットを担当するワーカーは、スロットをそれらのターゲットで共有し、どのターゲットの分も確保しません。
 
-ターゲットが上限に達すると、ジョブは待機し、元の優先度とターゲットのまま再試行されます。別のターゲットには移りません。Enterpriseの上限は、[Enterprise設定](../../configuration/enterprise/#プランポリシーとジョブの上限)で説明しています。
+ターゲットが上限に達すると、ジョブは待機し、元の優先度とターゲットのまま再試行されます。別のターゲットには移りません。Enterpriseの上限は、[Enterpriseの設定](../../configuration/enterprise/#プランポリシーとジョブの上限)で説明しています。

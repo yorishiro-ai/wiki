@@ -1,0 +1,33 @@
+---
+import { getCollection } from "astro:content";
+import { CardGrid, LinkCard } from "@astrojs/starlight/components";
+import { groups } from "../../wiki.config.mjs";
+import { selectPages } from "../lib/page-list";
+
+interface Props {
+  section?: string;
+}
+
+const { locale, entry } = Astro.locals.starlightRoute;
+const pages = selectPages(await getCollection("docs"), locale, entry.id);
+const sections = Astro.props.section
+  ? groups.filter((group) => group.dir === Astro.props.section)
+  : groups;
+---
+
+{
+  sections.map((group) => {
+    const children = pages.filter((page) => page.section === group.dir);
+    if (!children.length) return null;
+    return (
+      <>
+        {!Astro.props.section && <h2>{locale === "ja" ? group.ja : group.label}</h2>}
+        <CardGrid>
+          {children.map((page) => (
+            <LinkCard title={page.title} description={page.description} href={page.href} />
+          ))}
+        </CardGrid>
+      </>
+    );
+  })
+}

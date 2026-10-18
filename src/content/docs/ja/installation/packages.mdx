@@ -31,15 +31,15 @@ $ sudo dnf install ./yorishiro-ce-<VERSION>-amd64.rpm
 
 ## インストールされるファイル
 
-| ファイル | 説明 |
-| --- | --- |
-| `/usr/bin/yorishiro` | バイナリ |
-| `/lib/systemd/system/yorishiro.service` | サーバー |
-| `/lib/systemd/system/yorishiro-worker.service` | バックグラウンドワーカー（sharedターゲット） |
-| `/lib/systemd/system/yorishiro-scheduler.service` | スケジューラー |
-| `/etc/yorishiro/production.yaml.example` | パッケージに含まれるデフォルト設定。アップグレードのたびに更新されます |
-| `/etc/yorishiro/production.yaml` | 任意で用意する設定 |
-| `/var/lib/yorishiro` | データディレクトリ。`yorishiro`ユーザーが所有します |
+| ファイル                                          | 説明                                                                   |
+| ------------------------------------------------- | ---------------------------------------------------------------------- |
+| `/usr/bin/yorishiro`                              | バイナリ                                                               |
+| `/lib/systemd/system/yorishiro.service`           | サーバー                                                               |
+| `/lib/systemd/system/yorishiro-worker.service`    | バックグラウンドワーカー（sharedターゲット）                           |
+| `/lib/systemd/system/yorishiro-scheduler.service` | スケジューラー                                                         |
+| `/etc/yorishiro/production.yaml.example`          | パッケージに含まれるデフォルト設定。アップグレードのたびに更新されます |
+| `/etc/yorishiro/production.yaml`                  | 任意で用意する設定                                                     |
+| `/var/lib/yorishiro`                              | データディレクトリ。`yorishiro`ユーザーが所有します                    |
 
 Enterpriseパッケージは、`/etc/yorishiro/LICENSE.enterprise`もインストールします。
 
@@ -52,13 +52,13 @@ $ sudo systemctl status yorishiro
 
 続けて[初回起動](../first-run/)に進んでください。サーバーはポート`5150`で待ち受けるため、そこでのURLは`http://localhost:5150`です。
 
-サービスが繰り返し失敗すると、systemdは5分間に5回の試行で再起動をやめます。原因を修正してから`sudo systemctl reset-failed yorishiro`（またはワーカーやスケジューラーのユニット）を実行し、再度起動してください。
+サービスの起動が5分間に5回に達すると、systemdは再起動をやめます。原因を修正してから`sudo systemctl reset-failed yorishiro`（またはワーカーやスケジューラーのユニット）を実行し、再度起動してください。
 
 ## 設定
 
 `/etc/yorishiro/production.yaml`がない場合、サービスはパッケージのデフォルトを使います。SQLiteのデータベースとキューは`/var/lib/yorishiro`以下に保存されます。`DATABASE_URL`、`QUEUE_URL`、`HOST`、`PORT`、`BINDING`などの環境変数を設定すると、デフォルトより優先されます。
 
-設定をファイルで変更するには、`/etc/yorishiro/production.yaml`を作成します。このファイルはパッケージのデフォルトを完全に置き換えます。Yorishiroは両者をマージしません。`production.yaml.example`をもとに作成し、アップグレードのたびに新しい例と比較してください。例はリリースごとに変わるためです。バックアップも取っておきます。
+設定をファイルで変更するには、`/etc/yorishiro/production.yaml`を作成します。このファイルはパッケージのデフォルトを完全に置き換えます。Yorishiroは両者をマージしません。`production.yaml.example`をもとに作成し、アップグレードのたびに新しい例と比較してください。例はリリースごとに変わるためです。バックアップも取っておいてください。
 
 ```console
 $ sudo cp -a /etc/yorishiro/production.yaml /etc/yorishiro/production.yaml.backup

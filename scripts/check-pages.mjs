@@ -3,24 +3,16 @@
 //   - a page sits outside a known group (except each locale's index)
 //   - an English page has no translation for a locale, or a translation has no English page
 //   - a page still contains the "TODO:" placeholder from the template
+//   - lunaria.config.json disagrees with the locales in wiki.config.mjs
 //
-//   pnpm check
-import { readdir, readFile } from "node:fs/promises";
+//   pnpm check:pages
+import { readFile } from "node:fs/promises";
 import { join, relative } from "node:path";
-import { docsDir, groups, translatedLocales } from "./../wiki.config.mjs";
-
-async function walk(dir) {
-  const out = [];
-  for (const e of await readdir(dir, { withFileTypes: true })) {
-    const p = join(dir, e.name);
-    if (e.isDirectory()) out.push(...(await walk(p)));
-    else if (/\.mdx?$/.test(e.name)) out.push(p);
-  }
-  return out;
-}
+import { defaultLocale, docsDir, groups, translatedLocales } from "../wiki.config.mjs";
+import { walk } from "./lib/files.mjs";
 
 const errors = [];
-const files = (await walk(docsDir)).map((p) => relative(docsDir, p));
+const files = (await walk(docsDir, /\.mdx?$/)).map((p) => relative(docsDir, p));
 const pages = new Map(); // "<locale>|<path>" -> content
 for (const f of files) {
   const first = f.split("/")[0];
@@ -54,6 +46,20 @@ for (const locale of translatedLocales) {
   );
   for (const p of root) if (!own.has(p)) errors.push(`${locale}: missing translation of ${p}`);
   for (const p of own) if (!root.has(p)) errors.push(`${locale}/${p}: no English page`);
+}
+
+const lunaria = JSON.parse(await readFile("lunaria.config.json", "utf8"));
+if (lunaria.defaultLocale?.lang !== defaultLocale) {
+  errors.push(`lunaria.config.json: defaultLocale must be "${defaultLocale}"`);
+}
+const lunariaLocales = (lunaria.locales ?? [])
+  .map((l) => l.lang)
+  .sort()
+  .join(",");
+if (lunariaLocales !== [...translatedLocales].sort().join(",")) {
+  errors.push(
+    `lunaria.config.json: locales (${lunariaLocales}) must match translatedLocales (${translatedLocales})`,
+  );
 }
 
 if (errors.length) {

@@ -9,17 +9,17 @@ This page covers features of the Enterprise edition. It needs a licence key. Eve
 
 ## Licence
 
-Set `YORISHIRO_LICENSE_KEY` to your licence key. Without a valid, unexpired licence, the Enterprise edition behaves like Community and allows one tenant.
+Set `YORISHIRO_LICENSE_KEY` to your licence key. Without a valid, unexpired licence, the Enterprise edition allows only one tenant.
 
 ## Plan policy and job limits
 
 `YORISHIRO_PLAN_POLICY_ENABLED` is `false` by default and accepts only `true` or `false`. When it is `true`, subscription plans enforce workspace and entity limits, and limit how many background jobs run at once for each target.
 
-| Variable | Default | Description |
-| --- | --- | --- |
-| `YORISHIRO_WORKER_CLASS_SHARED_LIMIT` | `1` | Maximum concurrent shared jobs across the deployment |
-| `YORISHIRO_WORKER_CLASS_TENANT_PRIVATE_LIMIT` | `1` | Maximum concurrent tenant-private jobs, counted for each tenant |
-| `YORISHIRO_WORKER_OFFICIAL_LIMIT` | By plan | Maximum concurrent Official jobs across the deployment. Without this variable, the limit follows the plan: Free `1`, Pro `4`, Team `8`. |
+| Variable                                      | Default | Description                                                                                                                             |
+| --------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `YORISHIRO_WORKER_CLASS_SHARED_LIMIT`         | `1`     | Maximum concurrent shared jobs across the deployment                                                                                    |
+| `YORISHIRO_WORKER_CLASS_TENANT_PRIVATE_LIMIT` | `1`     | Maximum concurrent tenant-private jobs, counted for each tenant                                                                         |
+| `YORISHIRO_WORKER_OFFICIAL_LIMIT`             | By plan | Maximum concurrent Official jobs across the deployment. Without this variable, the limit follows the plan: Free `1`, Pro `4`, Team `8`. |
 
 Each limit must be a positive integer. Start checks these values even when plan policy is off, but the limits apply only when it is on. All Official jobs share one count, whatever their plans.
 
@@ -41,20 +41,20 @@ Set `YORISHIRO_OAUTH_REDIRECT_URI` to the public callback URL, especially behind
 
 A workspace can use its own embedding endpoint. Assign it with `PUT /api/workspace/embedding-key`.
 
-| Field | Description |
-| --- | --- |
-| `base_url` | Embeddings endpoint URL |
-| `model` | Model name |
-| `api_key` | API key (never returned by `GET`) |
-| `dimensions` | Vector size the model produces |
+| Field                   | Description                                     |
+| ----------------------- | ----------------------------------------------- |
+| `base_url`              | Embeddings endpoint URL                         |
+| `model`                 | Model name                                      |
+| `api_key`               | API key (never returned by `GET`)               |
+| `dimensions`            | Vector size the model produces                  |
 | `send_dimensions_param` | Send `dimensions` in requests (default `false`) |
 
 ## Worker class per workspace
 
 `PUT /api/workspace/worker-class` assigns a workspace's background jobs to a pool.
 
-| Field | Description |
-| --- | --- |
+| Field          | Description                               |
+| -------------- | ----------------------------------------- |
 | `worker_class` | `tenant_private`, `official`, or `shared` |
 
 Run workers for the target you choose. See [Workers and queues](../workers-and-queues/#worker-targets).

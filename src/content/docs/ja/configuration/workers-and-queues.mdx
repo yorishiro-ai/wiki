@@ -11,11 +11,11 @@ Yorishiro は、埋め込みの同期や再インデックスなど時間のか�
 
 HTTP サーバーとワーカーは、別々のプロセスとして実行します。`yorishiro start` だけを実行した場合はサーバーのみが動き、ジョブは処理されません。
 
-| プロセス | コマンド |
-| --- | --- |
-| サーバー | `yorishiro start` |
-| ワーカー | `yorishiro start --worker=worker-target:shared` |
-| スケジューラー | `yorishiro scheduler` |
+| プロセス       | コマンド                                        |
+| -------------- | ----------------------------------------------- |
+| サーバー       | `yorishiro start`                               |
+| ワーカー       | `yorishiro start --worker=worker-target:shared` |
+| スケジューラー | `yorishiro scheduler`                           |
 
 パッケージと Docker Compose の例では、3つすべてを起動します。個人での利用にはこれで十分です。スケジューラーは、中断したジョブの回復とスケジュールされたタスクの実行を担当します。専用のプロセスとして実行してください。
 
@@ -48,11 +48,11 @@ Valkey では、テナントのターゲットごとに、最初のジョブが�
 
 ## ワーカーの設定
 
-| 変数 | 既定値 | 説明 |
-| --- | --- | --- |
-| `YORISHIRO_QUEUE_WORKERS` | SQLite のキューでは `1`、それ以外は `2` | 1つのワーカープロセス内で並行して動くジョブループの数 |
-| `YORISHIRO_QUEUE_REAPER_AGE_MINUTES` | `30` | 処理中のままのジョブが回復されるまでの時間 |
-| `DB_MAX_CONNECTIONS` | SQLite では `10`、PostgreSQL では `100` | データベース接続プールのサイズ |
+| 変数                                 | 既定値                                  | 説明                                                  |
+| ------------------------------------ | --------------------------------------- | ----------------------------------------------------- |
+| `YORISHIRO_QUEUE_WORKERS`            | SQLite のキューでは `1`、それ以外は `2` | 1つのワーカープロセス内で並行して動くジョブループの数 |
+| `YORISHIRO_QUEUE_REAPER_AGE_MINUTES` | `30`                                    | 処理中のままのジョブが回復されるまでの時間            |
+| `DB_MAX_CONNECTIONS`                 | SQLite では `10`、PostgreSQL では `100` | データベース接続プールのサイズ                        |
 
 これらの変数は production の設定に適用されます。development の設定では固定値が使われます。
 
