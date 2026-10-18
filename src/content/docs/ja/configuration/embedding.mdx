@@ -5,7 +5,7 @@ sidebar:
   order: 2
 ---
 
-Yorishiro は、テキストを埋め込みと呼ばれる数値のベクトルに変換して、意味による検索を可能にします。
+Yorishiro はテキストを埋め込みと呼ばれる数値のベクトルに変換して、意味による検索を可能にします。
 
 ## 仕組み
 
@@ -21,7 +21,7 @@ Yorishiro は、テキストを埋め込みと呼ばれる数値のベクトル�
 $ yorishiro task resync_embeddings workspace_id:<uuid>
 ```
 
-Docker ではコンテナー内で実行します: `docker exec <container> yorishiro task resync_embeddings workspace_id:<uuid>`
+Docker ではコンテナー内で `docker exec <container> yorishiro task resync_embeddings workspace_id:<uuid>` を実行します。
 
 ## プロバイダーの選択
 
@@ -68,6 +68,6 @@ Docker ではコンテナー内で実行します: `docker exec <container> yori
 $ yorishiro task reindex_embeddings workspace_id:<uuid>
 ```
 
-この処理は、ワークスペース内のすべてのエンティティの埋め込みを作り直します。完了するまで、そのワークスペースへの新しい書き込みは拒否されます。API の `POST /api/migration-jobs/reindex` で再インデックスをキューに登録することもできます（`migration` スコープが必要です）。いずれかのワークスペースのモデルが変わっている場合は、起動時にも再インデックスが実行されます。
+この処理はワークスペース内のすべてのエンティティの埋め込みを作り直します。完了するまで、そのワークスペースへの新しい書き込みは拒否されます。API の `POST /api/migration-jobs/reindex` で再インデックスをキューに登録することもできます（`migration` スコープが必要です）。いずれかのワークスペースのモデルが変わっている場合は、起動時にも再インデックスが実行されます。
 
 失敗した埋め込みジョブは自動では再試行されません。原因を修正したあとで `resync_embeddings` または `reindex_embeddings` を実行して復旧してください。

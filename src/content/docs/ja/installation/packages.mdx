@@ -5,7 +5,7 @@ sidebar:
   order: 4
 ---
 
-リリースパッケージは、各Dockerイメージと並べて[Releases](https://github.com/yorishiro-ai/yorishiro/releases)ページで公開されています。対応するのはUbuntu 24.04とAlmaLinux 10（glibc 2.39以降）で、`amd64`と`arm64`向けです。
+リリースパッケージは各Dockerイメージと並べて[Releases](https://github.com/yorishiro-ai/yorishiro/releases)ページで公開されています。対応するのはUbuntu 24.04とAlmaLinux 10（glibc 2.39以降）で、`amd64`と`arm64`向けです。
 
 パッケージはエディションごとに1つずつあります。`yorishiro-ce`（Community）と`yorishiro-ee`（Enterprise。ライセンスキーが必要）です。2つのパッケージは競合するため、インストールできるのは一方だけです。もう一方のエディションをインストールすると、現在のものが置き換わります。
 
@@ -13,21 +13,21 @@ sidebar:
 
 `<VERSION>`をリリースタグ（例: `20261015-1`）に置き換えます。
 
-DebianとUbuntuの場合:
+DebianとUbuntuの場合は、次のコマンドを実行します。
 
 ```console
 $ wget https://github.com/yorishiro-ai/yorishiro/releases/download/<VERSION>/yorishiro-ce-<VERSION>-amd64.deb
 $ sudo apt install ./yorishiro-ce-<VERSION>-amd64.deb
 ```
 
-AlmaLinuxなどrpmベースのシステムの場合:
+AlmaLinuxなどrpmベースのシステムの場合は、次のコマンドを実行します。
 
 ```console
 $ wget https://github.com/yorishiro-ai/yorishiro/releases/download/<VERSION>/yorishiro-ce-<VERSION>-amd64.rpm
 $ sudo dnf install ./yorishiro-ce-<VERSION>-amd64.rpm
 ```
 
-各リリースには、ダウンロードしたファイルを検証するための`checksums.txt`も含まれています。
+各リリースにはダウンロードしたファイルを検証するための`checksums.txt`も含まれています。
 
 ## インストールされるファイル
 
@@ -41,7 +41,7 @@ $ sudo dnf install ./yorishiro-ce-<VERSION>-amd64.rpm
 | `/etc/yorishiro/production.yaml`                  | 任意で用意する設定                                                     |
 | `/var/lib/yorishiro`                              | データディレクトリ。`yorishiro`ユーザーが所有します                    |
 
-Enterpriseパッケージは、`/etc/yorishiro/LICENSE.enterprise`もインストールします。
+Enterpriseパッケージは`/etc/yorishiro/LICENSE.enterprise`もインストールします。
 
 ## 起動
 
@@ -82,4 +82,4 @@ server:
 
 Redis互換のキューを使う場合は、`queue`ブロックの代わりに、サービスの環境で`YORISHIRO_QUEUE_KIND=Redis`と`QUEUE_URL`を設定します。
 
-サービスの環境変数を変更するには、`sudo systemctl edit yorishiro`（およびワーカーとスケジューラーのユニット）を実行します。3つのプロセスはすべて、同じデータベースとキューの設定が必要です。
+サービスの環境変数を変更するには、`sudo systemctl edit yorishiro`（およびワーカーとスケジューラーのユニット）を実行します。3つのプロセスはすべて同じデータベースとキューの設定が必要です。

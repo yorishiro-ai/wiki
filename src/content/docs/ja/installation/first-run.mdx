@@ -5,7 +5,7 @@ sidebar:
   order: 6
 ---
 
-Yorishiroには、Webのセットアップ画面がありません。最初のアカウントと最初のAPIキーは、APIを通じて作成します。
+YorishiroにはWebのセットアップ画面がありません。最初のアカウントと最初のAPIキーは、APIを通じて作成します。
 
 例では、サーバーが`http://localhost:5150`で応答するものとしています。これらのページのDockerの例ではコンテナのポートをホストのポート`80`に公開しているため、代わりに`http://localhost`を使ってください。
 
@@ -40,7 +40,7 @@ $ curl -X POST http://localhost:5150/setup \
 $ curl http://localhost:5150/api/api-keys -H 'Authorization: Bearer <api-key>'
 ```
 
-オーナーと管理者は、`POST /api/api-keys`でキーを追加で作成し、`GET /api/api-keys`で一覧を取得し、`DELETE /api/api-keys/{id}`で失効させることができます。新しいキーが返されるのは、そのキーを作成したレスポンスだけです。一覧にキーのシークレットは含まれません。
+オーナーと管理者は`POST /api/api-keys`でキーを追加で作成し、`GET /api/api-keys`で一覧を取得し、`DELETE /api/api-keys/{id}`で失効させることができます。新しいキーが返されるのは、そのキーを作成したレスポンスだけです。一覧にキーのシークレットは含まれません。
 
 ## 4. MCPクライアントを接続する
 
