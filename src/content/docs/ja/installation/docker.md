@@ -1,5 +1,7 @@
 ---
 title: "Docker インストール"
+sidebar:
+  order: 2
 ---
 
 Yorishiro は1つのバイナリで動作します。Docker ならすぐに試せます。
@@ -50,6 +52,6 @@ $ docker run -d --name yorishiro --restart unless-stopped -p 80:5150 \
 
 ## 設定
 
-全設定は [docs/ja/configuration.md](../../configuration/) を参照してください。
+全設定は [設定](../../configuration/) を参照してください。
 イメージは `/app/config/production.yaml` を所有し、実行時に読み込みます。
 このパスへ置き換えファイルをマウントするか、`LOCO_CONFIG_FOLDER` で別の設定ディレクトリを指定してください。

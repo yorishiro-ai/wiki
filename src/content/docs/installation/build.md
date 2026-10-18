@@ -1,5 +1,7 @@
 ---
 title: "Build from Source"
+sidebar:
+  order: 5
 ---
 
 ## Prerequisites
@@ -45,4 +47,4 @@ $ DATABASE_URL=postgres://user:pass@host:5432/yorishiro \
   cargo run -- start
 ```
 
-See [docs/configuration.md](../../configuration/) for all settings.
+See [Configuration](../../configuration/) for all settings.

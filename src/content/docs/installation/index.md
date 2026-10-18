@@ -1,5 +1,7 @@
 ---
 title: "Installation"
+sidebar:
+  order: 1
 ---
 
 Choose your preferred method:

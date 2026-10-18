@@ -1,5 +1,7 @@
 ---
 title: "Docker Compose"
+sidebar:
+  order: 3
 ---
 
 Copy the following to `compose.yml` and run from that directory.
@@ -103,4 +105,4 @@ volumes:
   valkey-data:
 ```
 
-See [configuration](../../configuration/) for all settings.
+See [Configuration](../../configuration/) for all settings.

@@ -1,5 +1,7 @@
 ---
 title: "ソースからビルド"
+sidebar:
+  order: 5
 ---
 
 ## 必要なもの
@@ -45,4 +47,4 @@ $ DATABASE_URL=postgres://user:pass@host:5432/yorishiro \
   cargo run -- start
 ```
 
-全設定は [docs/ja/configuration.md](../../configuration/) を参照してください。
+全設定は [設定](../../configuration/) を参照してください。

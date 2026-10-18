@@ -1,5 +1,7 @@
 ---
 title: "Docker Compose"
+sidebar:
+  order: 3
 ---
 
 以下を `compose.yml` にコピーし、そのディレクトリで実行します。

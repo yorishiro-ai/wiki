@@ -1,5 +1,7 @@
 ---
 title: "Docker Installation"
+sidebar:
+  order: 2
 ---
 
 Yorishiro ships as a single binary. Docker is the simplest option.
@@ -50,6 +52,6 @@ $ docker run -d --name yorishiro --restart unless-stopped -p 80:5150 \
 
 ## Configuration
 
-See [docs/en/configuration.md](../../configuration/) for all settings.
+See [Configuration](../../configuration/) for all settings.
 The image owns and loads `/app/config/production.yaml` at runtime.
 Mount a replacement there or point `LOCO_CONFIG_FOLDER` at another configuration directory.

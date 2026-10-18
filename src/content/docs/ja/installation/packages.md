@@ -1,5 +1,7 @@
 ---
 title: "パッケージインストール（deb / rpm）"
+sidebar:
+  order: 4
 ---
 
 プレリリース版のパッケージは、Docker イメージとともに [Releases](https://github.com/yorishiro-ai/yorishiro/releases) で公開します。

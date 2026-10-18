@@ -1,5 +1,7 @@
 ---
 title: "Package Installation (deb / rpm)"
+sidebar:
+  order: 4
 ---
 
 Prerelease packages are published on the [Releases](https://github.com/yorishiro-ai/yorishiro/releases) page alongside each Docker image.
@@ -62,7 +64,7 @@ server:
 
 For a Redis-compatible queue service, set `YORISHIRO_QUEUE_KIND=Redis` and its `QUEUE_URL` in the service environment instead of using the PostgreSQL queue block.
 
-See [docs/configuration.md](../../configuration/) for all settings.
+See [Configuration](../../configuration/) for all settings.
 
 ## Start
 
