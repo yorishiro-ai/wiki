@@ -65,6 +65,8 @@ This import path is for `src/content/docs/guides/index.mdx`; Japanese pages need
 
 Add one entry to `groups` in `wiki.config.mjs` (folder name, English label, Japanese label), and add MDX pages in that folder for both languages. The sidebar and home page directory pick up the section automatically; an `index.mdx` landing page is optional. Locales, the sidebar, and site URLs are all defined in that file.
 
+UI translation overrides live in `src/content/i18n/<language>.json`. The English and Japanese files are intentionally empty: Starlight supplies the standard translations. Add keys only when a site-specific override is needed.
+
 ## MCP tool reference
 
 `reference/mcp-tools` is generated from the tool inventory that the Yorishiro server tests produce (`docs/en/mcp-tools.md` in the Yorishiro repository). Do not edit it by hand:
