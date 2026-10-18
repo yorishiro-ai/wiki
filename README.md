@@ -20,7 +20,7 @@ pnpm build         # outputs to dist/
 pnpm preview
 ```
 
-Pages are Markdown/MDX files under `src/content/docs/`. Each directory maps to a sidebar group configured in `astro.config.mjs`.
+Pages are Markdown/MDX files under `src/content/docs/`: English at the root, Japanese under `ja/` with the same file layout. Each directory maps to a sidebar group configured in `astro.config.mjs`; add a `translations` entry there for new groups.
 
 ## Deployment
 

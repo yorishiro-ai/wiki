@@ -1,0 +1,42 @@
+---
+title: Yorishiro Wiki
+description: Yorishiro（依り代）の使い方、設定、運用ガイド。
+template: splash
+hero:
+  tagline: MCP ネイティブで、ユーザー定義スキーマを持つマルチテナント知識ストア。
+  actions:
+    - text: インストール
+      link: installation/
+      icon: right-arrow
+    - text: 設定
+      link: configuration/
+      variant: minimal
+---
+
+import { CardGrid, LinkCard } from "@astrojs/starlight/components";
+
+<CardGrid>
+  <LinkCard
+    title="インストール"
+    href="installation/"
+    description="Docker、Docker Compose、deb/rpm パッケージ、ソースからのビルド。"
+  />
+  <LinkCard
+    title="設定"
+    href="configuration/"
+    description="サーバーアドレス、埋め込み、クォータ、キュー、Enterprise 設定。"
+  />
+  <LinkCard
+    title="ガイド"
+    href="guides/sqlite/"
+    description="SQLite モードと組み込みテンプレート。"
+  />
+  <LinkCard
+    title="運用"
+    href="operations/queue-start-objectives/"
+    description="キュー開始目標とワーカー容量。"
+  />
+  <LinkCard title="リファレンス" href="reference/mcp-tools/" description="MCP ツール名と入力。" />
+</CardGrid>
+
+開発者向けドキュメント（アーキテクチャ、テスト、コントリビューション）は [Yorishiro リポジトリ](https://github.com/yorishiro-ai/yorishiro/tree/develop/docs)にあります。
