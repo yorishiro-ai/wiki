@@ -4,16 +4,21 @@
 //   pnpm generate:mcp [path-or-url-to-inventory.md]
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { docsDir } from "../wiki.config.mjs";
+import { defaultLocale, docsDir, translatedLocales } from "../wiki.config.mjs";
 import { parseInventory } from "./lib/mcp-inventory.mjs";
 import { labels } from "./lib/mcp-labels.mjs";
 
 const DEFAULT_SOURCE =
   "https://raw.githubusercontent.com/yorishiro-ai/yorishiro/develop/docs/en/mcp-tools.md";
 const source = process.argv.slice(2).find((a) => a !== "--") ?? DEFAULT_SOURCE;
-const text = /^https?:/.test(source)
-  ? await (await fetch(source)).text()
-  : await readFile(source, "utf8");
+let text;
+if (/^https?:/.test(source)) {
+  const response = await fetch(source);
+  if (!response.ok) throw new Error(`Failed to fetch MCP inventory: HTTP ${response.status}`);
+  text = await response.text();
+} else {
+  text = await readFile(source, "utf8");
+}
 
 const { community, enterprise } = parseInventory(text);
 
@@ -54,8 +59,13 @@ function render(l) {
   return out.join("\n");
 }
 
-for (const [locale, l] of Object.entries(labels)) {
-  const dir = locale === "en" ? docsDir : join(docsDir, locale);
+const outputLocales = [defaultLocale, ...translatedLocales];
+for (const locale of outputLocales) {
+  if (!labels[locale]) throw new Error(`Missing MCP reference labels for locale: ${locale}`);
+}
+for (const locale of outputLocales) {
+  const l = labels[locale];
+  const dir = locale === defaultLocale ? docsDir : join(docsDir, locale);
   await writeFile(join(dir, "reference", "mcp-tools.mdx"), render(l));
 }
 console.log(`Generated ${community.length} community and ${enterprise.length} enterprise tools.`);

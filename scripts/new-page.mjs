@@ -6,23 +6,29 @@
 import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
+import { parseArgs } from "node:util";
 import { docsDir, groups, translatedLocales } from "../wiki.config.mjs";
 
-const args = process.argv.slice(2);
-const flag = (name, fallback) => {
-  const i = args.indexOf(`--${name}`);
-  if (i === -1) return fallback;
-  return args.splice(i, 2)[1];
-};
-const order = flag("order", "10");
-const description = flag("description", "");
-const [target, titleEn, titleJa] = args;
+const { values, positionals } = parseArgs({
+  allowPositionals: true,
+  options: {
+    order: { type: "string", default: "10" },
+    description: { type: "string", default: "" },
+  },
+});
+const { order, description } = values;
+const [target, titleEn, titleJa] = positionals;
 
-if (!target || !titleEn || !titleJa) {
+if (positionals.length !== 3 || !target || !titleEn || !titleJa) {
   console.error(
     'Usage: pnpm new <group>/<slug> "<English title>" "<日本語タイトル>" [--order N] [--description "<text>"]',
   );
   console.error(`Groups: ${groups.map((g) => g.dir).join(", ")}`);
+  process.exit(1);
+}
+
+if (!/^\d+$/.test(order) || !Number.isSafeInteger(Number(order))) {
+  console.error("--order must be a non-negative safe integer.");
   process.exit(1);
 }
 
@@ -36,10 +42,9 @@ if (!groups.some((g) => g.dir === group) || !/^[a-z0-9]+(?:[-/][a-z0-9]+)*$/.tes
 }
 
 const fill = (tpl, title) =>
-  tpl
-    .replaceAll("{{title}}", title.replaceAll('"', '\\"'))
-    .replaceAll("{{description}}", description.replaceAll('"', '\\"'))
-    .replaceAll("{{order}}", order);
+  tpl.replace(/"\{\{(title|description|order)\}\}"/g, (_, key) =>
+    JSON.stringify({ title, description, order: Number(order) }[key]),
+  );
 
 const targets = [
   { path: join(docsDir, group, `${slug}.mdx`), template: "templates/page.en.mdx", title: titleEn },
@@ -51,13 +56,17 @@ const targets = [
 ];
 
 for (const t of targets) {
-  if (existsSync(t.path)) {
+  if (existsSync(t.path) || existsSync(t.path.replace(/\.mdx$/, ".md"))) {
     console.error(`Already exists: ${t.path}`);
     process.exit(1);
   }
 }
-for (const t of targets) {
+// Read every template before creating files, so a missing translation cannot leave half a pair.
+const contents = await Promise.all(
+  targets.map(async (t) => fill(await readFile(t.template, "utf8"), t.title)),
+);
+for (const [i, t] of targets.entries()) {
   await mkdir(dirname(t.path), { recursive: true });
-  await writeFile(t.path, fill(await readFile(t.template, "utf8"), t.title));
+  await writeFile(t.path, contents[i], { flag: "wx" });
   console.log(`Created ${t.path}`);
 }

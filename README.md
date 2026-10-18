@@ -16,7 +16,7 @@ In VS Code, install the recommended extensions (Astro and Oxc). Format on save u
 pnpm install
 pnpm dev           # http://localhost:4321/wiki/
 pnpm format        # oxfmt
-pnpm check         # lint, format check, page structure and en/ja parity, types
+pnpm check         # lint, format check, script tests, page structure and en/ja parity, types
 pnpm build         # outputs to dist/
 pnpm check:links   # links and anchors in dist/ (run after build)
 pnpm verify        # check, build, and check:links, as CI does

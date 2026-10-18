@@ -36,13 +36,22 @@ function parseTools(section) {
     }));
     tools.push({ name, scope, description, params });
   }
+  const headings = [...section.matchAll(/^### /gm)];
+  if (headings.length !== tools.length) {
+    throw new Error("Invalid MCP inventory: a tool heading or input schema could not be parsed.");
+  }
   return tools;
 }
 
 /** Returns `{ community, enterprise }`, each a list of `{ name, scope, description, params }`. */
 export function parseInventory(text) {
-  const [, communityPart, enterprisePart] = text.match(
-    /## Community tools([\s\S]*?)## Enterprise-only tools([\s\S]*?)<!-- END GENERATED MCP INVENTORY -->/,
-  );
+  const sections = text
+    .replace(/\r\n/g, "\n")
+    .match(
+      /## Community tools([\s\S]*?)## Enterprise-only tools([\s\S]*?)<!-- END GENERATED MCP INVENTORY -->/,
+    );
+  if (!sections) throw new Error("Invalid MCP inventory: missing sections or end marker.");
+  const [, communityPart, enterprisePart] = sections;
+  if (!communityPart.trim()) throw new Error("Invalid MCP inventory: empty community section.");
   return { community: parseTools(communityPart), enterprise: parseTools(enterprisePart) };
 }
