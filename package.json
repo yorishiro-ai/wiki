@@ -13,16 +13,20 @@
     "new": "node scripts/new-page.mjs",
     "check": "node scripts/check-pages.mjs",
     "generate:mcp": "node scripts/generate-mcp-reference.mjs",
-    "check:links": "node scripts/check-links.mjs"
+    "check:links": "node scripts/check-links.mjs",
+    "check:types": "astro check"
   },
   "dependencies": {
     "@astrojs/starlight": "0.42.6",
     "astro": "7.4.0",
-    "sharp": "^0.35.5"
+    "sharp": "^0.35.5",
+    "starlight-kbd": "^0.4.0"
   },
   "devDependencies": {
+    "@astrojs/check": "^0.9.10",
     "oxfmt": "^0.73.0",
-    "oxlint": "^1.88.0"
+    "oxlint": "^1.88.0",
+    "typescript": "^6.0.3"
   },
   "engines": {
     "node": ">=24"

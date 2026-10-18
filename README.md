@@ -19,6 +19,7 @@ pnpm lint          # oxlint
 pnpm format        # oxfmt
 pnpm format:check
 pnpm check         # page structure and en/ja parity
+pnpm check:types   # astro check (TypeScript)
 pnpm build         # outputs to dist/
 pnpm check:links   # links and anchors in dist/ (run after build)
 pnpm preview

@@ -1,5 +1,6 @@
 import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
+import starlightKbd from "starlight-kbd";
 import { base, locales, productRepo, repo, sidebar, site } from "./wiki.config.mjs";
 
 export default defineConfig({
@@ -15,6 +16,12 @@ export default defineConfig({
       editLink: { baseUrl: `${repo}/edit/main/` },
       social: [{ icon: "github", label: "GitHub", href: productRepo }],
       sidebar,
+      plugins: [
+        starlightKbd({
+          globalPicker: false,
+          types: [{ id: "linux", label: "Linux", default: true }],
+        }),
+      ],
     }),
   ],
 });
