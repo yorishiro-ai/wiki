@@ -15,13 +15,11 @@ In VS Code, install the recommended extensions (Astro and Oxc). Format on save u
 ```sh
 pnpm install
 pnpm dev           # http://localhost:4321/wiki/
-pnpm lint          # oxlint
 pnpm format        # oxfmt
-pnpm format:check
-pnpm check         # page structure and en/ja parity
-pnpm check:types   # astro check (TypeScript)
+pnpm check         # lint, format check, page structure and en/ja parity, types
 pnpm build         # outputs to dist/
 pnpm check:links   # links and anchors in dist/ (run after build)
+pnpm verify        # check, build, and check:links, as CI does
 pnpm preview
 ```
 
@@ -36,7 +34,7 @@ pnpm preview
    This writes `src/content/docs/guides/backup.mdx` and `src/content/docs/ja/guides/backup.mdx`.
 
 2. Replace the `TODO:` text in both files. Pages are MDX, so write `{` and a bare `<` in prose as `&#123;` and `&lt;`, or put them in backticks. Write the English page first; the Japanese page mirrors its structure.
-3. Run `pnpm check`. It fails on a missing title or description, a page outside a known section, a missing translation, or a leftover `TODO:`.
+3. Run `pnpm check:pages`. It fails on a missing title or description, a page outside a known section, a missing translation, or a leftover `TODO:`.
 
 The page appears in the sidebar automatically, ordered by `sidebar.order` and then by name. Use relative links between pages (for example `../docker/`). In Japanese pages, link anchors use the Japanese heading text.
 
@@ -55,4 +53,4 @@ pnpm generate:mcp -- ../yorishiro/docs/en/mcp-tools.md   # or from a local check
 
 ## Deployment
 
-Pushes to `main` build and deploy to GitHub Pages through GitHub Actions. Pull requests run lint, format check, page checks, build, and link checks only.
+Pushes to `main` build and deploy to GitHub Pages through GitHub Actions. Pull requests run `pnpm check`, build, and link checks only.

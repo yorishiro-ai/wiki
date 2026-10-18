@@ -4,7 +4,16 @@ import react from "@astrojs/react";
 import tailwindcss from "@tailwindcss/vite";
 import starlightKbd from "starlight-kbd";
 import lunaria from "@lunariajs/starlight";
-import { base, locales, productRepo, repo, sidebar, site } from "./wiki.config.mjs";
+import {
+  base,
+  description,
+  locales,
+  productRepo,
+  repo,
+  sidebar,
+  site,
+  title,
+} from "./wiki.config.mjs";
 
 export default defineConfig({
   site,
@@ -13,8 +22,8 @@ export default defineConfig({
   integrations: [
     react(),
     starlight({
-      title: "Yorishiro Wiki",
-      description: "User guide, configuration, and operations for Yorishiro (依り代).",
+      title,
+      description,
       defaultLocale: "root",
       locales,
       lastUpdated: true,

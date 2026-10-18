@@ -11,10 +11,12 @@
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "new": "node scripts/new-page.mjs",
-    "check": "node scripts/check-pages.mjs",
     "generate:mcp": "node scripts/generate-mcp-reference.mjs",
+    "check:pages": "node scripts/check-pages.mjs",
+    "check:types": "astro check",
     "check:links": "node scripts/check-links.mjs",
-    "check:types": "astro check"
+    "check": "pnpm lint && pnpm format:check && pnpm check:pages && pnpm check:types",
+    "verify": "pnpm check && pnpm build && pnpm check:links"
   },
   "dependencies": {
     "@astrojs/react": "^7.1.0",

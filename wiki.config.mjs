@@ -2,6 +2,8 @@
 // the scripts in scripts/. To add a page, run `pnpm new`; to add a section, add
 // one entry to `groups`.
 
+export const title = "Yorishiro Wiki";
+export const description = "User guide, configuration, and operations for Yorishiro (依り代).";
 export const site = "https://yorishiro-ai.github.io";
 export const base = "/wiki";
 export const repo = "https://github.com/yorishiro-ai/wiki";
@@ -14,7 +16,7 @@ export const locales = {
   root: { label: "English", lang: "en" },
   ja: { label: "日本語", lang: "ja" },
 };
-export const translatedLocales = ["ja"];
+export const translatedLocales = Object.keys(locales).filter((l) => l !== "root");
 
 // Sidebar sections, in display order. `dir` is the folder under src/content/docs.
 // Pages inside are listed by `sidebar.order` in their frontmatter, then by name.
