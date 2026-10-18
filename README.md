@@ -10,6 +10,8 @@ Built with [Astro Starlight](https://starlight.astro.build/), [pnpm](https://pnp
 
 Requires Node.js 24 and pnpm.
 
+In VS Code, install the recommended extensions (Astro and Oxc). Format on save uses `oxfmt`, and **Run > Start Debugging** starts the dev server.
+
 ```sh
 pnpm install
 pnpm dev           # http://localhost:4321/wiki/
