@@ -87,6 +87,18 @@ An Enterprise workspace can copy an exact active schema version from another wor
 
 `PUT /api/schema-forks/{fork_id}` either updates the local definition or, with `action=follow`, brings the fork in line with its source again. Following is synchronous. It needs `force=true` when it would discard local edits.
 
+## Tenant reindex schedule
+
+A tenant can reindex all of its workspaces at a regular interval. Each run uses the normal reindex flow, the same one as `reindex_embeddings`, so it applies the same provider and model version checks.
+
+Set the schedule with `POST /api/identity/tenants/schedule`. Send an ISO 8601 duration, such as `P1D` (daily), `P1W` (weekly), or `PT6H` (every six hours). You can also send an IANA timezone name; the default is UTC. The interval must be at least `PT5M`. Years and months are rejected.
+
+The first run happens one interval after you set the schedule, and each run schedules the next one an interval later. An overdue run starts at the next scheduler tick, with no grace period.
+
+Run the scheduler as its own process with `yorishiro scheduler`. With PostgreSQL, several scheduler replicas can share one database. A replica that cannot take the lock skips that tick. `DATABASE_URL` must connect directly to PostgreSQL or through a session-mode pooler, because transaction-mode pooling is not supported. With SQLite, the scheduler takes a lock on a file named `.scheduler.lock`, placed next to the database file.
+
+Each run dispatches at most once. The schedule advances before the jobs are queued. If the scheduler crashes after that point, that tick can be missed. A failed enqueue is not retried, and the next interval is the recovery point.
+
 ## SQLite vector search benchmark
 
 On SQLite with many embedded entities, vector search scans every vector and can become slow. This task measures your real latency:
