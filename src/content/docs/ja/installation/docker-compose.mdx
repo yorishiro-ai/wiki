@@ -149,12 +149,16 @@ volumes:
 
 ## ローカルの埋め込みモデルをオフラインで使う
 
-ホストにモデルファイルがすでにある場合は、`models/multilingual-e5-base/model.safetensors`と`models/multilingual-e5-base/tokenizer.json`に置きます。必要な各サービスに`./models`をマウントします。
+ホストにモデルファイルがすでにある場合は、`models/multilingual-e5-base/model.safetensors`と`models/multilingual-e5-base/tokenizer.json`に置きます。`x-yorishiro`の既存の`volumes`リストにマウントを追加します。新しく`volumes`キーを書くとリスト全体が置き換わるので、すでにある項目は残してください。SQLiteの例では、リストは次のようになります。
 
 ```yaml
 volumes:
+  - data:/var/lib/yorishiro
+  - model-cache:/home/yorishiro/.cache/yorishiro
   - ./models:/app/models:ro
 ```
+
+PostgreSQLの例では、`model-cache`を残して`./models`の行を追加します。
 
 2つのファイルは両方を用意するか、どちらも置かないでください。片方だけがある場合、サーバーは起動に失敗します。
 

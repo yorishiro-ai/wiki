@@ -65,11 +65,26 @@ The services run with write access to `/var/lib/yorishiro` only. Keep the SQLite
 
 Community edition allows one tenant. Enterprise edition allows more only with a valid licence and `YORISHIRO_MAX_TENANTS`. SQLite always allows one tenant. See [Configuration](../../configuration/).
 
-To use PostgreSQL, set `DATABASE_URL` in the service environment. The queue then uses PostgreSQL too. Run `sudo systemctl edit yorishiro` and add:
+To use PostgreSQL, put the connection settings in an environment file that only root can read, and load it in all three services. The queue then uses PostgreSQL too. Do not put the password in `Environment=`, because other local users can read the `Environment=` values of a unit.
+
+Create `/etc/yorishiro/yorishiro.env`:
+
+```console
+$ sudo install -m 600 /dev/null /etc/yorishiro/yorishiro.env
+$ sudoedit /etc/yorishiro/yorishiro.env
+```
+
+```ini
+DATABASE_URL=postgres://user:pass@host:5432/yorishiro
+```
+
+For a Redis-compatible queue, also add `YORISHIRO_QUEUE_KIND=Redis` and `QUEUE_URL=redis://host:6379` to the file.
+
+Then run `sudo systemctl edit` for each of `yorishiro`, `yorishiro-worker`, and `yorishiro-scheduler`, and add the same lines to each:
 
 ```ini
 [Service]
-Environment=DATABASE_URL=postgres://user:pass@host:5432/yorishiro
+EnvironmentFile=/etc/yorishiro/yorishiro.env
 ```
 
-For a Redis-compatible queue, also add `Environment=YORISHIRO_QUEUE_KIND=Redis` and `Environment=QUEUE_URL=redis://host:6379`. Add the same lines to the worker and scheduler units (`sudo systemctl edit yorishiro-worker` and `sudo systemctl edit yorishiro-scheduler`), because all three processes need the same database and queue settings. Then restart the services with `sudo systemctl restart yorishiro yorishiro-worker yorishiro-scheduler`.
+All three processes need the same database and queue settings. Restart the services with `sudo systemctl restart yorishiro yorishiro-worker yorishiro-scheduler`.
