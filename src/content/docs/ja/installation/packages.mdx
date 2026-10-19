@@ -67,10 +67,11 @@ Communityエディションで使えるテナントは1つです。Enterpriseエ
 
 PostgreSQLを使うには、接続設定をroot以外が読めない環境ファイルに書き、3つのサービスすべてで読み込みます。キューもPostgreSQLを使うようになります。パスワードを`Environment=`に書かないでください。ユニットの`Environment=`の値は、ほかのローカルユーザーも読み取れるためです。
 
-`/etc/yorishiro/yorishiro.env`を作成します。
+`/etc/yorishiro/yorishiro.env`がなければ作成し、アクセス権限を制限して編集します。次のコマンドは既存の内容を消しません。
 
 ```console
-$ sudo install -m 600 /dev/null /etc/yorishiro/yorishiro.env
+$ sudo sh -c 'umask 077; touch /etc/yorishiro/yorishiro.env'
+$ sudo chmod 600 /etc/yorishiro/yorishiro.env
 $ sudoedit /etc/yorishiro/yorishiro.env
 ```
 

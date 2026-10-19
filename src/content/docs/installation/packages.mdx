@@ -67,10 +67,11 @@ Community edition allows one tenant. Enterprise edition allows more only with a 
 
 To use PostgreSQL, put the connection settings in an environment file that only root can read, and load it in all three services. The queue then uses PostgreSQL too. Do not put the password in `Environment=`, because other local users can read the `Environment=` values of a unit.
 
-Create `/etc/yorishiro/yorishiro.env`:
+Create `/etc/yorishiro/yorishiro.env` if it does not exist, restrict its permissions, and edit it. These commands preserve any existing contents:
 
 ```console
-$ sudo install -m 600 /dev/null /etc/yorishiro/yorishiro.env
+$ sudo sh -c 'umask 077; touch /etc/yorishiro/yorishiro.env'
+$ sudo chmod 600 /etc/yorishiro/yorishiro.env
 $ sudoedit /etc/yorishiro/yorishiro.env
 ```
 

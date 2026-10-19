@@ -21,7 +21,7 @@ The packages and the Docker Compose examples start all three. They are enough fo
 
 A bare `--worker`, `--all`, or `--server-and-worker` is rejected.
 
-Every process needs the same database, queue, and embedding settings that its jobs use. Workers can run on the server's host or on another machine. Workers on another machine must use the same `QUEUE_URL`. If that URL points to a shared SQLite file, use an absolute path, because each host resolves a relative path on its own.
+Every process needs the same database, queue, and embedding settings that its jobs use. If either the database or the queue uses SQLite, keep the server and workers on the same host and use absolute paths to the same files. To run workers on another machine, use PostgreSQL for the database and PostgreSQL or Valkey for the queue. All processes must connect to the same database and queue.
 
 ## Worker targets
 
