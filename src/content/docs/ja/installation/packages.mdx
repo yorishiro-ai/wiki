@@ -65,27 +65,10 @@ $ sudo cp -a /etc/yorishiro/production.yaml /etc/yorishiro/production.yaml.backu
 
 Communityエディションで使えるテナントは1つです。Enterpriseエディションでは、有効なライセンスと`YORISHIRO_MAX_TENANTS`がある場合にだけ、それ以上のテナントを使えます。SQLiteでは常にテナントは1つです。[設定](../../configuration/)を参照してください。
 
-PostgreSQLを使うには、接続設定をroot以外が読めない環境ファイルに書き、3つのサービスすべてで読み込みます。キューもPostgreSQLを使うようになります。パスワードを`Environment=`に書かないでください。ユニットの`Environment=`の値は、ほかのローカルユーザーも読み取れるためです。
+パッケージの3つのサービスはすべて`/etc/yorishiro/production.yaml`を読み込みます。データベースとキューはこのファイルで設定します。環境ファイルやsystemdのオーバーライドは不要です。
 
-`/etc/yorishiro/yorishiro.env`がなければ作成し、アクセス権限を制限して編集します。次のコマンドは既存の内容を消しません。
+PostgreSQLを使うには、`database.uri`にPostgreSQLの接続URIを設定します。例のキュー設定の条件分岐全体を1つの`queue:`ブロックに置き換え、ほかの設定は残してください。`queue.kind`は`Postgres`、`queue.uri`はPostgreSQLの接続URIにします。Redis互換のキューを使う場合は、代わりに`Redis`とRedisの接続URIを指定します。例の条件分岐は環境変数を参照するため、`database.uri`だけを変更してもキューのプロバイダーは変わりません。
 
-```console
-$ sudo sh -c 'umask 077; touch /etc/yorishiro/yorishiro.env'
-$ sudo chmod 600 /etc/yorishiro/yorishiro.env
-$ sudoedit /etc/yorishiro/yorishiro.env
-```
+パスワードを含む場合は、`sudo chown root:yorishiro /etc/yorishiro/production.yaml`と`sudo chmod 640 /etc/yorishiro/production.yaml`で、rootとサービスのグループだけが読めるようにします。サービスは`yorishiro`で実行されるため、このユーザーが読める必要があります。
 
-```ini
-DATABASE_URL=postgres://user:pass@host:5432/yorishiro
-```
-
-Redis互換のキューを使う場合は、`YORISHIRO_QUEUE_KIND=Redis`と`QUEUE_URL=redis://host:6379`もこのファイルに追加します。
-
-次に、`yorishiro`、`yorishiro-worker`、`yorishiro-scheduler`のそれぞれで`sudo systemctl edit`を実行し、同じ内容を追加します。
-
-```ini
-[Service]
-EnvironmentFile=/etc/yorishiro/yorishiro.env
-```
-
-3つのプロセスには同じデータベースとキューの設定が必要です。`sudo systemctl restart yorishiro yorishiro-worker yorishiro-scheduler`で再起動します。
+編集後は`sudo systemctl restart yorishiro yorishiro-worker yorishiro-scheduler`で3つのサービスを再起動します。
