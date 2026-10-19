@@ -56,7 +56,7 @@ All three services share one volume. SQLite supports a single tenant and is mean
 
 ## PostgreSQL and Valkey
 
-Use this setup for multi-tenant hosting (Enterprise edition with a licence) or when several workers share one queue. PostgreSQL stores the data, and Valkey (Redis-compatible) holds the job queue.
+Use this setup for multi-tenant hosting (Enterprise edition with a licence) or when several workers share one queue. PostgreSQL stores the data, and Valkey (Redis-compatible) holds the job queue. The example uses the Community image. For Enterprise, change `-ce` to `-ee` in the image tag.
 
 Create `init-extensions.sql` next to `compose.yml`. PostgreSQL runs it once, when the data volume is first created:
 

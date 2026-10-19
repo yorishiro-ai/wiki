@@ -56,7 +56,7 @@ volumes:
 
 ## PostgreSQLとValkey
 
-マルチテナントのホスティング（ライセンス付きのEnterpriseエディション）の場合や、複数のワーカーで1つのキューを共有する場合に、この構成を使います。PostgreSQLがデータを保存し、Valkey（Redis互換）がジョブキューを保持します。
+マルチテナントのホスティング（ライセンス付きのEnterpriseエディション）の場合や、複数のワーカーで1つのキューを共有する場合に、この構成を使います。PostgreSQLがデータを保存し、Valkey（Redis互換）がジョブキューを保持します。この例はCommunityイメージを使います。Enterpriseを使う場合は、イメージタグの `-ce` を `-ee` に変更します。
 
 `compose.yml`と同じ場所に`init-extensions.sql`を作成します。PostgreSQLはデータボリュームを最初に作成するときに一度だけこのファイルを実行します。
 
