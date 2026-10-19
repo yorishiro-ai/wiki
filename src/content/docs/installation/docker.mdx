@@ -17,7 +17,8 @@ Replace `<VERSION>` with a release tag from the [Releases](https://github.com/yo
 $ docker volume create yorishiro-data
 $ docker volume create yorishiro-model-cache
 
-$ docker run -d --name yorishiro --restart unless-stopped -p 80:5150 \
+$ docker run -d --name yorishiro --restart unless-stopped -p 5150:5150 \
+    -e HOST=http://localhost:5150 \
     -v yorishiro-data:/var/lib/yorishiro \
     -v yorishiro-model-cache:/home/yorishiro/.cache/yorishiro \
     ghcr.io/yorishiro-ai/yorishiro:<VERSION>-ce
@@ -30,9 +31,9 @@ $ docker run -d --name yorishiro-worker --restart unless-stopped \
     start --worker=worker-target:shared
 ```
 
-The first container serves the API on host port `80`. The second runs background jobs. The server alone does not run jobs, so without the worker, tasks such as embedding sync stay queued. Both containers use the same volumes, so they work on the same data.
+The first container serves the API on host port `5150`. The second runs background jobs. The server alone does not run jobs, so without the worker, tasks such as embedding sync stay queued. Both containers use the same volumes, so they work on the same data.
 
-Then follow [First run](../first-run/). The URL there is `http://localhost`.
+Then follow [First run](../first-run/). The URL there is `http://localhost:5150`.
 
 If you also need the scheduler to recover interrupted reindexes, run a third container with the command `scheduler` and `--no-healthcheck` (see [Docker Compose](../docker-compose/)).
 
@@ -57,7 +58,7 @@ Set these on both containers:
 
 ## Choose a public URL
 
-`HOST` is the public URL that Yorishiro puts in links. It defaults to `http://localhost`. If you publish the container on another address or port, set `HOST` to match, for example `-e HOST=http://localhost:5150`.
+`HOST` is the public URL that Yorishiro puts in links. It defaults to `http://localhost`; the example above sets it to `http://localhost:5150`. If you publish the container on another address or port, set `HOST` to match.
 
 ## Data and permissions
 

@@ -7,9 +7,9 @@ sidebar:
 
 以下のいずれかのファイルを`compose.yml`にコピーし、そのディレクトリで実行します。`<VERSION>`を[Releases](https://github.com/yorishiro-ai/yorishiro/releases)ページのリリースタグ（例: `20261015-1`）に置き換えます。
 
-どの構成も1つのイメージから3つのサービス（サーバー（`app`）、ワーカー、スケジューラー）を起動します。[動かすプロセス](../#動かすプロセス)を参照してください。`80:5150`のマッピングで、サーバーをホストのポート`80`に公開します。
+どの構成も1つのイメージから3つのサービス（サーバー（`app`）、ワーカー、スケジューラー）を起動します。[動かすプロセス](../#動かすプロセス)を参照してください。`5150:5150`のマッピングで、サーバーをホストのポート`5150`に公開します。
 
-起動は`docker compose up -d`、停止は`docker compose down`で行います。続けて[初回起動](../first-run/)に進んでください。そこでのURLは`http://localhost`です。
+起動は`docker compose up -d`、停止は`docker compose down`で行います。続けて[初回起動](../first-run/)に進んでください。そこでのURLは`http://localhost:5150`です。
 
 ローカルの埋め込みプロバイダーは初回の利用時にモデルをダウンロード（約1 GiB）するため、初回の起動はダウンロードが終わるまで待機します。ダウンロードを省略するには、`YORISHIRO_EMBEDDING_PROVIDER=none docker compose up -d`を実行します。
 
@@ -20,6 +20,7 @@ x-yorishiro: &yorishiro
   image: ghcr.io/yorishiro-ai/yorishiro:<VERSION>-ce
   restart: unless-stopped
   environment:
+    HOST: http://localhost:5150
     YORISHIRO_EMBEDDING_PROVIDER: ${YORISHIRO_EMBEDDING_PROVIDER:-local}
   volumes:
     - data:/var/lib/yorishiro
@@ -29,7 +30,7 @@ services:
   app:
     <<: *yorishiro
     ports:
-      - "80:5150"
+      - "5150:5150"
 
   worker:
     <<: *yorishiro
@@ -72,6 +73,7 @@ x-yorishiro: &yorishiro
   volumes:
     - model-cache:/home/yorishiro/.cache/yorishiro
   environment:
+    HOST: http://localhost:5150
     DATABASE_URL: postgres://yorishiro:change-me@db:5432/yorishiro
     YORISHIRO_QUEUE_KIND: Redis
     QUEUE_URL: redis://valkey:6379
@@ -108,7 +110,7 @@ services:
   app:
     <<: *yorishiro
     ports:
-      - "80:5150"
+      - "5150:5150"
     healthcheck:
       start_period: 15m
     depends_on:
