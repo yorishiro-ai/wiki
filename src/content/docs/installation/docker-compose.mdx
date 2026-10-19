@@ -7,11 +7,11 @@ sidebar:
 
 Copy one of the files below to `compose.yml` and run it from that directory. Replace `<VERSION>` with a release tag from the [Releases](https://github.com/yorishiro-ai/yorishiro/releases) page, for example `20261015-1`.
 
-Each setup starts three services from one image: the server (`app`), a worker, and a scheduler. See [What runs](../#what-runs). The `80:5150` mapping publishes the server on host port `80`.
+Each setup starts three services from one image: the server (`app`), a worker, and a scheduler. See [What runs](../#what-runs). The `5150:5150` mapping publishes the server on host port `5150`.
 
-Start with `docker compose up -d` and stop with `docker compose down`. Then follow [First run](../first-run/); the URL there is `http://localhost`.
+Start with `docker compose up -d` and stop with `docker compose down`. Then follow [First run](../first-run/); the URL there is `http://localhost:5150`.
 
-The local embedding provider downloads its model on first use (about 522 MiB), and the first start waits for it. To skip the download, set `YORISHIRO_EMBEDDING_PROVIDER=none` on the `x-yorishiro` environment.
+The local embedding provider downloads its model on first use (about 1 GiB), and the first start waits for it. To skip the download, run `YORISHIRO_EMBEDDING_PROVIDER=none docker compose up -d`.
 
 ## SQLite
 
@@ -19,6 +19,9 @@ The local embedding provider downloads its model on first use (about 522 MiB), a
 x-yorishiro: &yorishiro
   image: ghcr.io/yorishiro-ai/yorishiro:<VERSION>-ce
   restart: unless-stopped
+  environment:
+    HOST: http://localhost:5150
+    YORISHIRO_EMBEDDING_PROVIDER: ${YORISHIRO_EMBEDDING_PROVIDER:-local}
   volumes:
     - data:/var/lib/yorishiro
     - model-cache:/home/yorishiro/.cache/yorishiro
@@ -27,7 +30,7 @@ services:
   app:
     <<: *yorishiro
     ports:
-      - "80:5150"
+      - "5150:5150"
 
   worker:
     <<: *yorishiro
@@ -50,11 +53,11 @@ volumes:
   model-cache:
 ```
 
-All three services share one volume, because SQLite keeps both the database and the queue in files. SQLite supports a single tenant and is meant for evaluation and personal use. See [SQLite mode](../../guides/sqlite/).
+All three services share one volume. SQLite supports a single tenant and is meant for evaluation and personal use. See [SQLite mode](../../guides/sqlite/).
 
 ## PostgreSQL and Valkey
 
-Use this setup for multi-tenant hosting (Enterprise edition with a licence) or when several workers share one queue. PostgreSQL stores the data, and Valkey (Redis-compatible) holds the job queue.
+Use this setup for multi-tenant hosting (Enterprise edition with a licence) or when several workers share one queue. PostgreSQL stores the data, and Valkey (Redis-compatible) holds the job queue. The example uses the Community image. For Enterprise, change `-ce` to `-ee` in the image tag.
 
 Create `init-extensions.sql` next to `compose.yml`. PostgreSQL runs it once, when the data volume is first created:
 
@@ -70,9 +73,11 @@ x-yorishiro: &yorishiro
   volumes:
     - model-cache:/home/yorishiro/.cache/yorishiro
   environment:
+    HOST: http://localhost:5150
     DATABASE_URL: postgres://yorishiro:change-me@db:5432/yorishiro
     YORISHIRO_QUEUE_KIND: Redis
     QUEUE_URL: redis://valkey:6379
+    YORISHIRO_EMBEDDING_PROVIDER: ${YORISHIRO_EMBEDDING_PROVIDER:-local}
 
 services:
   db:
@@ -105,7 +110,7 @@ services:
   app:
     <<: *yorishiro
     ports:
-      - "80:5150"
+      - "5150:5150"
     healthcheck:
       start_period: 15m
     depends_on:
@@ -140,18 +145,22 @@ volumes:
   model-cache:
 ```
 
-Change the passwords before you use this beyond a local trial. The worker waits for a healthy server because the server applies the database migrations on start.
+Change the passwords before you use this beyond a local trial. The worker waits for a healthy server.
 
-To use PostgreSQL for the queue as well, remove `YORISHIRO_QUEUE_KIND` and `QUEUE_URL`, and drop the `valkey` service. With PostgreSQL as the database, the queue then uses PostgreSQL too.
+To use PostgreSQL for the queue as well, remove `YORISHIRO_QUEUE_KIND` and `QUEUE_URL`, remove the `valkey` service, and remove its entries from the `depends_on` of `app` and `worker`, or Compose fails. With PostgreSQL as the database, the queue then uses PostgreSQL too.
 
 ## Use a local embedding model offline
 
-If the host already has the model files, put `model.safetensors` and `tokenizer.json` in a `models/` directory and mount it into each service that needs it:
+If the host already has the model files, place them at `models/multilingual-e5-base/model.safetensors` and `models/multilingual-e5-base/tokenizer.json`. Add the mount to the existing `volumes` list under `x-yorishiro`. Keep the entries that are already there, because a new `volumes` key replaces the whole list. In the SQLite example, the list becomes:
 
 ```yaml
 volumes:
+  - data:/var/lib/yorishiro
+  - model-cache:/home/yorishiro/.cache/yorishiro
   - ./models:/app/models:ro
 ```
+
+In the PostgreSQL example, keep `model-cache` and add the `./models` line to it.
 
 Provide both files or neither. If only one is present, the server fails to start.
 

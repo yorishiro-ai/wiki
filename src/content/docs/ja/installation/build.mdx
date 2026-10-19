@@ -5,12 +5,13 @@ sidebar:
   order: 5
 ---
 
-カスタムビルドが必要な場合は、ソースからビルドします。開発環境のセットアップについては、[Yorishiroリポジトリ](https://github.com/yorishiro-ai/yorishiro/blob/develop/CONTRIBUTING.md)（英語）を参照してください。
+カスタムビルドが必要な場合は、ソースからビルドします。
 
 ## 必要なもの
 
-- [rustup](https://rustup.rs/)のRustツールチェーン。リポジトリがツールチェーンのバージョンを固定しており、rustupが自動で取得します。
+- [rustup](https://rustup.rs/)のRustツールチェーン。
 - C/C++ツールチェーン、`pkg-config`、OpenSSLの開発用ヘッダー。
+- Linuxの場合: `mold`と`sccache`。
 - PostgreSQLを使う場合: `vector`拡張と`pg_trgm`拡張を備えたサーバー。
 
 ## ビルド

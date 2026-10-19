@@ -27,15 +27,14 @@ In Docker, run `docker exec <container> yorishiro task resync_embeddings workspa
 
 You can run a model on your own machine, or use an OpenAI-compatible service such as LM Studio, Ollama, vLLM, or OpenAI.
 
-| Variable                                    | Description                                                                                                                                                                                                                                                                            |
-| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `YORISHIRO_EMBEDDING_PROVIDER`              | `local` runs a model on this machine (the default). `none` turns embeddings off. If you also set `YORISHIRO_EMBEDDING_BASE_URL` and `YORISHIRO_EMBEDDING_MODEL`, Yorishiro uses that OpenAI-compatible service instead. `openai` selects the same provider and requires both of those. |
-| `YORISHIRO_EMBEDDING_BASE_URL`              | URL of an OpenAI-compatible embeddings endpoint, for example `http://localhost:11434`. Requires `YORISHIRO_EMBEDDING_MODEL`.                                                                                                                                                           |
-| `YORISHIRO_EMBEDDING_MODEL`                 | Model name for the OpenAI-compatible service                                                                                                                                                                                                                                           |
-| `YORISHIRO_EMBEDDING_API_KEY`               | API key for the service. Leave it empty for local services.                                                                                                                                                                                                                            |
-| `YORISHIRO_EMBEDDING_DIMENSIONS`            | Vector size the model produces (default `768`). Supported sizes are `768`, `1024`, and `1536`.                                                                                                                                                                                         |
-| `YORISHIRO_EMBEDDING_SEND_DIMENSIONS_PARAM` | Send a `dimensions` field in requests (default `false`)                                                                                                                                                                                                                                |
-| `YORISHIRO_EMBEDDING_PROVIDER_CONCURRENCY`  | Maximum simultaneous provider calls per worker process (default `1`). Must be greater than zero.                                                                                                                                                                                       |
+| Variable                                    | Description                                                                                                                                                                                                                                                                                                                       |
+| ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `YORISHIRO_EMBEDDING_PROVIDER`              | `local` runs a model on this machine (the default). `none` turns embeddings off. Setting both `YORISHIRO_EMBEDDING_BASE_URL` and `YORISHIRO_EMBEDDING_MODEL` selects the OpenAI-compatible service whatever this variable is set to, including `local` and `none`. `openai` selects the same provider and requires both of those. |
+| `YORISHIRO_EMBEDDING_BASE_URL`              | URL of an OpenAI-compatible embeddings endpoint, for example `http://localhost:11434`. Requires `YORISHIRO_EMBEDDING_MODEL`.                                                                                                                                                                                                      |
+| `YORISHIRO_EMBEDDING_MODEL`                 | Model name for the OpenAI-compatible service                                                                                                                                                                                                                                                                                      |
+| `YORISHIRO_EMBEDDING_API_KEY`               | API key for the service. Leave it empty for local services.                                                                                                                                                                                                                                                                       |
+| `YORISHIRO_EMBEDDING_DIMENSIONS`            | Vector size the model produces (default `768`). The local provider accepts only `768`. `1024` and `1536` are for the OpenAI-compatible provider.                                                                                                                                                                                  |
+| `YORISHIRO_EMBEDDING_SEND_DIMENSIONS_PARAM` | Send a `dimensions` field in requests (default `false`)                                                                                                                                                                                                                                                                           |
 
 ## Local model
 
@@ -44,9 +43,9 @@ With `YORISHIRO_EMBEDDING_PROVIDER=local`, Yorishiro uses `multilingual-e5-base`
 | Variable                              | Description                                                                   |
 | ------------------------------------- | ----------------------------------------------------------------------------- |
 | `YORISHIRO_LOCAL_MODEL`               | Model name (default `multilingual-e5-base`). An unknown value prevents start. |
-| `YORISHIRO_LOCAL_MAX_SEQUENCE_LENGTH` | Maximum input length (default `512`). Must be greater than zero.              |
+| `YORISHIRO_LOCAL_MAX_SEQUENCE_LENGTH` | Maximum input length (default `512`). Must be from `16` to `512`.             |
 
-The model files (about 522 MiB) download on first use and are cached in `$HOME/.cache/yorishiro/models/`. The server needs a writable `HOME` for this. The first start waits for the download. Later starts use the cache. If a download fails, restart the service. Downloads are checked against a built-in checksum.
+The model files (about 1 GiB) download on first use and are cached in `$HOME/.cache/yorishiro/models/`. The server needs a writable `HOME` for this. The first start waits for the download. Later starts use the cache. If a download fails, restart the service.
 
 To work offline, place `model.safetensors` and `tokenizer.json` together in `models/<model-id>/` under the working directory. Provide both files or neither.
 
@@ -68,6 +67,6 @@ When you switch models, existing entities keep vectors from the old model. Reind
 $ yorishiro task reindex_embeddings workspace_id:<uuid>
 ```
 
-This re-embeds every entity in the workspace. New writes to that workspace are rejected until it finishes. You can also queue a reindex through the API with `POST /api/migration-jobs/reindex` (needs the `migration` scope). A reindex also runs on start when any workspace's model has changed.
+This re-embeds every entity in the workspace. While it runs, search in that workspace returns `503`. Search returns to normal only after every entity is re-embedded without failures. You can also queue a reindex through the API with `POST /api/migration-jobs/reindex` (needs the `migration` scope). A reindex also runs on start when any workspace's model has changed.
 
 Failed embedding jobs are not retried automatically. After you fix the cause, run `resync_embeddings` or `reindex_embeddings` to recover.

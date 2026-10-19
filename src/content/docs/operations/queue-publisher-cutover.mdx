@@ -7,15 +7,11 @@ sidebar:
 
 Use this procedure when you cut over the queue provider. It moves queued work to the new publisher epoch.
 
-## How publishing works
-
-Application code commits a business change and a dispatch-outbox row in the same transaction. Only the dispatch relay publishes outbox rows to the queue. The relay calls the provider outside the database transaction. A provider timeout or a crash can still publish a job twice, so duplicate jobs are possible.
-
 ## Steps
 
 1. Deploy the release that stops direct publishing by producers.
 2. Stop every old producer and worker. Record the operator attestation `old_workers_exited:true`.
-3. Pause publishing. This advances the epoch to E.
+3. Pause publishing. The epoch advances from `<n>` to E, and you use E in the following steps.
 
    ```console
    $ yorishiro task set_queue_publishing_epoch expected_epoch:<n> active:false
@@ -33,18 +29,19 @@ Application code commits a business change and a dispatch-outbox row in the same
    $ yorishiro task replay_queue_dispatch_snapshot phase:activate expected_epoch:<E> old_workers_exited:true snapshot_id:<evidence-id>
    ```
 
-   Activation checks that the epoch is still E. It enables the prepared E+1 without advancing the epoch again.
+   Activation takes the same `expected_epoch:<E>` and `snapshot_id` as prepare, and the cutoff that prepare recorded. It then turns publishing back on.
 
 6. Keep producers stopped until activation completes. Start them only after that.
 
 ## What prepare does
 
-- It retags queued, retrying, running, and unexpired pending query-embedding work to E+1.
+- It moves queued, retrying, and running work, and unexpired pending query-embedding work, to the new epoch.
 - It includes work that was accepted while publishing was paused.
-- It leaves future `retry_at` values unchanged. It reclaims running rows without waiting for their old lease.
+- It leaves scheduled retry times unchanged. Running jobs are reclaimed without waiting for their old leases to expire.
 
 ## Limits
 
 - The attestation and the snapshot ID are evidence that you provide. Yorishiro does not verify them.
-- Quarantined, expired, and unrepresentable legacy rows are not replayed. Reconcile them separately.
-- A change of epoch cannot retract a message that the provider has already accepted. An enqueue whose outcome is unknown can duplicate work.
+- Quarantined jobs, and jobs that are no longer queued, retrying, or running, are skipped without an error. So are expired query-embedding jobs that have no lifecycle.
+- If any other old row has no lifecycle, has not been published, and is not a query-embedding row with a workspace and a deadline, prepare fails with `N lifecycle-less dispatch rows cannot be replayed safely`. Quarantine those rows or otherwise resolve them, then run prepare again.
+- Changing the epoch cannot retract a message that the provider has already accepted. A provider timeout or a crash, or an enqueue whose outcome is unknown, can duplicate work.

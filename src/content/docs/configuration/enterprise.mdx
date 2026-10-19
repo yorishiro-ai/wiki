@@ -29,7 +29,7 @@ Stripe plan prices are mapped with `YORISHIRO_STRIPE_PRICE_PRO` and `YORISHIRO_S
 
 ## Stripe webhooks
 
-Set `YORISHIRO_STRIPE_WEBHOOK_SECRET` to process Stripe webhooks. Each request's `Stripe-Signature` is verified against the raw body, with a 300-second timestamp tolerance.
+Set `YORISHIRO_STRIPE_WEBHOOK_SECRET` to process Stripe webhooks. Stripe webhook requests are checked against the signing secret. Requests with a timestamp more than 300 seconds old are rejected.
 
 ## OAuth2 and OIDC sign-in
 
@@ -73,7 +73,7 @@ Each model answer is stored as a pending proposal. It does not write guessed dat
 
 You can act on proposals only after the job is `completed`. If a job fails, its pending proposals are discarded automatically. Completed proposals stay reviewable until you act on them. Jobs cannot be cancelled and do not expire.
 
-If a worker stops while it runs a job, the job stays `running` and is not retried automatically, because a retry could start a second inference while the first is still active. Check such a job before you start it again.
+If a worker stops while it runs a job, the job stays `running` and is not retried automatically. Check such a job before you start it again.
 
 ## Schema origin updates
 
@@ -89,15 +89,15 @@ An Enterprise workspace can copy an exact active schema version from another wor
 
 ## Tenant reindex schedule
 
-A tenant can reindex all of its workspaces at a regular interval. Each run uses the normal reindex flow, the same one as `reindex_embeddings`, so it applies the same provider and model version checks.
+A tenant can reindex all of its workspaces at a regular interval. Each run works like `reindex_embeddings` and applies the same provider and model version checks.
 
-Set the schedule with `POST /api/identity/tenants/schedule`. Send an ISO 8601 duration, such as `P1D` (daily), `P1W` (weekly), or `PT6H` (every six hours). You can also send an IANA timezone name; the default is UTC. The interval must be at least `PT5M`. Years and months are rejected.
+This release has no HTTP endpoint or command to set a tenant's schedule. The interval is an ISO 8601 duration, such as `P1D` (daily), `P1W` (weekly), or `PT6H` (every six hours). The timezone is an IANA name, and the default is UTC. The interval must be at least `PT5M`. Years and months are rejected.
 
-The first run happens one interval after you set the schedule, and each run schedules the next one an interval later. An overdue run starts at the next scheduler tick, with no grace period.
+The first run happens one interval after you set the schedule, and the next run follows one interval after each run. An overdue run starts at the next scheduler check, with no grace period.
 
-Run the scheduler as its own process with `yorishiro scheduler`. With PostgreSQL, several scheduler replicas can share one database. A replica that cannot take the lock skips that tick. `DATABASE_URL` must connect directly to PostgreSQL or through a session-mode pooler, because transaction-mode pooling is not supported. With SQLite, the scheduler takes a lock on a file named `.scheduler.lock`, placed next to the database file.
+The scheduled reindex runs only when you add a `scheduler:` entry for the `tenant_reindex_scheduler` task to `config/<environment>.yaml`. The development configuration shows an example. The production configuration enables only the job recovery task. Run the scheduler as its own process with `yorishiro scheduler`. With PostgreSQL, several scheduler processes can share one database, and each check runs in only one of them. `DATABASE_URL` must connect directly to PostgreSQL or through a session-mode pooler, because transaction-mode pooling is not supported. With SQLite, the scheduler creates a lock file named `<database file>.scheduler.lock` next to the database file. For example, the lock file for `yorishiro.sqlite3` is `yorishiro.sqlite3.scheduler.lock`.
 
-Each run dispatches at most once. The schedule advances before the jobs are queued. If the scheduler crashes after that point, that tick can be missed. A failed enqueue is not retried, and the next interval is the recovery point.
+Each run happens at most once. If the scheduler crashes during a run, that run can be missed. If queuing the jobs fails, the run is not retried, and the next interval is the recovery point.
 
 ## SQLite vector search benchmark
 

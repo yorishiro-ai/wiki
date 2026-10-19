@@ -17,11 +17,11 @@ Run the HTTP server and the workers as separate processes. A plain `yorishiro st
 | Worker    | `yorishiro start --worker=worker-target:shared` |
 | Scheduler | `yorishiro scheduler`                           |
 
-The packages and the Docker Compose examples start all three. They are enough for a personal installation. The scheduler recovers interrupted jobs and runs scheduled tasks. Run it as its own process.
+The packages and the Docker Compose examples start all three. They are enough for a personal installation. The scheduler recovers interrupted jobs and runs the scheduled tasks you configure. Run it as its own process.
 
 A bare `--worker`, `--all`, or `--server-and-worker` is rejected.
 
-Every process needs the same database, queue, and embedding settings that its jobs use. Workers can run on the server's host or on another machine. Workers on another machine must use the same `QUEUE_URL`. If that URL points to a shared SQLite file, use an absolute path, because each host resolves a relative path on its own.
+Every process needs the same database, queue, and embedding settings that its jobs use. If either the database or the queue uses SQLite, keep the server and workers on the same host and use absolute paths to the same files. To run workers on another machine, use PostgreSQL for the database and PostgreSQL or Valkey for the queue. All processes must connect to the same database and queue.
 
 ## Worker targets
 
@@ -42,7 +42,7 @@ Enterprise can assign a workspace's jobs to a pool. See [Enterprise configuratio
 
 ### Change worker routing safely
 
-Before you change which workers serve which targets, stop whatever creates jobs, and let the matching workers finish all queued, running, and retrying jobs. Then start the workers with the new routing. If producers and workers use different routing at the same time, jobs can stay unprocessed.
+Before you change which workers serve which targets, stop whatever creates jobs, and let the matching workers finish all queued, running, and retrying jobs. Then start the workers with the new routing. If the server and workers use different routing at the same time, jobs can stay unprocessed.
 
 With Valkey, each tenant target gets its own queue when its first job arrives. Deleting a tenant does not remove its queue. Remove an unused tenant queue yourself, after it is empty and the tenant is no longer served.
 
@@ -62,7 +62,7 @@ For the most throughput, use PostgreSQL for data and Valkey for the queue. Postg
 
 ## Queue priorities
 
-When jobs wait, Yorishiro picks higher priorities first: tenant-private jobs (300), Official jobs (200), then shared jobs (100). If a lower-priority job has waited one minute, new higher-priority jobs that use the same workers are lowered to priority 50 until the waiting job starts. Jobs already in the queue keep their priority.
+When jobs wait, Yorishiro runs tenant-private jobs first, then Official jobs, then shared jobs. If a lower-priority job has waited one minute, newer higher-priority jobs that use the same workers are moved behind shared jobs until the waiting job starts. Jobs already in the queue keep their priority.
 
 ## Limit concurrent jobs
 

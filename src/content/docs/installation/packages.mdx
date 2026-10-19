@@ -31,15 +31,12 @@ Each release also includes `checksums.txt` for verifying downloads.
 
 ## Installed files
 
-| File                                              | Description                                                |
-| ------------------------------------------------- | ---------------------------------------------------------- |
-| `/usr/bin/yorishiro`                              | The binary                                                 |
-| `/lib/systemd/system/yorishiro.service`           | The server                                                 |
-| `/lib/systemd/system/yorishiro-worker.service`    | The background worker (shared target)                      |
-| `/lib/systemd/system/yorishiro-scheduler.service` | The scheduler                                              |
-| `/etc/yorishiro/production.yaml.example`          | Packaged default configuration, refreshed on every upgrade |
-| `/etc/yorishiro/production.yaml`                  | Optional configuration you provide                         |
-| `/var/lib/yorishiro`                              | Data directory, owned by the `yorishiro` user              |
+| File                                     | Description                                                |
+| ---------------------------------------- | ---------------------------------------------------------- |
+| `/usr/bin/yorishiro`                     | The binary                                                 |
+| `/etc/yorishiro/production.yaml.example` | Packaged default configuration, refreshed on every upgrade |
+| `/etc/yorishiro/production.yaml`         | Optional configuration you provide                         |
+| `/var/lib/yorishiro`                     | Data directory                                             |
 
 The Enterprise package also installs `/etc/yorishiro/LICENSE.enterprise`.
 
@@ -58,7 +55,7 @@ If a service fails repeatedly, systemd stops restarting it after five attempts i
 
 Without `/etc/yorishiro/production.yaml`, the services use the packaged defaults. They store the SQLite database and queue under `/var/lib/yorishiro`. Environment variables such as `DATABASE_URL`, `QUEUE_URL`, `HOST`, `PORT`, and `BINDING` override the defaults.
 
-To change settings in a file, create `/etc/yorishiro/production.yaml`. It replaces the packaged defaults entirely; Yorishiro does not merge the two. Start from `production.yaml.example`, and compare it with the new example after each upgrade, because the example changes between releases. Keep a backup:
+To change settings in a file, copy `/etc/yorishiro/production.yaml.example` to `/etc/yorishiro/production.yaml` and edit it. It replaces the packaged defaults entirely; Yorishiro does not merge the two. Compare it with the new example after each upgrade, because the example changes between releases. Keep a backup:
 
 ```console
 $ sudo cp -a /etc/yorishiro/production.yaml /etc/yorishiro/production.yaml.backup
@@ -68,18 +65,10 @@ The services run with write access to `/var/lib/yorishiro` only. Keep the SQLite
 
 Community edition allows one tenant. Enterprise edition allows more only with a valid licence and `YORISHIRO_MAX_TENANTS`. SQLite always allows one tenant. See [Configuration](../../configuration/).
 
-To use PostgreSQL, create `production.yaml` with the database and queue settings:
+All three packaged services load `/etc/yorishiro/production.yaml`. Configure the database and queue in that file; no environment file or systemd override is needed.
 
-```yaml
-database:
-  uri: postgres://user:pass@host:5432/yorishiro
-queue:
-  kind: Postgres
-  uri: postgres://user:pass@host:5432/yorishiro
-server:
-  host: https://yorishiro.example.com
-```
+To use PostgreSQL, set `database.uri` to your PostgreSQL connection URI. Replace the example's entire conditional queue section with one `queue:` block, keeping its other settings. Set `queue.kind` to `Postgres` and `queue.uri` to the PostgreSQL connection URI. For a Redis-compatible queue, use `Redis` and the Redis connection URI instead. Changing `database.uri` alone does not change the queue provider, because the example's conditions read environment variables.
 
-For a Redis-compatible queue, set `YORISHIRO_QUEUE_KIND=Redis` and `QUEUE_URL` in the service environment instead of the `queue` block.
+If the file contains passwords, restrict it to root and the service group with `sudo chown root:yorishiro /etc/yorishiro/production.yaml` and `sudo chmod 640 /etc/yorishiro/production.yaml`. The services run as `yorishiro` and must be able to read it.
 
-To change service environment variables, run `sudo systemctl edit yorishiro` (and the worker and scheduler units). All three processes need the same database and queue settings.
+Restart all three services after editing: `sudo systemctl restart yorishiro yorishiro-worker yorishiro-scheduler`.

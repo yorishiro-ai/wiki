@@ -17,7 +17,8 @@ DockerはYorishiroを最も手軽に試せる方法です。デフォルトの�
 $ docker volume create yorishiro-data
 $ docker volume create yorishiro-model-cache
 
-$ docker run -d --name yorishiro --restart unless-stopped -p 80:5150 \
+$ docker run -d --name yorishiro --restart unless-stopped -p 5150:5150 \
+    -e HOST=http://localhost:5150 \
     -v yorishiro-data:/var/lib/yorishiro \
     -v yorishiro-model-cache:/home/yorishiro/.cache/yorishiro \
     ghcr.io/yorishiro-ai/yorishiro:<VERSION>-ce
@@ -30,11 +31,11 @@ $ docker run -d --name yorishiro-worker --restart unless-stopped \
     start --worker=worker-target:shared
 ```
 
-1つ目のコンテナはホストのポート`80`でAPIを提供します。2つ目はバックグラウンドジョブを実行します。サーバーだけではジョブを実行しないため、ワーカーがないと埋め込みの同期などのタスクはキューに入ったままになります。2つのコンテナは同じボリュームを共有しており、それによってSQLiteのデータベースとキューも共有されます。
+1つ目のコンテナはホストのポート`5150`でAPIを提供します。2つ目はバックグラウンドジョブを実行します。サーバーだけではジョブを実行しないため、ワーカーがないと埋め込みの同期などのタスクはキューに入ったままになります。2つのコンテナは同じボリュームを使うため、同じデータを扱います。
 
-続けて[初回起動](../first-run/)に進んでください。そこでのURLは`http://localhost`です。
+続けて[初回起動](../first-run/)に進んでください。そこでのURLは`http://localhost:5150`です。
 
-スケジュールされたタスクと中断したジョブの復旧も必要な場合は、コマンド`scheduler`と`--no-healthcheck`を指定して3つ目のコンテナを起動します（[Docker Compose](../docker-compose/)を参照してください）。
+中断した再インデックスを復旧するスケジューラーも必要な場合は、コマンド`scheduler`と`--no-healthcheck`を指定して3つ目のコンテナを起動します（[Docker Compose](../docker-compose/)を参照してください）。
 
 ## PostgreSQLを使う
 
@@ -57,7 +58,7 @@ $ docker run -d --name yorishiro-worker --restart unless-stopped \
 
 ## 公開URLを選ぶ
 
-`HOST`は、Yorishiroがリンクに使う公開URLです。デフォルトは`http://localhost`です。別のアドレスやポートでコンテナを公開する場合は、それに合わせて`HOST`を設定します（例: `-e HOST=http://localhost:5150`）。
+`HOST`は、Yorishiroがリンクに使う公開URLです。デフォルトは`http://localhost`です。上の例では`http://localhost:5150`に設定しています。別のアドレスやポートでコンテナを公開する場合は、それに合わせて`HOST`を設定します。
 
 ## データと権限
 
