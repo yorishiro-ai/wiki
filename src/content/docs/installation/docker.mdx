@@ -34,7 +34,7 @@ The first container serves the API on host port `80`. The second runs background
 
 Then follow [First run](../first-run/). The URL there is `http://localhost`.
 
-If you also need scheduled tasks and recovery of interrupted jobs, run a third container with the command `scheduler` and `--no-healthcheck` (see [Docker Compose](../docker-compose/)).
+If you also need the scheduler's recovery of dispatch records and interrupted reindexes, run a third container with the command `scheduler` and `--no-healthcheck` (see [Docker Compose](../docker-compose/)).
 
 ## Use PostgreSQL
 

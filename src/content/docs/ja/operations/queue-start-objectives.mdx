@@ -9,7 +9,7 @@ Yorishiroは、投入するすべてのバックグラウンドジョブにつ�
 
 ## 時間の測定方法
 
-- **キュー投入時刻**は、Yorishiroがジョブをキューに投入する直前に記録されます。
+- **キュー投入時刻**は、サーバーがジョブを保存したときに、同じデータベーストランザクション内でディスパッチの記録とともに記録されます。バックグラウンドのリレーがジョブをキューへ発行するのはその後のため、リレーの遅延もキュー開始時間に含まれます。
 - **開始時刻**は、ワーカーが初めてジョブを受け取った時刻です。キューは受け取りの時刻を別に報告しないため、受け取りと開始は同じ時点になります。
 - **キュー開始時間**は開始時刻からキュー投入時刻を引いた値です。
 
@@ -17,7 +17,7 @@ Yorishiroは、投入するすべてのバックグラウンドジョブにつ�
 
 ## ジョブの状態
 
-ジョブの状態は`queued`、`running`、`retrying`、`completed`、`failed`、`cancelled`、`unavailable` のいずれかです。キューの容量不足とプロバイダーの障害は、開始の成功として数えません。リクエストがジョブを投入する時点でキューが利用できない場合、ジョブは `unavailable` になり、リクエストはエラーを受け取ります。
+ジョブの状態は`queued`、`running`、`retrying`、`completed`、`failed`、`cancelled`、`unavailable` のいずれかです。キューの容量不足とプロバイダーの障害は、開始の成功として数えません。ジョブが `unavailable` になるのは、キューに渡る前にYorishiroがジョブを拒否したときだけです。たとえば、ワーカーのターゲット、同時実行ポリシー、飢餓防止ポリシーを特定できない場合が該当します。キューやプロバイダーの障害では、この状態になりません。発行に失敗すると、リレーは `dispatch outbox: enqueue failed and will be retried` を記録し、ジョブは `queued` または `retrying` のまま残ります。発行は非同期で行われるため、ジョブを投入したリクエストがプロバイダーのエラーを受け取ることはありません。
 
 実行中のジョブはリースを保持します。ワーカーは処理中、約1分に1回リースを更新し、5分間更新されなかったリースは期限切れとみなされます。リースの有効中に届いた重複配送は無視されます。リースの期限が切れると、次の配送は新しい試行として扱われ、以前のワーカーはそのジョブを完了も再試行もできなくなります。
 
@@ -27,7 +27,7 @@ Yorishiroは、投入するすべてのバックグラウンドジョブにつ�
 
 ジョブが開始されると、ログに `queue job admitted` というメッセージが、`queue_start_seconds` と `lifecycle_id` のフィールドとともに出力されます。ログ基盤でこれらのイベントを絞り込むと、開始時間をグラフにできます。
 
-最終的な失敗は `terminal worker failure` として記録されます。Enterpriseのプランポリシーが有効な場合、ターゲットの上限によって保留されたジョブは `worker capacity saturated` として記録され、`worker_class`、`scheduling_priority`、`capacity_limit`、`active_capacity` などのフィールドが付きます。
+最終的な失敗は `terminal worker failure` として記録されます。Enterpriseのプランポリシーが有効な場合、ターゲットの上限によって保留されたジョブは `queue capacity saturated` として記録され、`lifecycle_id`、`worker_class`、`concurrency_key`、`active_capacity`、`capacity_limit` のフィールドが付きます。そのワーカーは続けて `worker capacity saturated` を記録し、`lifecycle_id`、`worker_class`、`scheduling_priority`、`fallback` のフィールドが付きます。
 
 `queued`、`retrying`、`unavailable` のまま残るジョブが増え続ける場合は、開始時間を評価する前に、ワーカーの容量とキューの状態を確認してください。
 

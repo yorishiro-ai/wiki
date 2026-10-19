@@ -11,6 +11,7 @@ sidebar:
 
 - [rustup](https://rustup.rs/)のRustツールチェーン。リポジトリがツールチェーンのバージョンを固定しており、rustupが自動で取得します。
 - C/C++ツールチェーン、`pkg-config`、OpenSSLの開発用ヘッダー。
+- Linuxの場合: `mold`（リンカー）と`sccache`（コンパイラーのラッパー）。リポジトリの`.cargo/config.toml`がどちらも使います。
 - PostgreSQLを使う場合: `vector`拡張と`pg_trgm`拡張を備えたサーバー。
 
 ## ビルド

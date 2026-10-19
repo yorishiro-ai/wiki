@@ -11,6 +11,7 @@ Build from source when you need a custom build. For development setup, see the [
 
 - The Rust toolchain from [rustup](https://rustup.rs/). The repository pins the toolchain version, and rustup picks it up automatically.
 - A C/C++ toolchain, `pkg-config`, and OpenSSL development headers.
+- On Linux: `mold` (linker) and `sccache` (compiler wrapper). The repository's `.cargo/config.toml` uses both.
 - For PostgreSQL: a server with the `vector` and `pg_trgm` extensions.
 
 ## Build

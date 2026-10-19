@@ -11,7 +11,7 @@ sidebar:
 
 起動は`docker compose up -d`、停止は`docker compose down`で行います。続けて[初回起動](../first-run/)に進んでください。そこでのURLは`http://localhost`です。
 
-ローカルの埋め込みプロバイダーは初回の利用時にモデルをダウンロード（約522 MiB）するため、初回の起動はダウンロードが終わるまで待機します。ダウンロードを省略するには、`x-yorishiro`の環境変数に`YORISHIRO_EMBEDDING_PROVIDER=none`を設定します。
+ローカルの埋め込みプロバイダーは初回の利用時にモデルをダウンロード（約1 GiB）するため、初回の起動はダウンロードが終わるまで待機します。ダウンロードを省略するには、`YORISHIRO_EMBEDDING_PROVIDER=none docker compose up -d`を実行します。
 
 ## SQLite
 
@@ -19,6 +19,8 @@ sidebar:
 x-yorishiro: &yorishiro
   image: ghcr.io/yorishiro-ai/yorishiro:<VERSION>-ce
   restart: unless-stopped
+  environment:
+    YORISHIRO_EMBEDDING_PROVIDER: ${YORISHIRO_EMBEDDING_PROVIDER:-local}
   volumes:
     - data:/var/lib/yorishiro
     - model-cache:/home/yorishiro/.cache/yorishiro
@@ -73,6 +75,7 @@ x-yorishiro: &yorishiro
     DATABASE_URL: postgres://yorishiro:change-me@db:5432/yorishiro
     YORISHIRO_QUEUE_KIND: Redis
     QUEUE_URL: redis://valkey:6379
+    YORISHIRO_EMBEDDING_PROVIDER: ${YORISHIRO_EMBEDDING_PROVIDER:-local}
 
 services:
   db:
@@ -142,11 +145,11 @@ volumes:
 
 ローカルでの試用を超えて使う前に、パスワードを変更してください。サーバーは起動時にデータベースのマイグレーションを適用するため、ワーカーはサーバーが正常になるまで待機します。
 
-キューにもPostgreSQLを使うには、`YORISHIRO_QUEUE_KIND`と`QUEUE_URL`を削除し、`valkey`サービスも削除します。データベースがPostgreSQLの場合は、キューもPostgreSQLを使うようになります。
+キューにもPostgreSQLを使うには、`YORISHIRO_QUEUE_KIND`と`QUEUE_URL`を削除し、`valkey`サービスを削除します。さらに、`app`と`worker`の`depends_on`から`valkey`の項目も削除します（残すとComposeが失敗します）。データベースがPostgreSQLの場合は、キューもPostgreSQLを使うようになります。
 
 ## ローカルの埋め込みモデルをオフラインで使う
 
-ホストにモデルファイルがすでにある場合は、`model.safetensors`と`tokenizer.json`を`models/`ディレクトリに置き、必要な各サービスにマウントします。
+ホストにモデルファイルがすでにある場合は、`models/multilingual-e5-base/model.safetensors`と`models/multilingual-e5-base/tokenizer.json`に置きます。ディレクトリ名はモデルの短縮IDです。必要な各サービスに`./models`をマウントします。
 
 ```yaml
 volumes:

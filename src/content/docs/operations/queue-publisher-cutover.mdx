@@ -15,7 +15,7 @@ Application code commits a business change and a dispatch-outbox row in the same
 
 1. Deploy the release that stops direct publishing by producers.
 2. Stop every old producer and worker. Record the operator attestation `old_workers_exited:true`.
-3. Pause publishing. This advances the epoch to E.
+3. Pause publishing. This advances the epoch from `<n>` to E.
 
    ```console
    $ yorishiro task set_queue_publishing_epoch expected_epoch:<n> active:false
@@ -33,7 +33,7 @@ Application code commits a business change and a dispatch-outbox row in the same
    $ yorishiro task replay_queue_dispatch_snapshot phase:activate expected_epoch:<E> old_workers_exited:true snapshot_id:<evidence-id>
    ```
 
-   Activation checks that the epoch is still E. It enables the prepared E+1 without advancing the epoch again.
+   Activation passes the same `expected_epoch:<E>` as prepare. It requires the epoch that prepare advanced to E+1, the recorded cutoff, and the same snapshot ID. It then turns publishing back on without changing the epoch again.
 
 6. Keep producers stopped until activation completes. Start them only after that.
 
@@ -46,5 +46,6 @@ Application code commits a business change and a dispatch-outbox row in the same
 ## Limits
 
 - The attestation and the snapshot ID are evidence that you provide. Yorishiro does not verify them.
-- Quarantined, expired, and unrepresentable legacy rows are not replayed. Reconcile them separately.
+- Quarantined rows, and rows whose job is no longer queued, retrying, or running, are skipped without an error. So are expired query-embedding rows that have no lifecycle.
+- Any other legacy row that has no lifecycle, has not been published, and is not a query-embedding row with a workspace and a deadline makes prepare fail with `N lifecycle-less dispatch rows cannot be replayed safely`. Quarantine those rows or otherwise resolve them, then run prepare again.
 - A change of epoch cannot retract a message that the provider has already accepted. An enqueue whose outcome is unknown can duplicate work.

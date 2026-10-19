@@ -11,7 +11,7 @@ Each setup starts three services from one image: the server (`app`), a worker, a
 
 Start with `docker compose up -d` and stop with `docker compose down`. Then follow [First run](../first-run/); the URL there is `http://localhost`.
 
-The local embedding provider downloads its model on first use (about 522 MiB), and the first start waits for it. To skip the download, set `YORISHIRO_EMBEDDING_PROVIDER=none` on the `x-yorishiro` environment.
+The local embedding provider downloads its model on first use (about 1 GiB), and the first start waits for it. To skip the download, run `YORISHIRO_EMBEDDING_PROVIDER=none docker compose up -d`.
 
 ## SQLite
 
@@ -19,6 +19,8 @@ The local embedding provider downloads its model on first use (about 522 MiB), a
 x-yorishiro: &yorishiro
   image: ghcr.io/yorishiro-ai/yorishiro:<VERSION>-ce
   restart: unless-stopped
+  environment:
+    YORISHIRO_EMBEDDING_PROVIDER: ${YORISHIRO_EMBEDDING_PROVIDER:-local}
   volumes:
     - data:/var/lib/yorishiro
     - model-cache:/home/yorishiro/.cache/yorishiro
@@ -73,6 +75,7 @@ x-yorishiro: &yorishiro
     DATABASE_URL: postgres://yorishiro:change-me@db:5432/yorishiro
     YORISHIRO_QUEUE_KIND: Redis
     QUEUE_URL: redis://valkey:6379
+    YORISHIRO_EMBEDDING_PROVIDER: ${YORISHIRO_EMBEDDING_PROVIDER:-local}
 
 services:
   db:
@@ -142,11 +145,11 @@ volumes:
 
 Change the passwords before you use this beyond a local trial. The worker waits for a healthy server because the server applies the database migrations on start.
 
-To use PostgreSQL for the queue as well, remove `YORISHIRO_QUEUE_KIND` and `QUEUE_URL`, and drop the `valkey` service. With PostgreSQL as the database, the queue then uses PostgreSQL too.
+To use PostgreSQL for the queue as well, remove `YORISHIRO_QUEUE_KIND` and `QUEUE_URL`, remove the `valkey` service, and remove its entries from the `depends_on` of `app` and `worker`, or Compose fails. With PostgreSQL as the database, the queue then uses PostgreSQL too.
 
 ## Use a local embedding model offline
 
-If the host already has the model files, put `model.safetensors` and `tokenizer.json` in a `models/` directory and mount it into each service that needs it:
+If the host already has the model files, place them at `models/multilingual-e5-base/model.safetensors` and `models/multilingual-e5-base/tokenizer.json`. The directory name is the model's short ID. Mount `./models` into each service that needs it:
 
 ```yaml
 volumes:

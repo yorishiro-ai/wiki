@@ -22,7 +22,7 @@ A working installation has up to three processes, all from the same binary:
 | --------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
 | Server    | `yorishiro start`                               | Serves the REST API and the MCP endpoint. It does not run background jobs.                              |
 | Worker    | `yorishiro start --worker=worker-target:shared` | Runs background jobs such as embedding sync and reindexing. Without a worker, queued jobs wait forever. |
-| Scheduler | `yorishiro scheduler`                           | Recovers interrupted jobs and runs scheduled tasks.                                                     |
+| Scheduler | `yorishiro scheduler`                           | Recovers dispatch records and interrupted reindexes.                                                    |
 
 The Docker Compose examples and the deb/rpm packages start all three for you. With a plain `docker run`, you start each one yourself.
 

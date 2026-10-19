@@ -5,7 +5,7 @@ sidebar:
   order: 1
 ---
 
-Yorishiro reads its settings from environment variables. For the settings on these pages you need no configuration file. Only the mailer block and the time zone setting need a configuration file; the sections below say so.
+Yorishiro reads its settings from environment variables, so the settings on these pages need no configuration file. The time zone is set with `YORISHIRO_TIMEZONE`. In production, the mailer block is generated from environment variables too, so it needs no file edit.
 
 import PageList from "../../../components/PageList.astro";
 
@@ -15,7 +15,7 @@ import PageList from "../../../components/PageList.astro";
 
 Yorishiro loads `config/<environment>.yaml`. `LOCO_ENV` selects the environment. It defaults to `development` for source runs, and Docker and the packages set it to `production`. `LOCO_CONFIG_FOLDER` points to another directory that holds the file.
 
-The files read environment variables for deploy-time values such as `DATABASE_URL`. A configuration file you supply replaces the built-in one; the two are not merged. To keep a local override beside the built-in file, name it `production.local.yaml`.
+The files read environment variables for deploy-time values such as `DATABASE_URL`. A configuration file you supply replaces the built-in one, and the two are not merged. A `production.local.yaml` file placed beside the base file is merged on top of it, and its values win.
 
 Package installs read `/etc/yorishiro/production.yaml` if it exists, and the packaged `production.yaml.example` otherwise. Docker installs read `/app/config/production.yaml`.
 
@@ -65,18 +65,20 @@ SQLite always allows one tenant.
 
 ## Search quota
 
-| Variable                             | Default  | Description                                                                                                                                                                                                                                                                                                      |
-| ------------------------------------ | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `YORISHIRO_SEARCH_TOKENS_PER_MINUTE` | `100000` | Search tokens a workspace can spend per minute. Each query is charged, and the API and MCP share the quota. The default is high and mainly stops runaway automated queries. With the default estimate, Japanese text costs about half as many tokens as English, so the same quota allows more Japanese queries. |
+| Variable                             | Default  | Description                                                                                                                                                                                                                                                                                                                                                           |
+| ------------------------------------ | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `YORISHIRO_SEARCH_TOKENS_PER_MINUTE` | `100000` | Search tokens a workspace can spend per minute. Each query is charged, and the API and MCP share the quota. The default is high and mainly stops runaway automated queries. The estimate counts bytes, at one token per four bytes rounded up. Japanese characters take three bytes each in UTF-8, so the same quota allows fewer Japanese queries than English ones. |
 
 ## Sign-in rate limit
 
-| Variable                                | Default | Description                                     |
-| --------------------------------------- | ------- | ----------------------------------------------- |
-| `YORISHIRO_AUTH_RATE_LIMIT_MAX`         | `10`    | Sign-in and sign-up requests allowed per window |
-| `YORISHIRO_AUTH_RATE_LIMIT_WINDOW_SECS` | `60`    | Window length in seconds                        |
+| Variable                                | Default | Description                                                   |
+| --------------------------------------- | ------- | ------------------------------------------------------------- |
+| `YORISHIRO_AUTH_RATE_LIMIT_MAX`         | `10`    | Sign-in and sign-up requests allowed per client IP per window |
+| `YORISHIRO_AUTH_RATE_LIMIT_WINDOW_SECS` | `60`    | Window length in seconds                                      |
 
 Both must be greater than zero.
+
+The limit is applied per client IP. It covers `/auth/login` and `/auth/signup`, and Enterprise also applies it to `/auth/oauth/authorize` and `/auth/oauth/callback`.
 
 ## Database load guard
 
@@ -100,7 +102,7 @@ API keys, webhook secrets, OAuth credentials, OIDC tokens, and licence owner det
 
 ## Mail
 
-Yorishiro does not send mail by default. To enable it, add a `mailer:` block to your configuration file. Then set `MAILER_HOST`, `MAILER_PORT` (default `587`), `MAILER_USER`, and `MAILER_PASSWORD` in the environment. The block is used only in production when `MAILER_HOST` is set.
+This release sends no mail. Nothing in the application sends mail yet, so the mailer settings have no effect. In production, the `mailer:` block is generated only when `MAILER_HOST` is set, and it reads `MAILER_PORT` (default `587`), `MAILER_USER`, and `MAILER_PASSWORD` from the environment. You do not edit the file for this. In development, the block always renders, with `MAILER_HOST` defaulting to `localhost` and the port fixed at `1025`.
 
 ## API keys
 

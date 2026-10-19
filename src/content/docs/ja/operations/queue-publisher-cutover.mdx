@@ -15,7 +15,7 @@ sidebar:
 
 1. 生産者による直接の発行を止めるリリースをデプロイします。
 2. 古い生産者とワーカーをすべて停止します。運用者の証明として `old_workers_exited:true` を記録します。
-3. 発行を一時停止します。エポックは E に進みます。
+3. 発行を一時停止します。エポックは `<n>` から E に進みます。
 
    ```console
    $ yorishiro task set_queue_publishing_epoch expected_epoch:<n> active:false
@@ -33,7 +33,7 @@ sidebar:
    $ yorishiro task replay_queue_dispatch_snapshot phase:activate expected_epoch:<E> old_workers_exited:true snapshot_id:<evidence-id>
    ```
 
-   有効化では、エポックが E のままであることを確認します。そのうえで、準備済みの E+1 を、エポックをさらに進めずに有効にします。
+   有効化には、prepare と同じ `expected_epoch:<E>` を渡します。prepare によって E+1 に進んだエポック、記録済みのカットオフ、同じスナップショット ID が必要です。そのうえで、エポックをさらに進めずに発行を再開します。
 
 6. 有効化が完了するまで生産者は停止したままにします。完了してから生産者を起動します。
 
@@ -46,5 +46,6 @@ sidebar:
 ## 制限
 
 - 証明とスナップショット ID は、運用者が提供する証拠です。Yorishiro は検証しません。
-- 隔離された行、期限切れの行、表現できない古い行は再投入されません。別途照合してください。
+- 隔離された行と、ジョブがもう待機中、再試行待ち、実行中ではない行は、エラーなしでスキップされます。ライフサイクルがない期限切れのクエリ埋め込みの行も同様にスキップされます。
+- ライフサイクルがなく、まだ発行されていない古い行のうち、ワークスペースと期限を持つクエリ埋め込みの行ではないものがあると、prepare は `N lifecycle-less dispatch rows cannot be replayed safely` で失敗します。その行を隔離するか、ほかの方法で解決してから、prepare を再実行してください。
 - エポックを変えても、プロバイダーが受け付け済みのメッセージは取り消せません。結果が不明な投入は、作業が重複する場合があります。

@@ -24,7 +24,7 @@ Do not use SQLite for multi-tenant hosting. It keeps all data in one file, with 
 
 - More than one tenant is not supported. SQLite supports exactly one tenant, and you cannot change this.
 - Filtering on data fields is not supported. The `filter` query parameter returns an error on SQLite.
-- The template marketplace (Enterprise) is not supported. Its endpoints answer `501` with the code `backend_unsupported`, because the marketplace works across tenants.
+- Browsing the template marketplace (Enterprise) and publishing a template version are not supported. Both return `501` with the code `backend_unsupported`, because the marketplace works across tenants.
 - SQLite has no named database locks. Infer-fill still allows only one running job per workspace.
 
 SQLite allows a single writer at a time, so many concurrent writes can wait on each other.
@@ -41,6 +41,6 @@ Background jobs use a separate SQLite file by default, `sqlite:///var/lib/yorish
 
 A SQLite database works with a SQLite queue or a Valkey queue. A PostgreSQL queue with a SQLite database is rejected at start. With a Valkey queue, keep the workers on the database's host.
 
-The database pool needs at least 2 connections. The server refuses to start with fewer.
+The database pool's maximum size, `database.max_connections`, must be at least 2. The server refuses to start with a smaller value.
 
 There is no separate SQLite configuration file. Use the normal configuration and set `DATABASE_URL`. See [Configuration](../../configuration/).
