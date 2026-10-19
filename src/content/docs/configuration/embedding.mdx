@@ -45,7 +45,7 @@ With `YORISHIRO_EMBEDDING_PROVIDER=local`, Yorishiro uses `multilingual-e5-base`
 | `YORISHIRO_LOCAL_MODEL`               | Model name (default `multilingual-e5-base`). An unknown value prevents start. |
 | `YORISHIRO_LOCAL_MAX_SEQUENCE_LENGTH` | Maximum input length (default `512`). Must be from `16` to `512`.             |
 
-The model files (about 1 GiB) download on first use and are cached in `$HOME/.cache/yorishiro/models/`. The server needs a writable `HOME` for this. The first start waits for the download. Later starts use the cache. If a download fails, restart the service. Downloads are checked against a built-in checksum.
+The model files (about 1 GiB) download on first use and are cached in `$HOME/.cache/yorishiro/models/`. The server needs a writable `HOME` for this. The first start waits for the download. Later starts use the cache. If a download fails, restart the service.
 
 To work offline, place `model.safetensors` and `tokenizer.json` together in `models/<model-id>/` under the working directory. Provide both files or neither.
 

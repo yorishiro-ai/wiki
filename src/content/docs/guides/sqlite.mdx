@@ -24,8 +24,8 @@ Do not use SQLite for multi-tenant hosting. It keeps all data in one file, with 
 
 - More than one tenant is not supported. SQLite supports exactly one tenant, and you cannot change this.
 - Filtering on data fields is not supported. The `filter` query parameter returns an error on SQLite.
-- Browsing the template marketplace (Enterprise) and publishing a template version are not supported. Both return `501` with the code `backend_unsupported`, because the marketplace works across tenants.
-- SQLite has no named database locks. Infer-fill still allows only one running job per workspace.
+- Browsing the template marketplace (Enterprise) and publishing a template version are not supported. Both return `501`.
+- Infer-fill allows only one running job per workspace.
 
 SQLite allows a single writer at a time, so many concurrent writes can wait on each other.
 
@@ -37,7 +37,7 @@ Select SQLite with a `sqlite:` URL:
 $ export DATABASE_URL='sqlite:///var/lib/yorishiro/yorishiro.sqlite3?mode=rwc'
 ```
 
-Background jobs use a separate SQLite file by default, `sqlite:///var/lib/yorishiro/yorishiro_queue.sqlite3?mode=rwc`. The database and the queue must not share a file, because their connection pools can block each other. If `QUEUE_URL` points to the database file, finish or move pending jobs, then set a separate queue file before you start the server.
+Background jobs use a separate SQLite file by default, `sqlite:///var/lib/yorishiro/yorishiro_queue.sqlite3?mode=rwc`. The database and the queue must not share a file. If `QUEUE_URL` points to the database file, finish or move pending jobs, then set a separate queue file before you start the server.
 
 A SQLite database works with a SQLite queue or a Valkey queue. A PostgreSQL queue with a SQLite database is rejected at start. With a Valkey queue, keep the workers on the database's host.
 

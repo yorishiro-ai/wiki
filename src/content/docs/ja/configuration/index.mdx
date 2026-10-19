@@ -5,7 +5,7 @@ sidebar:
   order: 1
 ---
 
-Yorishiro は環境変数から設定を読み込みます。このページに載せた設定には、設定ファイルは必要ありません。タイムゾーンは `YORISHIRO_TIMEZONE` で設定します。production では、メールのブロックも環境変数から生成されるため、ファイルを編集する必要はありません。
+Yorishiro は環境変数から設定を読み込みます。このページに載せた設定には、設定ファイルは必要ありません。タイムゾーンは `YORISHIRO_TIMEZONE` で設定します。production では、メールの設定も環境変数から読み込まれるため、ファイルを編集する必要はありません。
 
 import PageList from "../../../../components/PageList.astro";
 
@@ -102,7 +102,7 @@ APIキー、Webhook のシークレット、OAuth の認証情報、OIDC のト�
 
 ## メール
 
-このリリースではメールを送信しません。アプリケーションにはまだメールを送信する処理がないため、メールの設定は現時点では効果がありません。production では、`MAILER_HOST` が設定されている場合にだけ `mailer:` ブロックが生成され、`MAILER_PORT`（既定値は `587`）、`MAILER_USER`、`MAILER_PASSWORD` を環境変数から読み取ります。この設定のためにファイルを編集する必要はありません。development では、このブロックは常に生成され、`MAILER_HOST` の既定値は `localhost`、ポートは `1025` に固定されます。
+このリリースではメールを送信しません。アプリケーションにはまだメールを送信する処理がないため、メールの設定は現時点では効果がありません。production では、`MAILER_HOST` が設定されている場合にだけメールが設定され、ポートと認証情報は環境変数の `MAILER_PORT`（既定値は `587`）、`MAILER_USER`、`MAILER_PASSWORD` から読み込まれます。この設定のためにファイルを編集する必要はありません。development では、`MAILER_HOST` の既定値は `localhost`、ポートは `1025` に固定されます。
 
 ## APIキー
 

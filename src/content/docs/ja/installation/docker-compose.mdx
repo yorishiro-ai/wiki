@@ -52,7 +52,7 @@ volumes:
   model-cache:
 ```
 
-SQLiteはデータベースとキューの両方をファイルに保存するため、3つのサービスは1つのボリュームを共有します。SQLiteで使えるテナントは1つだけで、評価や個人での利用向けです。[SQLiteモード](../../guides/sqlite/)を参照してください。
+3つのサービスは1つのボリュームを共有します。SQLiteで使えるテナントは1つだけで、評価や個人での利用向けです。[SQLiteモード](../../guides/sqlite/)を参照してください。
 
 ## PostgreSQLとValkey
 
@@ -143,13 +143,13 @@ volumes:
   model-cache:
 ```
 
-ローカルでの試用を超えて使う前に、パスワードを変更してください。サーバーは起動時にデータベースのマイグレーションを適用するため、ワーカーはサーバーが正常になるまで待機します。
+ローカルでの試用を超えて使う前に、パスワードを変更してください。ワーカーはサーバーが正常になるまで待機します。
 
 キューにもPostgreSQLを使うには、`YORISHIRO_QUEUE_KIND`と`QUEUE_URL`を削除し、`valkey`サービスを削除します。さらに、`app`と`worker`の`depends_on`から`valkey`の項目も削除します（残すとComposeが失敗します）。データベースがPostgreSQLの場合は、キューもPostgreSQLを使うようになります。
 
 ## ローカルの埋め込みモデルをオフラインで使う
 
-ホストにモデルファイルがすでにある場合は、`models/multilingual-e5-base/model.safetensors`と`models/multilingual-e5-base/tokenizer.json`に置きます。ディレクトリ名はモデルの短縮IDです。必要な各サービスに`./models`をマウントします。
+ホストにモデルファイルがすでにある場合は、`models/multilingual-e5-base/model.safetensors`と`models/multilingual-e5-base/tokenizer.json`に置きます。必要な各サービスに`./models`をマウントします。
 
 ```yaml
 volumes:

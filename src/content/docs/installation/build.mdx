@@ -5,13 +5,13 @@ sidebar:
   order: 5
 ---
 
-Build from source when you need a custom build. For development setup, see the [contributing guide](https://github.com/yorishiro-ai/yorishiro/blob/develop/CONTRIBUTING.md).
+Build from source when you need a custom build.
 
 ## Requirements
 
-- The Rust toolchain from [rustup](https://rustup.rs/). The repository pins the toolchain version, and rustup picks it up automatically.
+- The Rust toolchain from [rustup](https://rustup.rs/).
 - A C/C++ toolchain, `pkg-config`, and OpenSSL development headers.
-- On Linux: `mold` (linker) and `sccache` (compiler wrapper). The repository's `.cargo/config.toml` uses both.
+- On Linux: `mold` and `sccache`.
 - For PostgreSQL: a server with the `vector` and `pg_trgm` extensions.
 
 ## Build

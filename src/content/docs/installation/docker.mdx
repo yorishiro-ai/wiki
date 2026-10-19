@@ -30,11 +30,11 @@ $ docker run -d --name yorishiro-worker --restart unless-stopped \
     start --worker=worker-target:shared
 ```
 
-The first container serves the API on host port `80`. The second runs background jobs. The server alone does not run jobs, so without the worker, tasks such as embedding sync stay queued. Both containers share the same volumes, which is how they share the SQLite database and queue.
+The first container serves the API on host port `80`. The second runs background jobs. The server alone does not run jobs, so without the worker, tasks such as embedding sync stay queued. Both containers use the same volumes, so they work on the same data.
 
 Then follow [First run](../first-run/). The URL there is `http://localhost`.
 
-If you also need the scheduler's recovery of dispatch records and interrupted reindexes, run a third container with the command `scheduler` and `--no-healthcheck` (see [Docker Compose](../docker-compose/)).
+If you also need the scheduler to recover interrupted reindexes, run a third container with the command `scheduler` and `--no-healthcheck` (see [Docker Compose](../docker-compose/)).
 
 ## Use PostgreSQL
 
