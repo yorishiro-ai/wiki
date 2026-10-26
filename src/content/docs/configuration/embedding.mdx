@@ -41,6 +41,96 @@ Use an OpenAI-compatible embeddings service, such as an appropriately configured
 
 Inside Docker, `localhost` means that container, not the host or another service. Use an address reachable from the container. Enterprise can also [choose a provider per workspace](../enterprise/#per-workspace-embedding-provider).
 
+### Ollama
+
+Install [Ollama](https://ollama.com/), start its server, and download an embedding model, not a chat model:
+
+```sh
+ollama pull nomic-embed-text
+curl --fail-with-body http://localhost:11434/v1/embeddings \
+  -H 'Content-Type: application/json' \
+  -d '{"model":"nomic-embed-text","input":["A test note"]}'
+```
+
+For Yorishiro running on the same host, use:
+
+```yaml
+YORISHIRO_EMBEDDING_PROVIDER: openai
+YORISHIRO_EMBEDDING_BASE_URL: http://localhost:11434/v1
+YORISHIRO_EMBEDDING_MODEL: nomic-embed-text
+YORISHIRO_EMBEDDING_API_KEY: ""
+YORISHIRO_EMBEDDING_DIMENSIONS: "768"
+YORISHIRO_EMBEDDING_SEND_DIMENSIONS_PARAM: "false"
+```
+
+These are environment entries, not a complete Yorishiro configuration file. The example model produces 768 dimensions. For another model, check its output size and change the setting. See [Ollama's OpenAI compatibility](https://docs.ollama.com/api/openai-compatibility).
+
+### LM Studio
+
+In [LM Studio](https://lmstudio.ai/), download and load an embedding model, then start its local API server from the Developer section. The usual port is `1234`; use the address shown by your server. Get the exact model identifier:
+
+```sh
+curl --fail-with-body http://localhost:1234/v1/models
+```
+
+Use that identifier and the model's output dimensions:
+
+```yaml
+YORISHIRO_EMBEDDING_PROVIDER: openai
+YORISHIRO_EMBEDDING_BASE_URL: http://localhost:1234/v1
+YORISHIRO_EMBEDDING_MODEL: <embedding-model-id>
+YORISHIRO_EMBEDDING_API_KEY: ""
+YORISHIRO_EMBEDDING_DIMENSIONS: "<model-output-dimensions>"
+YORISHIRO_EMBEDDING_SEND_DIMENSIONS_PARAM: "false"
+```
+
+Replace both placeholders. If you enabled API authentication in LM Studio, supply its token instead of an empty key. Verify the model with the Ollama curl example, changing the port and model and adding a bearer header if required. See [LM Studio embeddings](https://lmstudio.ai/docs/developer/openai-compat/embeddings).
+
+### Hosted API or another OpenAI-compatible server
+
+For example, OpenAI's `text-embedding-3-small` can return 1536-dimensional vectors:
+
+```yaml
+YORISHIRO_EMBEDDING_PROVIDER: openai
+YORISHIRO_EMBEDDING_BASE_URL: https://api.openai.com/v1
+YORISHIRO_EMBEDDING_MODEL: text-embedding-3-small
+YORISHIRO_EMBEDDING_API_KEY: ${EMBEDDING_API_KEY}
+YORISHIRO_EMBEDDING_DIMENSIONS: "1536"
+YORISHIRO_EMBEDDING_SEND_DIMENSIONS_PARAM: "true"
+```
+
+In Compose, supply `EMBEDDING_API_KEY` through your deployment's secret handling; do not commit its value. Hosted services receive the text being embedded and may charge for requests. Other services, including vLLM, need their own embedding model, URL, credential, and output size; a chat-completions endpoint alone is not enough.
+
+Yorishiro appends `/embeddings` to the base URL. Include `/v1` when the service requires it, but do not include `/embeddings` itself. These examples call `/v1/embeddings`, not Ollama's native `/api/embed` endpoint.
+
+### Apply the settings
+
+For Compose, merge the chosen environment entries into `x-yorishiro.environment`, keeping the existing database and queue entries. Then run `docker compose up -d` to recreate services with the new settings. A plain `docker compose restart` does not apply changed environment values.
+
+If Ollama or LM Studio runs on the Docker host, replace `localhost` with `host.docker.internal`. On Linux Docker Engine, add this to `x-yorishiro`:
+
+```yaml
+extra_hosts:
+  - "host.docker.internal:host-gateway"
+```
+
+The model server must listen on an address reachable from containers, not only its loopback address. Use Ollama's `OLLAMA_HOST` setting or LM Studio's network-serving option, and restrict access with your firewall. For another Compose service, use its service name and container port instead.
+
+For packages, edit the existing `settings.embedding` block in `production.yaml`, using fields rather than environment-variable names. For Ollama on the same host:
+
+```yaml
+settings:
+  embedding:
+    provider: openai
+    base_url: http://localhost:11434/v1
+    model: nomic-embed-text
+    api_key: ""
+    dimensions: 768
+    send_dimensions_param: false
+```
+
+Merge this into the existing configuration; do not replace the whole file or remove other `settings` entries. Restart all four packaged services. No `yorishiro.env` file is needed. If the workspace already has embeddings, follow the model-change procedure below, then test a search and check the embedding worker logs.
+
 ## Change the embedding model
 
 Back up your data before changing the provider or model. Restart with the new settings. Yorishiro schedules reindexing when it detects a changed workspace model; keep the embedding worker and scheduler running.

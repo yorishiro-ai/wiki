@@ -41,6 +41,96 @@ OpenAI互換の埋め込みサービスを使えます。対応する設定のOl
 
 Docker内の`localhost`は、そのコンテナ自身を指します。ホストやほかのサービスではありません。コンテナから接続できるアドレスを使ってください。Enterpriseでは[ワークスペースごとのプロバイダー](../enterprise/#ワークスペースごとの埋め込みプロバイダー)も設定できます。
 
+### Ollama
+
+[Ollama](https://ollama.com/)をインストールしてサーバーを起動し、チャット用ではなく埋め込み用のモデルを取得します。
+
+```sh
+ollama pull nomic-embed-text
+curl --fail-with-body http://localhost:11434/v1/embeddings \
+  -H 'Content-Type: application/json' \
+  -d '{"model":"nomic-embed-text","input":["A test note"]}'
+```
+
+Yorishiroも同じホストで動く場合は、次を使います。
+
+```yaml
+YORISHIRO_EMBEDDING_PROVIDER: openai
+YORISHIRO_EMBEDDING_BASE_URL: http://localhost:11434/v1
+YORISHIRO_EMBEDDING_MODEL: nomic-embed-text
+YORISHIRO_EMBEDDING_API_KEY: ""
+YORISHIRO_EMBEDDING_DIMENSIONS: "768"
+YORISHIRO_EMBEDDING_SEND_DIMENSIONS_PARAM: "false"
+```
+
+これは環境変数の設定例で、Yorishiroの完全な設定ファイルではありません。例のモデルは768次元を出力します。別のモデルでは出力サイズを確認して変更してください。[OllamaのOpenAI互換API](https://docs.ollama.com/api/openai-compatibility)も参照してください。
+
+### LM Studio
+
+[LM Studio](https://lmstudio.ai/)で埋め込みモデルをダウンロードして読み込み、DeveloperからローカルAPIサーバーを起動します。通常のポートは`1234`ですが、サーバーに表示されたアドレスを使ってください。モデルの正確な識別子を取得します。
+
+```sh
+curl --fail-with-body http://localhost:1234/v1/models
+```
+
+その識別子とモデルの出力次元数を設定します。
+
+```yaml
+YORISHIRO_EMBEDDING_PROVIDER: openai
+YORISHIRO_EMBEDDING_BASE_URL: http://localhost:1234/v1
+YORISHIRO_EMBEDDING_MODEL: <embedding-model-id>
+YORISHIRO_EMBEDDING_API_KEY: ""
+YORISHIRO_EMBEDDING_DIMENSIONS: "<model-output-dimensions>"
+YORISHIRO_EMBEDDING_SEND_DIMENSIONS_PARAM: "false"
+```
+
+2つのプレースホルダーを置き換えてください。LM StudioのAPI認証を有効にしている場合は、空のキーではなくトークンを指定します。Ollamaのcurl例のポートとモデルを変更し、必要ならBearerヘッダーを付けて動作を確認します。[LM Studioの埋め込みAPI](https://lmstudio.ai/docs/developer/openai-compat/embeddings)も参照してください。
+
+### 外部APIやほかのOpenAI互換サーバー
+
+たとえばOpenAIの`text-embedding-3-small`は1536次元のベクトルを返せます。
+
+```yaml
+YORISHIRO_EMBEDDING_PROVIDER: openai
+YORISHIRO_EMBEDDING_BASE_URL: https://api.openai.com/v1
+YORISHIRO_EMBEDDING_MODEL: text-embedding-3-small
+YORISHIRO_EMBEDDING_API_KEY: ${EMBEDDING_API_KEY}
+YORISHIRO_EMBEDDING_DIMENSIONS: "1536"
+YORISHIRO_EMBEDDING_SEND_DIMENSIONS_PARAM: "true"
+```
+
+Composeではデプロイ環境の秘密情報の管理方法で`EMBEDDING_API_KEY`を渡し、値をコミットしないでください。外部サービスには埋め込み対象の本文が送られ、リクエストに料金がかかる場合があります。vLLMなどでも、埋め込みモデル、URL、認証情報、出力サイズをそろえます。チャット補完のエンドポイントだけでは使えません。
+
+YorishiroはベースURLの末尾に`/embeddings`を追加します。サービスが必要とする場合は`/v1`を含めますが、`/embeddings`自体は含めません。この例は`/v1/embeddings`を使い、Ollama独自の`/api/embed`は使いません。
+
+### 設定を反映する
+
+Composeでは、選んだ環境変数を既存の`x-yorishiro.environment`に追加し、データベースやキューの設定は残してください。`docker compose up -d`で新しい設定のサービスに作り直します。`docker compose restart`だけでは環境変数の変更は反映されません。
+
+OllamaやLM StudioがDockerのホストで動く場合は、`localhost`を`host.docker.internal`に変えます。LinuxのDocker Engineでは`x-yorishiro`に次も追加します。
+
+```yaml
+extra_hosts:
+  - "host.docker.internal:host-gateway"
+```
+
+モデルのサーバーはループバックだけでなく、コンテナから接続できるアドレスで待ち受ける必要があります。Ollamaの`OLLAMA_HOST`やLM Studioのネットワーク公開設定を使い、ファイアウォールで接続元を制限してください。別のComposeサービスなら、そのサービス名とコンテナ内のポートを使います。
+
+パッケージでは`production.yaml`の既存の`settings.embedding`を、環境変数名ではなく設定の項目名で編集します。同じホストのOllamaなら次のとおりです。
+
+```yaml
+settings:
+  embedding:
+    provider: openai
+    base_url: http://localhost:11434/v1
+    model: nomic-embed-text
+    api_key: ""
+    dimensions: 768
+    send_dimensions_param: false
+```
+
+ファイル全体を置き換えたり、ほかの`settings`を削除したりせず、既存の設定に反映してください。パッケージの4サービスを再起動します。`yorishiro.env`は不要です。既存の埋め込みがある場合は次のモデル変更手順に従い、検索と埋め込みワーカーのログを確認してください。
+
 ## 埋め込みモデルを変更する
 
 プロバイダーやモデルを変更する前にバックアップを取ってください。新しい設定で再起動すると、ワークスペースのモデル変更を検出した際に再インデックスが予約されます。埋め込みワーカーとスケジューラーを起動しておいてください。
