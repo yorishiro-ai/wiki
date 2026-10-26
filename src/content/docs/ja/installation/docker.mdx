@@ -47,7 +47,7 @@ docker run -d --name yorishiro-scheduler --restart unless-stopped --no-healthche
 
 PostgreSQLを使う場合は、4つすべてに同じ`DATABASE_URL`を設定します。Valkeyのキューも使う場合は、`YORISHIRO_QUEUE_KIND=Redis`と`QUEUE_URL`も4つすべてに設定します。データベース拡張を含む構成例は[Composeガイド](../docker-compose/#postgresqlとvalkey)を参照してください。
 
-イメージは`/app/config/production.yaml`を読み込みます。必要なら完全な設定ファイルをこの場所にマウントします。イメージ内のファイルとはマージされません。`HOST`には利用者が接続するURLを指定します。`BINDING=0.0.0.0`は、公開したポートからコンテナ内のサーバーに接続するための設定です。
+イメージは`/app/config/production.yaml`を読み込みます。必要なら完全な設定ファイルをこの場所にマウントします。イメージ内のファイルとはマージされません。`HOST`には利用者が接続するURLを指定します。`BINDING=0.0.0.0`は公開したポートからコンテナ内のサーバーに接続するための設定です。
 
 ## ログと停止
 

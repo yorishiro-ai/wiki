@@ -27,9 +27,9 @@ Your MCP client lists the tools your server actually offers. This page lists the
   ja: {
     title: "MCPツール",
     description: "YorishiroがMCPクライアントに公開するツールの一覧です。",
-    intro: `Yorishiroは、Model Context ProtocolをStreamable HTTPで \`/mcp\` に公開します。APIキーは \`Authorization: Bearer <api-key>\` ヘッダーで送ります。
+    intro: `YorishiroはModel Context ProtocolをStreamable HTTPで \`/mcp\` に公開します。APIキーは \`Authorization: Bearer <api-key>\` ヘッダーで送ります。
 
-どのツールにも、呼び出しに必要な最小のスコープがあります。スコープは \`read\`、\`write\`、\`schema\`、\`migration\` の順に高くなり、高いスコープのキーは低いスコープのツールもすべて呼び出せます。スコープが足りない呼び出しは、プロトコルエラーではなくツールのエラーとして返ります。
+どのツールにも呼び出しに必要な最小のスコープがあります。スコープは \`read\`、\`write\`、\`schema\`、\`migration\` の順に高くなり、高いスコープのキーは低いスコープのツールもすべて呼び出せます。スコープが足りない場合は、プロトコルエラーではなくツールのエラーが返ります。
 
 \`localhost\` 以外のホスト名でサーバーにアクセスするクライアントがある場合は、そのホスト名を \`YORISHIRO_MCP_ALLOWED_HOSTS\` にカンマ区切りで追加します。詳しくは[設定](../../configuration/)を参照してください。
 

@@ -25,7 +25,7 @@ Docker Composeでは共有の`x-yorishiro.environment`に追加します。パ�
 
 オフラインでは`model.safetensors`と`tokenizer.json`を両方配置します。ワーカーが読める権限が必要です。片方だけでは起動できません。[Composeのマウント手順](../../installation/docker-compose/#ローカルモデルをオフラインで使う)を参照してください。
 
-`YORISHIRO_LOCAL_MODEL`の既定値は、対応するローカルモデルの`multilingual-e5-base`です。`YORISHIRO_LOCAL_MAX_SEQUENCE_LENGTH`は既定値が`512`で、`16`〜`512`を指定できます。入力長を制限する必要がなければ変更は不要です。
+`YORISHIRO_LOCAL_MODEL`の既定値は対応するローカルモデルの`multilingual-e5-base`です。`YORISHIRO_LOCAL_MAX_SEQUENCE_LENGTH`の既定値は`512`で、`16`〜`512`を指定できます。入力長を制限する必要がなければ変更は不要です。
 
 ## 外部サービス
 
@@ -39,7 +39,7 @@ OpenAI互換の埋め込みサービスを使えます。対応する設定のOl
 | `YORISHIRO_EMBEDDING_DIMENSIONS`            | 出力ベクトルのサイズ。既定値は`768`。モデルに合わせます                         |
 | `YORISHIRO_EMBEDDING_SEND_DIMENSIONS_PARAM` | 既定値は`false`。サービスが`dimensions`フィールドを要求する場合だけ有効にします |
 
-Docker内の`localhost`は、そのコンテナ自身を指します。ホストやほかのサービスではありません。コンテナから接続できるアドレスを使ってください。Enterpriseでは[ワークスペースごとのプロバイダー](../enterprise/#ワークスペースごとの埋め込みプロバイダー)も設定できます。
+Docker内の`localhost`はそのコンテナ自身を指します。ホストやほかのサービスではありません。コンテナから接続できるアドレスを使ってください。Enterpriseでは[ワークスペースごとのプロバイダー](../enterprise/#ワークスペースごとの埋め込みプロバイダー)も設定できます。
 
 ### Ollama
 
@@ -105,7 +105,7 @@ YorishiroはベースURLの末尾に`/embeddings`を追加します。サービ�
 
 ### 設定を反映する
 
-Composeでは、選んだ環境変数を既存の`x-yorishiro.environment`に追加し、データベースやキューの設定は残してください。`docker compose up -d`で新しい設定のサービスに作り直します。`docker compose restart`だけでは環境変数の変更は反映されません。
+Composeでは選んだ環境変数を既存の`x-yorishiro.environment`に追加し、データベースやキューの設定は残してください。`docker compose up -d`でサービスを新しい設定で作り直します。`docker compose restart`だけでは環境変数の変更は反映されません。
 
 OllamaやLM StudioがDockerのホストで動く場合は、`localhost`を`host.docker.internal`に変えます。LinuxのDocker Engineでは`x-yorishiro`に次も追加します。
 
@@ -147,6 +147,6 @@ yorishiro task reindex_embeddings workspace_id:<uuid>
 
 ## 検索までの待ち時間
 
-保存、更新した項目が類似検索に出るまで時間がかかる場合があります。IDを指定した取得はできます。ワーカーやプロバイダーが時間内に検索文の埋め込みを作れない場合は`503`になります。自動でテキストのみの検索には切り替わりません。
+保存や更新をした項目が類似検索に出るまで時間がかかる場合があります。IDを指定した取得はできます。ワーカーやプロバイダーが時間内に検索文の埋め込みを作れない場合は`503`になります。自動でテキストのみの検索には切り替わりません。
 
 productionの`YORISHIRO_QUERY_EMBEDDING_TIMEOUT_MS`は既定値が`15000`、最大が`120000`です。増やす前にワーカーのログとプロバイダーへの接続を確認してください。[トラブルシューティング](../../operations/queue-start-objectives/)を参照してください。

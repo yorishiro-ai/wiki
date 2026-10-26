@@ -9,7 +9,7 @@ Enterprise（`ee`）の管理者向けです。通常のMCP利用はCommunityと
 
 ## ライセンス
 
-productionでは`YORISHIRO_LICENSE_KEY`を指定するか、設定ファイルの`initializers.licence_key`を編集します。有効で期限内のライセンスがなければ1テナントです。SQLiteはライセンスがあっても1テナントに限られます。
+productionでは`YORISHIRO_LICENSE_KEY`を指定するか、設定ファイルの`initializers.licence_key`を編集します。有効で期限内のライセンスがなければ、利用できるのは1テナントです。SQLiteはライセンスがあっても1テナントに限られます。
 
 パッケージでは秘密の値を保護した`production.yaml`に書きます。追加の環境ファイルは不要です。[パッケージ](../../installation/packages/#設定)を参照してください。
 
@@ -36,7 +36,7 @@ productionでは`YORISHIRO_LICENSE_KEY`を指定するか、設定ファイル�
 
 `PUT /api/workspace/worker-class`の`worker_class`に`shared`、`official`、`tenant_private`を指定します。専用ワーカーを用意していなければ`shared`のままにしてください。
 
-ほかのクラスを選ぶ前に、対象の2種類のワーカーを起動し、サーバーにも埋め込みの経路を宣言します。[ワーカーの対象](../workers-and-queues/#ワーカーの対象)を参照してください。宣言はワーカーの起動や監視を行いません。
+ほかのクラスを選ぶ前に、対象の2種類のワーカーを起動し、サーバーにも埋め込みの経路を宣言します。[ワーカーの対象](../workers-and-queues/#ワーカーの対象)を参照してください。宣言してもワーカーは起動されず、監視もされません。
 
 ## 非同期のinfer-fill
 
@@ -50,7 +50,7 @@ infer-fillはLLMで不足する値を提案し、確認するまで適用しま�
 
 承認も非同期で、新しい`job_id`が返ります。適用済みと判断する前に`GET /api/inference-jobs/confirmations/{job_id}`を確認してください。推論と承認には`job-target:shared`が必要です。一覧には`read`、確認操作と承認の状態取得には`schema`権限が必要です。
 
-すべて適用されたと決めず、失敗や古くなった提案を確認してください。待機中というだけで再投入せず、[トラブルシューティング](../../operations/queue-start-objectives/)を確認します。
+すべて適用されたと決めつけず、失敗や古くなった提案を確認してください。待機中というだけで再投入せず、[トラブルシューティング](../../operations/queue-start-objectives/)を確認します。
 
 ## テンプレートの更新とスキーマのフォーク
 

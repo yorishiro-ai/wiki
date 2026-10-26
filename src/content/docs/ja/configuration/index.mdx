@@ -19,9 +19,9 @@ import PageList from "../../../../components/PageList.astro";
 | パッケージ | `/etc/yorishiro/production.yaml.example`を`/etc/yorishiro/production.yaml`にコピーして編集 |
 | ソース     | `config/development.yaml`。`LOCO_ENV=production`なら`config/production.yaml`               |
 
-productionの例は、このページに示す環境変数を読み込みます。YAMLの値を固定値に置き換えると、その項目は環境変数を参照しなくなります。変更後は対象のサービスを再起動し、データベースとキューの設定を4つのサービスでそろえてください。
+productionの例はこのページに示す環境変数を読み込みます。YAMLの値を固定値に置き換えると、その項目は環境変数を参照しなくなります。変更後は対象のサービスを再起動し、データベースとキューの設定を4つのサービスでそろえてください。
 
-`production.yaml`を置き換える場合は完全なファイルが必要です。パッケージのファイルとはマージされません。ベースの設定と同じ場所にある`production.local.yaml`は、指定した項目だけを上書きします。別の設定ディレクトリは`LOCO_CONFIG_FOLDER`で指定します。権限やデータベースの変更は[パッケージ](../installation/packages/#設定)を参照してください。
+`production.yaml`を置き換える場合は完全なファイルが必要です。パッケージのファイルとはマージされません。ベースの設定と同じ場所にある`production.local.yaml`は指定した項目だけを上書きします。別の設定ディレクトリは`LOCO_CONFIG_FOLDER`で指定します。権限やデータベースの変更は[パッケージ](../installation/packages/#設定)を参照してください。
 
 ## サーバーのアドレス
 
@@ -35,7 +35,7 @@ productionの例は、このページに示す環境変数を読み込みます�
 
 `HOST`は待受アドレスを変更しません。[Dockerの例](../installation/docker-compose/)では`BINDING=0.0.0.0`と`HOST=http://localhost:5150`を明示しています。
 
-別のオリジンのブラウザークライアントには、`YORISHIRO_ALLOWED_ORIGINS`を`["https://assistant.example.com"]`のように設定します。MCPのホスト名検証とは別の設定で、APIキーの代わりにはなりません。`0.0.0.0`や`::`で待ち受ける場合は任意のMCP Hostを受け付けます。限定したアドレスではループバック、待受アドレス、明示的に許可したホストを受け付けます。
+別のオリジンのブラウザークライアントには`YORISHIRO_ALLOWED_ORIGINS`を`["https://assistant.example.com"]`のように設定します。MCPのホスト名検証とは別の設定で、APIキーの代わりにはなりません。`0.0.0.0`や`::`で待ち受ける場合は任意のMCP Hostを受け付けます。限定したアドレスではループバック、待受アドレス、明示的に許可したホストを受け付けます。
 
 ## データベースとキュー
 

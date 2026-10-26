@@ -11,14 +11,14 @@ Ubuntu 24.04かAlmaLinux 10で使えます。glibc 2.39以降が必要です。`
 
 [Releases](https://github.com/yorishiro-ai/yorishiro/releases)から対象のパッケージと`checksums.txt`を取得します。`<VERSION>`をリリースタグに置き換えてください。`arm64`ではファイル名の`amd64`も変更します。
 
-DebianやUbuntuの場合:
+DebianやUbuntuでは次を実行します。
 
 ```sh
 wget https://github.com/yorishiro-ai/yorishiro/releases/download/<VERSION>/yorishiro-ce-<VERSION>-amd64.deb
 sudo apt install ./yorishiro-ce-<VERSION>-amd64.deb
 ```
 
-AlmaLinuxの場合:
+AlmaLinuxでは次を実行します。
 
 ```sh
 wget https://github.com/yorishiro-ai/yorishiro/releases/download/<VERSION>/yorishiro-ce-<VERSION>-amd64.rpm
@@ -47,7 +47,7 @@ Enterpriseには`/etc/yorishiro/LICENSE.enterprise`も含まれます。
 
 ## 設定
 
-4つのサービスは同じ設定を使います。独自のファイルがなければ、パッケージの例とSQLiteで動きます。`yorishiro.env`や`EnvironmentFile=`のオーバーライドは不要です。
+4つのサービスは同じ設定を使います。独自のファイルがなければ、パッケージの設定例を使い、SQLiteで動きます。`yorishiro.env`や`EnvironmentFile=`のオーバーライドは不要です。
 
 設定を変更する場合は、既存の設定がないときだけ例をコピーします。
 
