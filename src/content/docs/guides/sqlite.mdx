@@ -1,46 +1,31 @@
 ---
-title: "SQLite mode"
-description: "What SQLite mode supports and where it has limits."
+title: SQLite mode
+description: Choose SQLite for personal use and recognize when to move to PostgreSQL.
 sidebar:
-  order: 1
+  order: 3
 ---
 
-Yorishiro can store its data in SQLite instead of PostgreSQL. SQLite is the default, and it suits local evaluation, personal use, and a single-person workspace that shares data with no one.
+SQLite is the default. It lets you try Yorishiro without running a separate database. Use it for personal information and one tenant on one host.
 
-Do not use SQLite for multi-tenant hosting. It keeps all data in one file, with no isolation between tenants. When two or more tenants share a deployment, use PostgreSQL.
+## What you can do
 
-## What works
+Save, update, list, and delete information; connect items with relations; use templates; search by meaning; and export or import workspace content. Keep both worker services running for background operations.
 
-- Creating, reading, updating, and deleting entities
-- Similarity search over embeddings. It scans every vector, so it can slow down with very large workspaces. Entities without an embedding are found by text search instead.
-- Text search with fuzzy matching on character sequences
-- API key sign-in
-- Embedding sync, the same as on PostgreSQL
-- The template library, and creating schemas from templates
-- `recall_context`, which finds related entities across several hops
-- Enterprise features such as column preferences and inference proposals
+## Limits to check
 
-## What does not work
+- One tenant only, including Enterprise. Use PostgreSQL for multiple tenants.
+- Data-field containment filters are unavailable. Omit `filter` in searches and listings, or use PostgreSQL when you need it.
+- SQLite writes one operation at a time. Many concurrent writes can wait on one another.
+- Similarity search scans vectors, so large workspaces can become slow.
+- Template marketplace browsing and template-version publishing are unavailable.
+- Infer-fill runs at most one job per workspace at a time.
 
-- More than one tenant is not supported. SQLite supports exactly one tenant, and you cannot change this.
-- Filtering on data fields is not supported. The `filter` query parameter returns an error on SQLite.
-- Browsing the template marketplace (Enterprise) and publishing a template version are not supported. Both return `501`.
-- Infer-fill allows only one running job per workspace.
+## Keep files together
 
-SQLite allows a single writer at a time, so many concurrent writes can wait on each other.
+The default production data file is `/var/lib/yorishiro/yorishiro.sqlite3`. The queue uses a separate file, `/var/lib/yorishiro/yorishiro_queue.sqlite3`. Never point both URLs at the same file.
 
-## Settings
+Keep the server and workers on the same host with the same file paths. Valkey can replace the queue, but it does not make a SQLite database accessible to a worker on another host.
 
-Select SQLite with a `sqlite:` URL:
+## Move beyond SQLite
 
-```console
-$ export DATABASE_URL='sqlite:///var/lib/yorishiro/yorishiro.sqlite3?mode=rwc'
-```
-
-Background jobs use a separate SQLite file by default, `sqlite:///var/lib/yorishiro/yorishiro_queue.sqlite3?mode=rwc`. The database and the queue must not share a file. If `QUEUE_URL` points to the database file, finish or move pending jobs, then set a separate queue file before you start the server.
-
-A SQLite database works with a SQLite queue or a Valkey queue. A PostgreSQL queue with a SQLite database is rejected at start. With a Valkey queue, keep the workers on the database's host.
-
-The database pool's maximum size, `database.max_connections`, must be at least 2. The server refuses to start with a smaller value.
-
-There is no separate SQLite configuration file. Use the normal configuration and set `DATABASE_URL`. See [Configuration](../../configuration/).
+Use PostgreSQL when you need more than one tenant, remote workers, content filters, or better write concurrency. Changing `DATABASE_URL` does not copy existing information. Test an [export and import](../import-export/) into your new installation, and keep a [full backup](../../operations/queue-publisher-cutover/) until you have verified it.

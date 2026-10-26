@@ -2,7 +2,7 @@
 
 User documentation for [Yorishiro](https://github.com/yorishiro-ai/yorishiro) (依り代): installation, configuration, guides, operations, and reference. Available in English and Japanese.
 
-Published at <https://yorishiro-ai.github.io/wiki/>. Developer documentation (architecture, testing, contribution) lives in the [Yorishiro repository](https://github.com/yorishiro-ai/yorishiro/tree/develop/docs).
+Published at <https://yorishiro-ai.github.io/wiki/>. This wiki covers using and operating Yorishiro; it follows product `develop`. Contributor information lives in the [Yorishiro contributing guide](https://github.com/yorishiro-ai/yorishiro/blob/develop/CONTRIBUTING.md).
 
 Built with [Astro Starlight](https://starlight.astro.build/), [pnpm](https://pnpm.io/), and [Oxc](https://oxc.rs/) (`oxlint`, `oxfmt`).
 

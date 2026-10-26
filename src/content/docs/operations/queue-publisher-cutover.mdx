@@ -1,47 +1,48 @@
 ---
-title: "Queue publisher cutover"
-description: "Switch the queue publisher to a new epoch and replay queued work."
+title: Update and back up
+description: Preserve your data before updating Yorishiro or changing storage.
 sidebar:
   order: 2
 ---
 
-Use this procedure when you cut over the queue provider. It moves queued work to the new publisher epoch.
+Before updating, read the chosen release's notes and back up your database and configuration. A content export is useful for moving information, but it is not a complete installation backup.
 
-## Steps
+## Back up
 
-1. Deploy the release that stops direct publishing by producers.
-2. Stop every old producer and worker. Record the operator attestation `old_workers_exited:true`.
-3. Pause publishing. The epoch advances from `<n>` to E, and you use E in the following steps.
+- **SQLite:** stop all four services before copying the data directory. Keep the database, separate queue database, and any SQLite sidecar files together. Do not copy only a live `.sqlite3` file.
+- **PostgreSQL:** use your database backup procedure, such as `pg_dump`, and test restoring it to a separate database. Preserve the queue too if it uses a separate database or Valkey.
+- **Configuration:** save your Compose file or `/etc/yorishiro/production.yaml`, connection settings, and credentials in a protected backup.
 
-   ```console
-   $ yorishiro task set_queue_publishing_epoch expected_epoch:<n> active:false
-   ```
+Record the image or package version alongside the backup. Model files can be downloaded again, but preserving them avoids a large download.
 
-4. While publishing is paused, record the provider snapshot evidence, then prepare the replay.
+## Update Docker Compose
 
-   ```console
-   $ yorishiro task replay_queue_dispatch_snapshot phase:prepare expected_epoch:<E> old_workers_exited:true cutoff_at:<RFC3339> snapshot_id:<evidence-id>
-   ```
+1. Stop clients from submitting new work and let pending jobs finish where possible.
+2. Stop the services and take your backup. Keep the existing volumes.
+3. Change the image tag in `compose.yml` to the chosen version, using the same version and edition for all four services.
+4. Pull and restart:
 
-5. Start the new worker pool, then activate the prepared epoch.
+```sh
+docker compose pull
+docker compose up -d
+docker compose ps
+docker compose logs --tail 100 app worker jobs scheduler
+```
 
-   ```console
-   $ yorishiro task replay_queue_dispatch_snapshot phase:activate expected_epoch:<E> old_workers_exited:true snapshot_id:<evidence-id>
-   ```
+Check `/_ping`, an authenticated read, and a search before resuming clients. Do not run `docker compose down -v`: it deletes named volumes.
 
-   Activation takes the same `expected_epoch:<E>` and `snapshot_id` as prepare, and the cutoff that prepare recorded. It then turns publishing back on.
+## Update packages
 
-6. Keep producers stopped until activation completes. Start them only after that.
+Stop new work, stop all four services, and take a backup. Install the new package using the [package installation commands](../../installation/packages/). Compare your configuration with the new `/etc/yorishiro/production.yaml.example`, then restart:
 
-## What prepare does
+```sh
+sudo systemctl restart yorishiro yorishiro-worker yorishiro-jobs yorishiro-scheduler
+```
 
-- It moves queued, retrying, and running work, and unexpired pending query-embedding work, to the new epoch.
-- It includes work that was accepted while publishing was paused.
-- It leaves scheduled retry times unchanged. Running jobs are reclaimed without waiting for their old leases to expire.
+## Restore or change storage
 
-## Limits
+Test restoration separately before replacing your installation. A database migration may prevent an older binary from reading an upgraded database; changing the image tag back is not a recovery plan. Follow release-specific guidance and restore the matching backup when required.
 
-- The attestation and the snapshot ID are evidence that you provide. Yorishiro does not verify them.
-- Quarantined jobs, and jobs that are no longer queued, retrying, or running, are skipped without an error. So are expired query-embedding jobs that have no lifecycle.
-- If any other old row has no lifecycle, has not been published, and is not a query-embedding row with a workspace and a deadline, prepare fails with `N lifecycle-less dispatch rows cannot be replayed safely`. Quarantine those rows or otherwise resolve them, then run prepare again.
-- Changing the epoch cannot retract a message that the provider has already accepted. A provider timeout or a crash, or an enqueue whose outcome is unknown, can duplicate work.
+For moving workspace content, use [Export and import](../../guides/import-export/). Changing `DATABASE_URL` or `QUEUE_URL` does not migrate data or pending jobs. Do not switch queues while work is pending without a tested migration procedure.
+
+Older documentation referred to publisher-epoch cutover tasks. Those commands are not available in the current product; do not use them for an update.

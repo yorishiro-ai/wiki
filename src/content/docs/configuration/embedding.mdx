@@ -1,72 +1,152 @@
 ---
-title: "Embedding"
-description: "Set up automatic text embeddings for similarity search."
+title: Embedding
+description: Enable search by meaning with a local model or an external service.
 sidebar:
   order: 2
 ---
 
-Yorishiro turns your text into numeric vectors, called embeddings, so you can search by meaning.
-
-## How it works
-
-When you create or update an entity, Yorishiro generates its embedding in the background after the save completes, so writes stay fast. A worker does this, so [a worker must be running](../workers-and-queues/).
-
-When you search, the server asks a worker to embed your query and waits for the result. If the worker times out or the provider fails, the search returns `503`. It does not quietly fall back to text-only results.
-
-All embeddings in a workspace use the same provider and model. Different workspaces can use different ones.
-
-Entities without an embedding do not cause errors. They are still found by fuzzy text matching, but similarity search returns less relevant results for them. This happens, for example, right after you import a backup with `import_jsonl`. To generate the missing embeddings, run:
-
-```console
-$ yorishiro task resync_embeddings workspace_id:<uuid>
-```
-
-In Docker, run `docker exec <container> yorishiro task resync_embeddings workspace_id:<uuid>` inside the container.
+Embeddings let you find information by meaning rather than exact words. The standard installation uses a local model and requires no external API key. Keep the [embedding worker](../workers-and-queues/) running.
 
 ## Choose a provider
 
-You can run a model on your own machine, or use an OpenAI-compatible service such as LM Studio, Ollama, vLLM, or OpenAI.
+| Choice                    | Set in the production environment                                       | Result                                                                           |
+| ------------------------- | ----------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Local model               | `YORISHIRO_EMBEDDING_PROVIDER=local`                                    | Default. Runs multilingual-e5-base on the embedding worker.                      |
+| OpenAI-compatible service | Set both `YORISHIRO_EMBEDDING_BASE_URL` and `YORISHIRO_EMBEDDING_MODEL` | Uses your endpoint and model. Add `YORISHIRO_EMBEDDING_API_KEY` if required.     |
+| Disabled                  | `YORISHIRO_EMBEDDING_PROVIDER=none`                                     | Save and retrieve items without loading a model. Semantic search is unavailable. |
 
-| Variable                                    | Description                                                                                                                                                                                                                                                                                                                       |
-| ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `YORISHIRO_EMBEDDING_PROVIDER`              | `local` runs a model on this machine (the default). `none` turns embeddings off. Setting both `YORISHIRO_EMBEDDING_BASE_URL` and `YORISHIRO_EMBEDDING_MODEL` selects the OpenAI-compatible service whatever this variable is set to, including `local` and `none`. `openai` selects the same provider and requires both of those. |
-| `YORISHIRO_EMBEDDING_BASE_URL`              | URL of an OpenAI-compatible embeddings endpoint, for example `http://localhost:11434`. Requires `YORISHIRO_EMBEDDING_MODEL`.                                                                                                                                                                                                      |
-| `YORISHIRO_EMBEDDING_MODEL`                 | Model name for the OpenAI-compatible service                                                                                                                                                                                                                                                                                      |
-| `YORISHIRO_EMBEDDING_API_KEY`               | API key for the service. Leave it empty for local services.                                                                                                                                                                                                                                                                       |
-| `YORISHIRO_EMBEDDING_DIMENSIONS`            | Vector size the model produces (default `768`). The local provider accepts only `768`. `1024` and `1536` are for the OpenAI-compatible provider.                                                                                                                                                                                  |
-| `YORISHIRO_EMBEDDING_SEND_DIMENSIONS_PARAM` | Send a `dimensions` field in requests (default `false`)                                                                                                                                                                                                                                                                           |
+Setting both the external endpoint and model takes priority over the provider variable, even `none`. To disable an external provider, remove those two values too.
+
+For Docker Compose, add settings to the shared `x-yorishiro.environment` block. For packages, edit `settings.embedding` in `/etc/yorishiro/production.yaml`. Restart the services after changing settings.
 
 ## Local model
 
-With `YORISHIRO_EMBEDDING_PROVIDER=local`, Yorishiro uses `multilingual-e5-base` (768 dimensions), which works well for many languages including Japanese. It is the only local model.
+The default model supports multiple languages, including Japanese. On first startup, the embedding worker downloads about 1 GiB into `models/multilingual-e5-base/` under its working directory. Docker uses `/app/models/`; packages use `/var/lib/yorishiro/models/`. Preserve this directory to avoid downloading again.
 
-| Variable                              | Description                                                                   |
-| ------------------------------------- | ----------------------------------------------------------------------------- |
-| `YORISHIRO_LOCAL_MODEL`               | Model name (default `multilingual-e5-base`). An unknown value prevents start. |
-| `YORISHIRO_LOCAL_MAX_SEQUENCE_LENGTH` | Maximum input length (default `512`). Must be from `16` to `512`.             |
+For offline use, put both `model.safetensors` and `tokenizer.json` in that directory. The worker must be able to read them. Providing only one prevents startup. See the [Compose mounting instructions](../../installation/docker-compose/#use-a-local-embedding-model-offline).
 
-The model files (about 1 GiB) download on first use and are cached in `$HOME/.cache/yorishiro/models/`. The server needs a writable `HOME` for this. The first start waits for the download. Later starts use the cache. If a download fails, restart the service.
+`YORISHIRO_LOCAL_MODEL` defaults to `multilingual-e5-base`, the supported local model. `YORISHIRO_LOCAL_MAX_SEQUENCE_LENGTH` defaults to `512` and accepts `16` to `512`. Leave these unchanged unless you need to limit input length.
 
-To work offline, place `model.safetensors` and `tokenizer.json` together in `models/<model-id>/` under the working directory. Provide both files or neither.
+## External service
 
-If you upgrade from an older release that used `YORISHIRO_ONNX_*`, `YORISHIRO_LOCAL_MODEL_PATH`, or `YORISHIRO_LOCAL_TOKENIZER_PATH`, remove those variables. Start fails with a message while they are set.
+Use an OpenAI-compatible embeddings service, such as an appropriately configured Ollama, LM Studio, vLLM, or OpenAI endpoint. Set the endpoint URL, model name, credentials, and model output size together.
 
-## Search timing
+| Variable                                    | Use                                                                               |
+| ------------------------------------------- | --------------------------------------------------------------------------------- |
+| `YORISHIRO_EMBEDDING_BASE_URL`              | Your service URL, reachable from the embedding worker                             |
+| `YORISHIRO_EMBEDDING_MODEL`                 | The service's embedding model name                                                |
+| `YORISHIRO_EMBEDDING_API_KEY`               | Service credential; leave empty if not required                                   |
+| `YORISHIRO_EMBEDDING_DIMENSIONS`            | Output vector size; default `768`. Must match the model.                          |
+| `YORISHIRO_EMBEDDING_SEND_DIMENSIONS_PARAM` | Default `false`. Enable only if the service expects a `dimensions` request field. |
 
-| Variable                                     | Default | Description                                                                               |
-| -------------------------------------------- | ------- | ----------------------------------------------------------------------------------------- |
-| `YORISHIRO_QUERY_EMBEDDING_TIMEOUT_MS`       | `15000` | How long a search waits for the query embedding before returning `503`. Maximum `120000`. |
-| `YORISHIRO_QUERY_EMBEDDING_POLL_INTERVAL_MS` | `100`   | How often the server checks for the result. Must not exceed the timeout.                  |
-| `YORISHIRO_QUERY_EMBEDDING_RETENTION_SECS`   | `300`   | How long a query request is kept. Must cover the timeout.                                 |
+Inside Docker, `localhost` means that container, not the host or another service. Use an address reachable from the container. Enterprise can also [choose a provider per workspace](../enterprise/#per-workspace-embedding-provider).
+
+### Ollama
+
+Install [Ollama](https://ollama.com/), start its server, and download an embedding model, not a chat model:
+
+```sh
+ollama pull nomic-embed-text
+curl --fail-with-body http://localhost:11434/v1/embeddings \
+  -H 'Content-Type: application/json' \
+  -d '{"model":"nomic-embed-text","input":["A test note"]}'
+```
+
+For Yorishiro running on the same host, use:
+
+```yaml
+YORISHIRO_EMBEDDING_PROVIDER: openai
+YORISHIRO_EMBEDDING_BASE_URL: http://localhost:11434/v1
+YORISHIRO_EMBEDDING_MODEL: nomic-embed-text
+YORISHIRO_EMBEDDING_API_KEY: ""
+YORISHIRO_EMBEDDING_DIMENSIONS: "768"
+YORISHIRO_EMBEDDING_SEND_DIMENSIONS_PARAM: "false"
+```
+
+These are environment entries, not a complete Yorishiro configuration file. The example model produces 768 dimensions. For another model, check its output size and change the setting. See [Ollama's OpenAI compatibility](https://docs.ollama.com/api/openai-compatibility).
+
+### LM Studio
+
+In [LM Studio](https://lmstudio.ai/), download and load an embedding model, then start its local API server from the Developer section. The usual port is `1234`; use the address shown by your server. Get the exact model identifier:
+
+```sh
+curl --fail-with-body http://localhost:1234/v1/models
+```
+
+Use that identifier and the model's output dimensions:
+
+```yaml
+YORISHIRO_EMBEDDING_PROVIDER: openai
+YORISHIRO_EMBEDDING_BASE_URL: http://localhost:1234/v1
+YORISHIRO_EMBEDDING_MODEL: <embedding-model-id>
+YORISHIRO_EMBEDDING_API_KEY: ""
+YORISHIRO_EMBEDDING_DIMENSIONS: "<model-output-dimensions>"
+YORISHIRO_EMBEDDING_SEND_DIMENSIONS_PARAM: "false"
+```
+
+Replace both placeholders. If you enabled API authentication in LM Studio, supply its token instead of an empty key. Verify the model with the Ollama curl example, changing the port and model and adding a bearer header if required. See [LM Studio embeddings](https://lmstudio.ai/docs/developer/openai-compat/embeddings).
+
+### Hosted API or another OpenAI-compatible server
+
+For example, OpenAI's `text-embedding-3-small` can return 1536-dimensional vectors:
+
+```yaml
+YORISHIRO_EMBEDDING_PROVIDER: openai
+YORISHIRO_EMBEDDING_BASE_URL: https://api.openai.com/v1
+YORISHIRO_EMBEDDING_MODEL: text-embedding-3-small
+YORISHIRO_EMBEDDING_API_KEY: ${EMBEDDING_API_KEY}
+YORISHIRO_EMBEDDING_DIMENSIONS: "1536"
+YORISHIRO_EMBEDDING_SEND_DIMENSIONS_PARAM: "true"
+```
+
+In Compose, supply `EMBEDDING_API_KEY` through your deployment's secret handling; do not commit its value. Hosted services receive the text being embedded and may charge for requests. Other services, including vLLM, need their own embedding model, URL, credential, and output size; a chat-completions endpoint alone is not enough.
+
+Yorishiro appends `/embeddings` to the base URL. Include `/v1` when the service requires it, but do not include `/embeddings` itself. These examples call `/v1/embeddings`, not Ollama's native `/api/embed` endpoint.
+
+### Apply the settings
+
+For Compose, merge the chosen environment entries into `x-yorishiro.environment`, keeping the existing database and queue entries. Then run `docker compose up -d` to recreate services with the new settings. A plain `docker compose restart` does not apply changed environment values.
+
+If Ollama or LM Studio runs on the Docker host, replace `localhost` with `host.docker.internal`. On Linux Docker Engine, add this to `x-yorishiro`:
+
+```yaml
+extra_hosts:
+  - "host.docker.internal:host-gateway"
+```
+
+The model server must listen on an address reachable from containers, not only its loopback address. Use Ollama's `OLLAMA_HOST` setting or LM Studio's network-serving option, and restrict access with your firewall. For another Compose service, use its service name and container port instead.
+
+For packages, edit the existing `settings.embedding` block in `production.yaml`, using fields rather than environment-variable names. For Ollama on the same host:
+
+```yaml
+settings:
+  embedding:
+    provider: openai
+    base_url: http://localhost:11434/v1
+    model: nomic-embed-text
+    api_key: ""
+    dimensions: 768
+    send_dimensions_param: false
+```
+
+Merge this into the existing configuration; do not replace the whole file or remove other `settings` entries. Restart all four packaged services. No `yorishiro.env` file is needed. If the workspace already has embeddings, follow the model-change procedure below, then test a search and check the embedding worker logs.
 
 ## Change the embedding model
 
-When you switch models, existing entities keep vectors from the old model. Reindex each affected workspace:
+Back up your data before changing the provider or model. Restart with the new settings. Yorishiro schedules reindexing when it detects a changed workspace model; keep the embedding worker and scheduler running.
 
-```console
-$ yorishiro task reindex_embeddings workspace_id:<uuid>
+To request a full reindex yourself:
+
+```sh
+yorishiro task reindex_embeddings workspace_id:<uuid>
 ```
 
-This re-embeds every entity in the workspace. While it runs, search in that workspace returns `503`. Search returns to normal only after every entity is re-embedded without failures. You can also queue a reindex through the API with `POST /api/migration-jobs/reindex` (needs the `migration` scope). A reindex also runs on start when any workspace's model has changed.
+Run the task with the same configuration as your installation. In Compose, use `docker compose exec app yorishiro task reindex_embeddings workspace_id:<uuid>`.
 
-Failed embedding jobs are not retried automatically. After you fix the cause, run `resync_embeddings` or `reindex_embeddings` to recover.
+Search in the workspace returns `503` during reindexing and becomes available after it completes successfully. For missing embeddings after an import or a provider failure, run `yorishiro task resync_embeddings workspace_id:<uuid>` after fixing the cause.
+
+## Search timing
+
+New or updated items can take time to appear in similarity results. You can still retrieve an item by ID. Search returns `503` if the worker or provider cannot produce the query embedding in time; it does not silently become text-only search.
+
+The production variable `YORISHIRO_QUERY_EMBEDDING_TIMEOUT_MS` defaults to `15000` and supports up to `120000`. Check worker logs and provider connectivity before increasing it. See [Troubleshooting](../../operations/queue-start-objectives/).

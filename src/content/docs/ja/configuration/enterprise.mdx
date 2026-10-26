@@ -1,112 +1,73 @@
 ---
-title: "Enterprise の設定"
-description: "Enterprise エディションの機能に関する設定です。"
+title: Enterprise設定
+description: Enterpriseの認証、ワークスペースごとのプロバイダー、確認付きのAI補完を設定します。
 sidebar:
   order: 4
 ---
 
-このページでは Enterprise エディションの機能を説明します。利用にはライセンスキーが必要です。Community のすべての機能は Enterprise でも利用できます。
+Enterprise（`ee`）の管理者向けです。通常のMCP利用はCommunityと共通です。Enterpriseのイメージかパッケージを使い、ライセンスが必要な機能には有効なライセンスを設定してください。
 
 ## ライセンス
 
-`YORISHIRO_LICENSE_KEY` にライセンスキーを設定します。有効で期限内のライセンスがない場合、Enterprise エディションが許可するテナントは1つだけです。
+productionでは`YORISHIRO_LICENSE_KEY`を指定するか、設定ファイルの`initializers.licence_key`を編集します。有効で期限内のライセンスがなければ、利用できるのは1テナントです。SQLiteはライセンスがあっても1テナントに限られます。
 
-## プランポリシーとジョブの上限
+パッケージでは秘密の値を保護した`production.yaml`に書きます。追加の環境ファイルは不要です。[パッケージ](../../installation/packages/#設定)を参照してください。
 
-`YORISHIRO_PLAN_POLICY_ENABLED` の既定値は `false` で、`true` または `false` だけを受け付けます。`true` にすると、サブスクリプションのプランによってワークスペースとエンティティの上限が適用され、ターゲットごとに同時に実行できるバックグラウンドジョブの数も制限されます。
+## OAuth2とOIDCのログイン
 
-| 変数                                          | 既定値       | 説明                                                                                                                                       |
-| --------------------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `YORISHIRO_WORKER_CLASS_SHARED_LIMIT`         | `1`          | デプロイ全体で同時に実行できる Shared ジョブの最大数                                                                                       |
-| `YORISHIRO_WORKER_CLASS_TENANT_PRIVATE_LIMIT` | `1`          | 同時に実行できるテナント専用ジョブの最大数。テナントごとに数えます。                                                                       |
-| `YORISHIRO_WORKER_OFFICIAL_LIMIT`             | プランによる | デプロイ全体で同時に実行できる Official ジョブの最大数です。この変数がない場合は、プランに従います。Free は `1`、Pro は `4`、Team は `8`。 |
+認証プロバイダーにYorishiroを登録し、次を設定します。
 
-各上限は正の整数にする必要があります。起動時には、プランポリシーが無効でもこれらの値を検査しますが、上限が適用されるのは有効な場合だけです。Official ジョブはプランに関係なくまとめて1つの数として数えます。
+| productionの環境変数            | 設定ファイルの項目                 |
+| ------------------------------- | ---------------------------------- |
+| `YORISHIRO_OAUTH_ISSUER_URL`    | `initializers.oauth.issuer_url`    |
+| `YORISHIRO_OAUTH_CLIENT_ID`     | `initializers.oauth.client_id`     |
+| `YORISHIRO_OAUTH_CLIENT_SECRET` | `initializers.oauth.client_secret` |
+| `YORISHIRO_OAUTH_REDIRECT_URI`  | `initializers.oauth.redirect_uri`  |
 
-これらの上限はワーカーの数や埋め込みプロバイダー自体の制限を変更しません。同時実行ジョブを増やすと、スループットが上がらないままデータベースの競合とメモリ使用量が増えることがあります。
-
-Stripe のプランの価格は `YORISHIRO_STRIPE_PRICE_PRO` と `YORISHIRO_STRIPE_PRICE_TEAM` で対応づけます。変数を未設定のままにすると、その対応づけは行われません。
-
-## Stripe の Webhook
-
-Stripe の Webhook を処理するには、`YORISHIRO_STRIPE_WEBHOOK_SECRET` を設定します。Webhook のリクエストは署名シークレットで検証されます。タイムスタンプが300秒より古いリクエストは拒否されます。
-
-## OAuth2 と OIDC のログイン
-
-ID プロバイダーでのログインを有効にするには、`YORISHIRO_OAUTH_ISSUER_URL`、`YORISHIRO_OAUTH_CLIENT_ID`、`YORISHIRO_OAUTH_CLIENT_SECRET` を設定します。プロバイダーはループバックアドレスで動作する場合を除き、HTTPS を使う必要があります。
-
-特にリバースプロキシの背後や、外部のポートが異なる場合は、`YORISHIRO_OAUTH_REDIRECT_URI` に公開コールバック URL を設定します。未設定の場合のコールバックは `http://<BINDING>:<PORT>/auth/oauth/callback` で、`0.0.0.0` のようなワイルドカードアドレスは `localhost` に置き換えられます。`YORISHIRO_BIND` が変更するのはこのフォールバックだけで、サーバーの待ち受け先は変わりません。
+公開するリダイレクトURIを`/auth/oauth/callback`で終わる値として明示し、プロバイダーにも同じURIを登録してください。ローカルのループバックで試す場合を除きHTTPSを使います。既定のリダイレクト先はローカルの試用向けで、待受設定に従います。`HOST`では設定できません。MCPクライアントは引き続きAPIキーを使います。
 
 ## ワークスペースごとの埋め込みプロバイダー
 
-ワークスペースごとに、独自の埋め込みエンドポイントを使えます。割り当てには `PUT /api/workspace/embedding-key` を使います。
+`PUT /api/workspace/embedding-key`でワークスペース専用のサービスを指定できます。`base_url`、`model`、`api_key`、モデルの`dimensions`を設定し、`send_dimensions_param`はプロバイダーが必要とする場合だけ使います。設定を読み取ってもAPIキーは返りません。
 
-| フィールド              | 説明                                                             |
-| ----------------------- | ---------------------------------------------------------------- |
-| `base_url`              | 埋め込みエンドポイントの URL                                     |
-| `model`                 | モデル名                                                         |
-| `api_key`               | APIキー（`GET` では返されません）                                |
-| `dimensions`            | モデルが生成するベクトルのサイズ                                 |
-| `send_dimensions_param` | リクエストに `dimensions` を含めて送信します（既定値は `false`） |
+モデルを変えると検索データの作り直しが必要です。[埋め込み](../embedding/#埋め込みモデルを変更する)に従い、埋め込みワーカーを起動しておいてください。
 
 ## ワークスペースごとのワーカークラス
 
-`PUT /api/workspace/worker-class` で、ワークスペースのバックグラウンドジョブをプールに割り当てます。
+`PUT /api/workspace/worker-class`の`worker_class`に`shared`、`official`、`tenant_private`を指定します。専用ワーカーを用意していなければ`shared`のままにしてください。
 
-| フィールド     | 説明                                              |
-| -------------- | ------------------------------------------------- |
-| `worker_class` | `tenant_private`、`official`、`shared` のいずれか |
+ほかのクラスを選ぶ前に、対象の2種類のワーカーを起動し、サーバーにも埋め込みの経路を宣言します。[ワーカーの対象](../workers-and-queues/#ワーカーの対象)を参照してください。宣言してもワーカーは起動されず、監視もされません。
 
-選択したターゲットのワーカーを実行してください。[ワーカーとキュー](../workers-and-queues/#ワーカーのターゲット)を参照してください。
+## 非同期のinfer-fill
 
-## 非同期の infer-fill
+infer-fillはLLMで不足する値を提案し、確認するまで適用しません。スキーマの固定のデフォルト値ではなく、確認付きの提案が必要な場合に使います。
 
-infer-fill は LLM を使ってフィールドの値を提案します。提案は1件ずつ確認するまでは何も変更しません。
+1. `PUT /api/workspace/llm-key`でLLMの認証情報を設定します。
+2. `POST /api/schemas/active/{name}/infer-fill`で開始し、返された`job_id`を保存します。
+3. `GET /api/inference-jobs/{job_id}`で`completed`か`failed`になるまで確認します。
+4. `GET /api/inference-jobs/{job_id}/proposals`で提案を読み、内容を確認します。
+5. `POST /api/inference-jobs/{job_id}/confirm`で承認するか、対応するエンドポイントでrejectまたはdiscardします。
 
-1. `PUT /api/workspace/llm-key` でワークスペースの LLM キーを設定します。設定していない場合、リクエストはジョブが作成される前に拒否されます。
-2. `POST /api/schemas/active/{name}/infer-fill` で補完を開始します。レスポンスには `job_id` と、ステータス `queued` が含まれます。
-3. ステータスが `completed` または `failed` になるまで、`read` キーで `GET /api/inference-jobs/{job_id}` をポーリングします。ジョブレコードにはステータス、提案された値・適用された値・スキップされた値の数、エラーメッセージが保持されるため、サーバーを再起動したあともポーリングできます。
-4. `GET /api/inference-jobs/{job_id}/proposals` で提案を一覧表示します。
-5. `POST /api/inference-jobs/{job_id}/confirm`、`/reject`、`/discard` で、提案を承認、却下、破棄します。これらには `schema` スコープが必要で、一覧表示には `read` が必要です。
+承認も非同期で、新しい`job_id`が返ります。適用済みと判断する前に`GET /api/inference-jobs/confirmations/{job_id}`を確認してください。推論と承認には`job-target:shared`が必要です。一覧には`read`、確認操作と承認の状態取得には`schema`権限が必要です。
 
-モデルの回答はそれぞれ保留中の提案として保存されます。推測したデータをエンティティに書き込むことはありません。承認すると、統合後のエンティティがスキーマに対して検証され、`POST /api/migration-jobs/{job_id}/undo` で元に戻せるスナップショットが作成されます。古くなった提案や無効な提案には印が付けられ、エンティティは変更されません。
+すべて適用されたと決めつけず、失敗や古くなった提案を確認してください。待機中というだけで再投入せず、[トラブルシューティング](../../operations/queue-start-objectives/)を確認します。
 
-提案を操作できるのは、ジョブが `completed` になってからです。ジョブが失敗した場合、保留中の提案は自動的に破棄されます。完了した提案は操作するまで確認できる状態のまま残ります。ジョブはキャンセルできず、期限切れにもなりません。
+## テンプレートの更新とスキーマのフォーク
 
-ワーカーがジョブの実行中に停止すると、ジョブは `running` のままになり、自動では再試行されません。そのようなジョブは再度開始する前に確認してください。
+テンプレートに連携するスキーマでは、アシスタントに`list_upstream_changes`、続けて`merge_preview`を依頼します。特にローカルの項目を変更している場合は、`merge_apply`の前に内容を確認してください。競合があると更新は保留のままです。[組み込みテンプレート](../../guides/templates/)を参照してください。
 
-## スキーマのオリジンの更新
+`POST /api/schema-forks`では、同じテナントの別ワークスペースから有効なスキーマをコピーします。コピーは独立した履歴を持ちます。`PUT /api/schema-forks/{fork_id}`で元に追従し直すとローカルの変更が失われる場合があり、その場合は`force=true`が必要です。先に差分を確認してください。
 
-テンプレートから作成したワークスペースのスキーマは、以降のテンプレートの更新に追従できます。テンプレートが変更されると、リンクされたスキーマに更新保留中の印が付きます。確認と適用には、MCP ツールの `list_upstream_changes`、`merge_preview`、`merge_apply` を使います。[MCP ツール](../../reference/mcp-tools/)を参照してください。
+## プランポリシーとジョブの制限
 
-プレビューには、フィールドの合計数、自動で追加または更新される項目、ローカルのフィールド、競合が表示されます。競合のないマージでは、新しいスキーマバージョンの作成と保留中の印の解除が同時に行われます。競合があるマージや失敗したマージでは、更新は保留のままです。
+プラン別のサービスを運用しなければ`YORISHIRO_PLAN_POLICY_ENABLED=false`のままで構いません。有効にするとワークスペース、エンティティ、同時処理数のプラン制限が適用されます。
 
-## スキーマのフォーク
+| productionの環境変数                          | 既定値   | 制限                                                 |
+| --------------------------------------------- | -------- | ---------------------------------------------------- |
+| `YORISHIRO_WORKER_CLASS_SHARED_LIMIT`         | `1`      | 共有の同時処理数                                     |
+| `YORISHIRO_WORKER_CLASS_TENANT_PRIVATE_LIMIT` | `1`      | テナントごとの専用処理数                             |
+| `YORISHIRO_WORKER_OFFICIAL_LIMIT`             | プラン別 | Officialの同時処理数。Freeは`1`、Proは`4`、Teamは`8` |
 
-Enterprise のワークスペースは、`POST /api/schema-forks` を使って、同じテナントの別のワークスペースから有効なスキーマバージョンを正確にコピーできます。フォークはテンプレートのオリジンから切り離され、独自のスキーマ履歴を持ちます。
+明示する値は正の整数です。ワーカーの起動数やプロバイダーの処理能力は増えません。設定ファイルでは`initializers.plan_policy_enabled`と`initializers.worker_admission`を使います。
 
-`PUT /api/schema-forks/{fork_id}` は、ローカルの定義を更新するか、`action=follow` を指定してフォークをソースに再び合わせます。追従は同期的に行われます。ローカルの編集内容が破棄される場合は、`force=true` が必要です。
-
-## テナントの再インデックススケジュール
-
-テナントは配下のすべてのワークスペースを一定の間隔で再インデックスできます。各実行は `reindex_embeddings` と同様に動作し、プロバイダーとモデルのバージョンの確認も同じように行われます。
-
-このリリースにはテナントのスケジュールを設定する HTTP エンドポイントもコマンドもありません。間隔は ISO 8601 形式の期間（`P1D` は毎日、`P1W` は毎週、`PT6H` は6時間ごと）です。タイムゾーンは IANA のタイムゾーン名で、既定は UTC です。間隔は `PT5M` 以上にしてください。年と月は指定できません。
-
-最初の実行はスケジュールを設定してから1間隔後です。その後の実行はそれぞれ前回の実行から1間隔後になります。期限を過ぎた実行は次のスケジューラーのチェックで開始されます。猶予期間はありません。
-
-スケジュールされた再インデックスは、`config/<environment>.yaml` に `tenant_reindex_scheduler` タスクの `scheduler:` エントリを追加した場合にだけ実行されます。development の設定には例が示されています。production の設定では、ジョブの回復タスクだけが有効になっています。
-
-スケジューラーはサーバーやワーカーとは別のプロセスとして `yorishiro scheduler` で起動します。PostgreSQL では、同じデータベースを共有する複数のスケジューラープロセスを起動できます。それぞれのチェックはそのうちの1つだけで実行されます。`DATABASE_URL` は PostgreSQL に直接接続するか、セッションモードのプーラーを経由してください。トランザクションモードのプーリングには対応していません。SQLite では、データベースファイルの隣に `<データベースファイル>.scheduler.lock` というロックファイルを作成します。たとえば `yorishiro.sqlite3` のロックファイルは `yorishiro.sqlite3.scheduler.lock` です。
-
-各実行は最大1回だけ行われます。実行中にスケジューラーがクラッシュすると、その実行は行われないことがあります。ジョブのキューへの投入に失敗した場合は再試行されず、次の間隔が復旧の基準になります。
-
-## SQLite のベクトル検索ベンチマーク
-
-多くのエンティティを埋め込んだ SQLite では、ベクトル検索がすべてのベクトルをスキャンするため、遅くなることがあります。次のタスクで、実際のレイテンシーを計測できます。
-
-```console
-$ yorishiro task sqlite_ann_benchmark workspace_id:<uuid>
-```
-
-5回の検索について、中央値、最小値、最大値を報告します。ワークスペースのエンティティが1000件以上あり、中央値が200 ms を超える場合は、インデックス付きのベクトルテーブルを推奨します。しきい値は `min_entities` と `max_latency_ms` の引数で変更できます。このタスクは計測のみを行い、スキーマも設定も変更しません。
+Stripeと連携する場合は`YORISHIRO_STRIPE_WEBHOOK_SECRET`、`YORISHIRO_STRIPE_PRICE_PRO`、`YORISHIRO_STRIPE_PRICE_TEAM`、または対応する`initializers.stripe`の項目を設定します。Webhookの秘密の値は公開しないでください。

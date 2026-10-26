@@ -1,51 +1,35 @@
 ---
-title: "Build from source"
-description: "Build and run Yorishiro from source."
+title: Build from source
+description: Build a custom version and run the required services.
 sidebar:
   order: 5
 ---
 
-Build from source when you need a custom build.
-
-## Requirements
-
-- The Rust toolchain from [rustup](https://rustup.rs/).
-- A C/C++ toolchain, `pkg-config`, and OpenSSL development headers.
-- On Linux: `mold` and `sccache`.
-- For PostgreSQL: a server with the `vector` and `pg_trgm` extensions.
+Use a [package](../packages/) or [Docker Compose](../docker-compose/) unless you need a custom build. Source builds require Rust through [rustup](https://rustup.rs/), Python 3, a C/C++ toolchain, and the platform dependencies described in the [contributing guide](https://github.com/yorishiro-ai/yorishiro/blob/develop/CONTRIBUTING.md). Linux builds use `mold` and `sccache`.
 
 ## Build
 
-Pick the edition with Cargo features. Without them, the build includes Enterprise.
-
-```console
-$ git clone https://github.com/yorishiro-ai/yorishiro && cd yorishiro
-$ cargo build --release --bin yorishiro --no-default-features --features community
+```sh
+git clone https://github.com/yorishiro-ai/yorishiro
+cd yorishiro
+git switch develop
+python3 patches/loco-rs/verify.py --prepare
+cargo build --locked --release --bin yorishiro --no-default-features --features community
 ```
 
-For the Enterprise edition, build with `cargo build --release --bin yorishiro`. The binary is `target/release/yorishiro`.
+The repository selects its Rust toolchain. Preparing the patched dependency is required on a fresh checkout. For Enterprise, omit `--no-default-features --features community`. The executable is `target/release/yorishiro`.
 
 ## Run
 
-A source run uses the `development` configuration and needs a server and a worker as separate processes:
+Run each command in a separate terminal, from the repository directory:
 
-```console
-$ target/release/yorishiro start
-$ target/release/yorishiro start --worker=worker-target:shared
+```sh
+target/release/yorishiro start
+target/release/yorishiro start --worker=worker-target:shared
+target/release/yorishiro start --worker=job-target:shared
+target/release/yorishiro scheduler
 ```
 
-To use the `production` configuration that packages and Docker use, set `LOCO_ENV=production`.
+Source runs use `config/development.yaml` by default. To use production settings, set `LOCO_ENV=production` consistently for all four commands and configure writable data paths. See [Configuration](../../configuration/).
 
-Then follow [First run](../first-run/); the URL there is `http://localhost:5150`.
-
-## Use PostgreSQL or a Valkey queue
-
-```console
-$ DATABASE_URL=postgres://user:pass@host:5432/yorishiro \
-  YORISHIRO_QUEUE_KIND=Redis \
-  QUEUE_URL=redis://host:6379 \
-  LOCO_ENV=production \
-  target/release/yorishiro start
-```
-
-Start the worker with the same variables. See [Configuration](../../configuration/) for all settings.
+Continue with [First run](../first-run/) at `http://localhost:5150`. The embedding worker downloads its model on first start. Do not run all four commands sequentially in one terminal: the first keeps running.

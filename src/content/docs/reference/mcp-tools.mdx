@@ -22,7 +22,7 @@ Your MCP client lists the tools your server actually offers. This page lists the
 | [`create_schema`](#create_schema) | Community | `schema` | Register a new schema, or add a new version to an existing schema. |
 | [`delete_entity`](#delete_entity) | Community | `write` | Delete an entity. |
 | [`delete_relation`](#delete_relation) | Community | `write` | Delete a relation. |
-| [`fill_defaults`](#fill_defaults) | Community | `migration` | Fill absent required fields in entities behind a schema's active version. |
+| [`fill_defaults`](#fill_defaults) | Community | `migration` | Enqueue a fill-defaults job. |
 | [`get_active_schema`](#get_active_schema) | Community | `read` | Get the currently active schema definition by name. |
 | [`get_entity`](#get_entity) | Community | `read` | Get a single entity by ID. |
 | [`get_entity_drift`](#get_entity_drift) | Community | `read` | Report how an entity stands against the active version of its schema. |
@@ -30,6 +30,7 @@ Your MCP client lists the tools your server actually offers. This page lists the
 | [`get_relation`](#get_relation) | Community | `read` | Get a single relation by ID. |
 | [`get_schema_by_id`](#get_schema_by_id) | Community | `read` | Get a specific version of a schema definition by ID. |
 | [`get_template_library_item`](#get_template_library_item) | Community | `read` | Get a single template from the tenant's DB-backed template library by ID. |
+| [`import_job_status`](#import_job_status) | Community | `schema` | Poll a queued JSON Lines import. |
 | [`import_jsonl`](#import_jsonl) | Community | `schema` | Bulk-import schemas/entities/relations from a JSON Lines document in the export format. |
 | [`list_entities`](#list_entities) | Community | `read` | List entities. |
 | [`list_relations`](#list_relations) | Community | `read` | List relations. |
@@ -105,7 +106,7 @@ Required scope: `write`
 
 ### fill_defaults
 
-Fill absent required fields in entities behind a schema's active version. Takes a snapshot so the operation can be undone with the migration undo endpoint.
+Enqueue a fill-defaults job. Returns a job ID; the worker fills absent required fields and takes undo snapshots. Completed counts appear in the audit log.
 
 Required scope: `migration`
 
@@ -184,9 +185,19 @@ Required scope: `read`
 | --- | --- | --- | --- |
 | `id` | string (uuid) | Yes |  |
 
+### import_job_status
+
+Poll a queued JSON Lines import.
+
+Required scope: `schema`
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `job_id` | string (uuid) | Yes |  |
+
 ### import_jsonl
 
-Bulk-import schemas/entities/relations from a JSON Lines document in the export format. Runs as a single transaction: either every record in `jsonl` is applied, or the first error rolls back everything imported so far.
+Bulk-import schemas/entities/relations from a JSON Lines document in the export format. Returns a job_id; poll import_job_status. The worker applies every record in one transaction or rolls everything back.
 
 Required scope: `schema`
 

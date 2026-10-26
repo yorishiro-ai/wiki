@@ -1,74 +1,73 @@
 ---
-title: "パッケージ（deb / rpm）"
-description: "systemdを使って、debまたはrpmパッケージからYorishiroをインストールします。"
+title: パッケージ（deb / rpm）
+description: Linuxにインストールし、systemdで管理します。
 sidebar:
   order: 4
 ---
 
-リリースパッケージは各Dockerイメージと並べて[Releases](https://github.com/yorishiro-ai/yorishiro/releases)ページで公開されています。対応するのはUbuntu 24.04とAlmaLinux 10（glibc 2.39以降）で、`amd64`と`arm64`向けです。
+Ubuntu 24.04かAlmaLinux 10で使えます。glibc 2.39以降が必要です。`amd64`と`arm64`向けがあり、Community（`yorishiro-ce`）とEnterprise（`yorishiro-ee`）から選びます。同時にインストールできるのは片方だけです。
 
-パッケージはエディションごとに1つずつあります。`yorishiro-ce`（Community）と`yorishiro-ee`（Enterprise。ライセンスキーが必要）です。2つのパッケージは競合するため、インストールできるのは一方だけです。もう一方のエディションをインストールすると、現在のものが置き換わります。
+## インストールする
 
-## インストール
+[Releases](https://github.com/yorishiro-ai/yorishiro/releases)から対象のパッケージと`checksums.txt`を取得します。`<VERSION>`をリリースタグに置き換えてください。`arm64`ではファイル名の`amd64`も変更します。
 
-`<VERSION>`をリリースタグ（例: `20261015-1`）に置き換えます。
+DebianやUbuntuでは次を実行します。
 
-DebianとUbuntuの場合は、次のコマンドを実行します。
-
-```console
-$ wget https://github.com/yorishiro-ai/yorishiro/releases/download/<VERSION>/yorishiro-ce-<VERSION>-amd64.deb
-$ sudo apt install ./yorishiro-ce-<VERSION>-amd64.deb
+```sh
+wget https://github.com/yorishiro-ai/yorishiro/releases/download/<VERSION>/yorishiro-ce-<VERSION>-amd64.deb
+sudo apt install ./yorishiro-ce-<VERSION>-amd64.deb
 ```
 
-AlmaLinuxなどrpmベースのシステムの場合は、次のコマンドを実行します。
+AlmaLinuxでは次を実行します。
 
-```console
-$ wget https://github.com/yorishiro-ai/yorishiro/releases/download/<VERSION>/yorishiro-ce-<VERSION>-amd64.rpm
-$ sudo dnf install ./yorishiro-ce-<VERSION>-amd64.rpm
+```sh
+wget https://github.com/yorishiro-ai/yorishiro/releases/download/<VERSION>/yorishiro-ce-<VERSION>-amd64.rpm
+sudo dnf install ./yorishiro-ce-<VERSION>-amd64.rpm
 ```
 
-各リリースにはダウンロードしたファイルを検証するための`checksums.txt`も含まれています。
+## 起動する
 
-## インストールされるファイル
-
-| ファイル                                 | 説明                                                                   |
-| ---------------------------------------- | ---------------------------------------------------------------------- |
-| `/usr/bin/yorishiro`                     | バイナリ                                                               |
-| `/etc/yorishiro/production.yaml.example` | パッケージに含まれるデフォルト設定。アップグレードのたびに更新されます |
-| `/etc/yorishiro/production.yaml`         | 任意で用意する設定                                                     |
-| `/var/lib/yorishiro`                     | データディレクトリ                                                     |
-
-Enterpriseパッケージは`/etc/yorishiro/LICENSE.enterprise`もインストールします。
-
-## 起動
-
-```console
-$ sudo systemctl enable --now yorishiro yorishiro-worker yorishiro-scheduler
-$ sudo systemctl status yorishiro
+```sh
+sudo systemctl enable --now yorishiro yorishiro-worker yorishiro-jobs yorishiro-scheduler
+sudo systemctl status yorishiro yorishiro-worker yorishiro-jobs yorishiro-scheduler
 ```
 
-続けて[初回起動](../first-run/)に進んでください。サーバーはポート`5150`で待ち受けるため、そこでのURLは`http://localhost:5150`です。
+`http://localhost:5150`で[初回起動](../first-run/)に進みます。埋め込みワーカーは初回に約1 GiBをダウンロードします。`sudo journalctl -u yorishiro-worker -f`で確認できます。
 
-サービスの起動が5分間に5回に達すると、systemdは再起動をやめます。原因を修正してから`sudo systemctl reset-failed yorishiro`（またはワーカーやスケジューラーのユニット）を実行し、再度起動してください。
+## インストール先
+
+| パス                                     | 内容                                                    |
+| ---------------------------------------- | ------------------------------------------------------- |
+| `/usr/bin/yorishiro`                     | 実行ファイル                                            |
+| `/etc/yorishiro/production.yaml.example` | パッケージとともに更新される設定例                      |
+| `/etc/yorishiro/production.yaml`         | 自分で用意する完全な設定。省略可能                      |
+| `/var/lib/yorishiro`                     | SQLiteのデータとキューのファイル、`models/`ディレクトリ |
+
+Enterpriseには`/etc/yorishiro/LICENSE.enterprise`も含まれます。
 
 ## 設定
 
-`/etc/yorishiro/production.yaml`がない場合、サービスはパッケージのデフォルトを使います。SQLiteのデータベースとキューは`/var/lib/yorishiro`以下に保存されます。`DATABASE_URL`、`QUEUE_URL`、`HOST`、`PORT`、`BINDING`などの環境変数を設定すると、デフォルトより優先されます。
+4つのサービスは同じ設定を使います。独自のファイルがなければ、パッケージの設定例を使い、SQLiteで動きます。`yorishiro.env`や`EnvironmentFile=`のオーバーライドは不要です。
 
-設定をファイルで変更するには、`/etc/yorishiro/production.yaml.example`を`/etc/yorishiro/production.yaml`にコピーして編集します。このファイルはパッケージのデフォルトを完全に置き換えます。Yorishiroは両者をマージしません。アップグレードのたびに新しい例と比較してください。例はリリースごとに変わるためです。バックアップも取っておいてください。
+設定を変更する場合は、既存の設定がないときだけ例をコピーします。
 
-```console
-$ sudo cp -a /etc/yorishiro/production.yaml /etc/yorishiro/production.yaml.backup
+```sh
+sudo cp -n /etc/yorishiro/production.yaml.example /etc/yorishiro/production.yaml
+sudo chown root:yorishiro /etc/yorishiro/production.yaml
+sudo chmod 640 /etc/yorishiro/production.yaml
+sudoedit /etc/yorishiro/production.yaml
 ```
 
-サービスが書き込みアクセスを持つのは`/var/lib/yorishiro`だけです。SQLiteのファイルとモデルキャッシュはここに置いてください。
+サービスの`yorishiro`ユーザーが読めるようにしてください。この権限なら、ほかのユーザーはパスワードを読めません。既存の設定は編集前にバックアップします。独自のファイルはパッケージの設定を置き換えるため、アップグレード後は新しい例と比較してください。
 
-Communityエディションで使えるテナントは1つです。Enterpriseエディションでは、有効なライセンスと`YORISHIRO_MAX_TENANTS`がある場合にだけ、それ以上のテナントを使えます。SQLiteでは常にテナントは1つです。[設定](../../configuration/)を参照してください。
+PostgreSQLでは`database.uri`に接続URIを指定します。キューの条件分岐全体は1つの`queue:`ブロックに置き換えます。選んだプロバイダーの項目を残し、`kind: Postgres`と`uri`を指定して、ほかの分岐とテンプレートの条件行を削除してください。Valkeyでは代わりに`kind: Redis`と`redis://`または`rediss://`のURIを使います。`database.uri`だけを編集しても、例のキュー選択は変わりません。
 
-パッケージの3つのサービスはすべて`/etc/yorishiro/production.yaml`を読み込みます。データベースとキューはこのファイルで設定します。環境ファイルやsystemdのオーバーライドは不要です。
+別のマシンから接続する場合は、`server.binding`を`localhost`から`0.0.0.0`に変更し、`server.host`に利用者が接続するURLを指定します。[設定](../../configuration/)を参照してください。
 
-PostgreSQLを使うには、`database.uri`にPostgreSQLの接続URIを設定します。例のキュー設定の条件分岐全体を1つの`queue:`ブロックに置き換え、ほかの設定は残してください。`queue.kind`は`Postgres`、`queue.uri`はPostgreSQLの接続URIにします。Redis互換のキューを使う場合は、代わりに`Redis`とRedisの接続URIを指定します。例の条件分岐は環境変数を参照するため、`database.uri`だけを変更してもキューのプロバイダーは変わりません。
+編集後に再起動します。
 
-パスワードを含む場合は、`sudo chown root:yorishiro /etc/yorishiro/production.yaml`と`sudo chmod 640 /etc/yorishiro/production.yaml`で、rootとサービスのグループだけが読めるようにします。サービスは`yorishiro`で実行されるため、このユーザーが読める必要があります。
+```sh
+sudo systemctl restart yorishiro yorishiro-worker yorishiro-jobs yorishiro-scheduler
+```
 
-編集後は`sudo systemctl restart yorishiro yorishiro-worker yorishiro-scheduler`で3つのサービスを再起動します。
+サービスが書き込めるのは`/var/lib/yorishiro`だけです。書き込みが必要なSQLiteやモデルのファイルはここに置いてください。起動に繰り返し失敗する場合は[トラブルシューティング](../../operations/queue-start-objectives/)を参照してください。
