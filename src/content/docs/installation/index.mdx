@@ -1,35 +1,40 @@
 ---
-title: "Installation"
-description: "Choose how to install Yorishiro."
+title: Installation
+description: Choose an installation method and get ready to connect your AI assistant.
 sidebar:
   order: 1
 ---
 
-Yorishiro runs as a single binary. Pick the method that fits your environment:
+If someone already runs Yorishiro for you, ask them for the server URL and an API key. You do not need to install it yourself. Continue with [Connect an MCP client](first-run/#4-connect-an-mcp-client).
 
-- [Docker](docker/): the quickest way to try it. Defaults to SQLite.
-- [Docker Compose](docker-compose/): server, worker, and scheduler together, with SQLite or PostgreSQL and Valkey.
-- [Package (deb / rpm)](packages/): systemd-managed services.
-- [Build from source](build/): for custom builds.
+## Choose an installation method
 
-After installing, follow [First run](first-run/) to create the first account and an API key.
+| Method                            | When to use it                                                        |
+| --------------------------------- | --------------------------------------------------------------------- |
+| [Docker Compose](docker-compose/) | Recommended for a first installation. Includes all required services. |
+| [Packages (deb / rpm)](packages/) | Run on a Linux host managed with systemd.                             |
+| [Docker](docker/)                 | Manage individual containers yourself.                                |
+| [Build from source](build/)       | Build a version that is not available as a release.                   |
+
+Start with SQLite for a personal installation. Choose PostgreSQL when you need several tenants or workers on different machines. See [SQLite mode](../guides/sqlite/).
+
+After installation, [create the first account and connect your AI assistant](first-run/).
 
 ## What runs
 
-A working installation has up to three processes, all from the same binary:
+Keep these four services running. The Compose examples include all four; the packages provide four systemd units.
 
-| Process   | Command                                         | Purpose                                                                                                 |
-| --------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| Server    | `yorishiro start`                               | Serves the REST API and the MCP endpoint. It does not run background jobs.                              |
-| Worker    | `yorishiro start --worker=worker-target:shared` | Runs background jobs such as embedding sync and reindexing. Without a worker, queued jobs wait forever. |
-| Scheduler | `yorishiro scheduler`                           | Recovers interrupted reindexes.                                                                         |
-
-The Docker Compose examples and the deb/rpm packages start all three for you. With a plain `docker run`, you start each one yourself.
+| Service          | What you need it for                                       | Command                                         |
+| ---------------- | ---------------------------------------------------------- | ----------------------------------------------- |
+| Server           | API and MCP connections                                    | `yorishiro start`                               |
+| Embedding worker | Search by meaning and updating search data                 | `yorishiro start --worker=worker-target:shared` |
+| Application jobs | Imports, filling defaults, undo, and Enterprise inference  | `yorishiro start --worker=job-target:shared`    |
+| Scheduler        | Recovering interrupted background work and scheduled tasks | `yorishiro scheduler`                           |
 
 ## Editions and versions
 
-Yorishiro is published in two editions: Community (`ce`) and Enterprise (`ee`). Enterprise adds features such as OAuth2/OIDC login and per-workspace providers, and it needs a licence key. Community runs without a licence. See [Enterprise configuration](../configuration/enterprise/) for the Enterprise features.
+Community (`ce`) runs without a licence and supports one tenant. Enterprise (`ee`) adds features such as external identity-provider sign-in and per-workspace providers. See [Enterprise configuration](../configuration/enterprise/).
 
-Releases are currently published as prereleases. Each release has a tag such as `20261015-1`. Find the latest tag on the [Releases](https://github.com/yorishiro-ai/yorishiro/releases) page and use it wherever these pages show `<VERSION>`.
+Choose a tag from [Releases](https://github.com/yorishiro-ai/yorishiro/releases) wherever a command shows `<VERSION>`. Use documentation that matches your chosen version: the current wiki follows product `develop`, and older releases may not have every command shown here.
 
-Docker images are named `ghcr.io/yorishiro-ai/yorishiro:<VERSION>-ce` and `ghcr.io/yorishiro-ai/yorishiro:<VERSION>-ee`. There is no `latest` tag. Images and packages are built for `amd64` and `arm64`.
+Images are `ghcr.io/yorishiro-ai/yorishiro:<VERSION>-ce` and `ghcr.io/yorishiro-ai/yorishiro:<VERSION>-ee`. There is no `latest` tag. Images and packages are available for `amd64` and `arm64`.

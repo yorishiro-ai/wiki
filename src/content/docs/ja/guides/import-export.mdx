@@ -1,0 +1,46 @@
+---
+title: エクスポートとインポート
+description: JSON Linesでワークスペースのスキーマ、エンティティ、リレーションを移します。
+sidebar:
+  order: 4
+---
+
+APIキーでアクセスするワークスペースのスキーマ、エンティティ、リレーションを書き出します。ユーザー、APIキー、サーバー設定、環境全体のバックアップではありません。全体のバックアップは[更新とバックアップ](../../operations/queue-publisher-cutover/)を参照してください。
+
+## ワークスペースを書き出す
+
+`read`権限のキーを使います。URLとキーを置き換えてください。
+
+```sh
+curl --fail-with-body http://localhost:5150/api/export.jsonl \
+  -H 'Authorization: Bearer <api-key>' \
+  -o workspace.jsonl
+```
+
+ファイルを使う前にコマンドの成功を確認してください。内容は平文なので、エクスポートを公開しないでください。
+
+## ワークスペースに取り込む
+
+取り込み先のワークスペースの`schema`権限のキーを使います。先に空のワークスペースで試してください。使用中のワークスペースに同じファイルを繰り返し投入しないでください。
+
+```sh
+curl --fail-with-body -X POST http://localhost:5150/api/import.jsonl \
+  -H 'Authorization: Bearer <destination-api-key>' \
+  -H 'Content-Type: application/x-ndjson' \
+  --data-binary @workspace.jsonl
+```
+
+レスポンスには`job_id`が含まれます。受付済みという意味で、完了ではありません。アプリケーションジョブのワーカーを起動して、状態を確認します。
+
+```sh
+curl --fail-with-body http://localhost:5150/api/import-jobs/<job-id> \
+  -H 'Authorization: Bearer <destination-api-key>'
+```
+
+`completed`になるまで待ってください。`failed`なら、再実行前にエラーとログを確認します。ワーカーはレコードをまとめて取り込み、レコードのエラーがあれば取り込みをロールバックします。
+
+## アシスタントから取り込む
+
+MCPアシスタントは`import_jsonl`でJSON Linesを送り、返されたIDで`import_job_status`を確認できます。どちらも`schema`権限が必要です。チャットへ全文を送る前に、ファイルの大きさがクライアントの制限に収まるか確認してください。
+
+取り込み後は検索データの再生成が必要な場合があります。埋め込みが足りなければ、管理者に取り込み先の[resync_embeddings](../../configuration/embedding/#埋め込みモデルを変更する)の実行を依頼してください。検索だけでなく、一覧やID指定の取得でも結果を確認します。

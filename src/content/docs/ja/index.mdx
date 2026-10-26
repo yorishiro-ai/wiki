@@ -1,20 +1,24 @@
 ---
 title: Yorishiro Wiki
-description: Yorishiroのユーザーガイド、設定、運用。
+description: AIアシスタントと情報を保存し、必要なときに探すためのガイドです。
 template: splash
 hero:
-  tagline: MCPネイティブで、ユーザー定義スキーマを持つマルチテナントの知識ストア。
+  tagline: メモや構造化した情報、そのつながりをAIアシスタントと保存できます。
   actions:
-    - text: インストール
-      link: installation/
+    - text: 使い始める
+      link: installation/first-run/
       icon: right-arrow
-    - text: 設定
-      link: configuration/
+    - text: インストールする
+      link: installation/
       variant: minimal
 ---
 
 import PageList from "../../../components/PageList.astro";
 
-<PageList />
+AIアシスタントをMCPで接続し、用途に合うテンプレートを選んで、情報の保存や検索を依頼します。情報は自分で運用するYorishiroに保存されます。
 
-開発の手順（アーキテクチャ、テスト、コントリビューション）は、[Yorishiroリポジトリ](https://github.com/yorishiro-ai/yorishiro/blob/develop/CONTRIBUTING.md)にあります（英語）。
+- **これから導入する方:** [Docker Compose](installation/docker-compose/)で起動し、[アカウントを作成](installation/first-run/)してください。
+- **接続済みの方:** [AIアシスタントで使う](guides/using-yorishiro/)へ進んでください。
+- **うまく動かない場合:** [トラブルシューティング](operations/queue-start-objectives/)を参照してください。
+
+<PageList />

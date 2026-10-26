@@ -1,47 +1,65 @@
 ---
-title: "First run"
-description: "Create the first account and an API key."
+title: First run
+description: Create your account, connect an MCP client, and save your first note.
 sidebar:
   order: 6
 ---
 
-Yorishiro has no web setup screen. You create the first account and your first API key through the API.
+Install Yorishiro with [Docker Compose](../docker-compose/) or [packages](../packages/) first. If an administrator has already given you a server URL and API key, skip to step 4.
 
-The examples assume the server answers at `http://localhost:5150`.
+These examples use `http://localhost:5150`. Replace it with your server URL when connecting to another installation. Account creation uses the API, not a web setup screen.
 
 ## 1. Check the server
 
-```console
-$ curl http://localhost:5150/_ping
+```sh
+curl http://localhost:5150/_ping
 ```
 
-The server is ready when this succeeds. The first start can take a while because the local embedding model downloads on first use (about 1 GiB). Set `YORISHIRO_EMBEDDING_PROVIDER=none` to skip the download. See [Embedding](../../configuration/embedding/).
+A successful response confirms that the server answers. Search also needs the embedding worker. Its first start downloads about 1 GiB of model files; wait for that worker to finish starting before testing search.
 
 ## 2. Create the first account
 
-```console
-$ curl http://localhost:5150/setup/status
-{"setup_required":true}
+Check whether setup is needed:
 
-$ curl -X POST http://localhost:5150/setup \
-    -H 'Content-Type: application/json' \
-    -d '{"email":"you@example.com","password":"choose-a-password","display_name":"You"}'
+```sh
+curl http://localhost:5150/setup/status
 ```
 
-The response contains your `user_id`, `tenant_id`, `workspace_id`, and an `api_key`. **The API key is shown only once. Store it now.**
+If `setup_required` is `true`, replace the example email, password, and name, then run:
 
-Setup works once, while the deployment has no tenant. A second call returns `409`. Setup is also unavailable when `YORISHIRO_MAX_TENANTS=0` (Enterprise with a licence). See [Configuration](../../configuration/).
+```sh
+curl -X POST http://localhost:5150/setup \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"you@example.com","password":"choose-a-password","display_name":"You"}'
+```
+
+Save the returned `api_key` in your password manager. It is shown only once. The response also includes your user, tenant, and workspace IDs.
+
+If setup returns `409`, the installation already has a tenant. Ask its administrator for access. Setup is disabled when `YORISHIRO_MAX_TENANTS=0`.
 
 ## 3. Use the API key
 
-Send the key as a bearer token:
+Verify the key with a request:
 
-```console
-$ curl http://localhost:5150/api/api-keys -H 'Authorization: Bearer <api-key>'
+```sh
+curl http://localhost:5150/api/api-keys \
+  -H 'Authorization: Bearer <api-key>'
 ```
 
-Owners and admins can create more keys with `POST /api/api-keys`, list them with `GET /api/api-keys`, and revoke them with `DELETE /api/api-keys/{id}`. A new key is returned only in the response that creates it. Listing never returns key secrets.
+Replace `<api-key>` with the saved key. Do not include the angle brackets. Keep it private; anyone holding it can use the access it grants.
 
 ## 4. Connect an MCP client
 
-Point your MCP client at `http://localhost:5150/mcp` and send the API key in the `Authorization: Bearer <api-key>` header. See [MCP tools](../../reference/mcp-tools/) for the available tools and the scope each one needs.
+In an MCP client that supports remote HTTP servers and custom headers, add:
+
+| Setting      | Value                       |
+| ------------ | --------------------------- |
+| Server URL   | `http://localhost:5150/mcp` |
+| Header name  | `Authorization`             |
+| Header value | `Bearer <api-key>`          |
+
+Use your server's address instead of `localhost` if the client runs on another machine. For a hosted instance, use the HTTPS URL supplied by its administrator. Client configuration screens differ; the `/mcp` URL and bearer header remain the same.
+
+Reconnect the client and ask it to list the available schemas. If it can call `list_schemas`, the connection works. An empty list is normal for a new workspace.
+
+Continue with [Use Yorishiro with your AI assistant](../../guides/using-yorishiro/) to save and search your first note. For errors, see [Troubleshooting](../../operations/queue-start-objectives/).

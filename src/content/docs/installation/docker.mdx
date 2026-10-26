@@ -1,69 +1,60 @@
 ---
-title: "Docker"
-description: "Run Yorishiro with docker run."
+title: Docker
+description: Start Yorishiro containers individually with docker run.
 sidebar:
   order: 2
 ---
 
-Docker is the quickest way to try Yorishiro. The default configuration uses SQLite, so you need no external database.
+For a first installation, use [Docker Compose](../docker-compose/). Use this page if you want to manage each container yourself.
 
-For anything beyond a trial, use [Docker Compose](../docker-compose/), which also runs the worker and scheduler.
+## Start the containers
 
-## Quick start
+Replace `<VERSION>` with the tag you chose from [Releases](https://github.com/yorishiro-ai/yorishiro/releases). Run the server first:
 
-Replace `<VERSION>` with a release tag from the [Releases](https://github.com/yorishiro-ai/yorishiro/releases) page, for example `20261015-1`.
+```sh
+docker volume create yorishiro-data
+docker volume create yorishiro-models
 
-```console
-$ docker volume create yorishiro-data
-$ docker volume create yorishiro-model-cache
-
-$ docker run -d --name yorishiro --restart unless-stopped -p 5150:5150 \
-    -e HOST=http://localhost:5150 \
-    -v yorishiro-data:/var/lib/yorishiro \
-    -v yorishiro-model-cache:/home/yorishiro/.cache/yorishiro \
-    ghcr.io/yorishiro-ai/yorishiro:<VERSION>-ce
-
-$ docker run -d --name yorishiro-worker --restart unless-stopped \
-    --no-healthcheck \
-    -v yorishiro-data:/var/lib/yorishiro \
-    -v yorishiro-model-cache:/home/yorishiro/.cache/yorishiro \
-    ghcr.io/yorishiro-ai/yorishiro:<VERSION>-ce \
-    start --worker=worker-target:shared
+docker run -d --name yorishiro --restart unless-stopped -p 5150:5150 \
+  -e BINDING=0.0.0.0 -e HOST=http://localhost:5150 \
+  -v yorishiro-data:/var/lib/yorishiro \
+  ghcr.io/yorishiro-ai/yorishiro:<VERSION>-ce
 ```
 
-The first container serves the API on host port `5150`. The second runs background jobs. The server alone does not run jobs, so without the worker, tasks such as embedding sync stay queued. Both containers use the same volumes, so they work on the same data.
+Wait until `curl http://localhost:5150/_ping` succeeds, then start the other three containers:
 
-Then follow [First run](../first-run/). The URL there is `http://localhost:5150`.
+```sh
+docker run -d --name yorishiro-worker --restart unless-stopped --no-healthcheck \
+  -v yorishiro-data:/var/lib/yorishiro -v yorishiro-models:/app/models \
+  ghcr.io/yorishiro-ai/yorishiro:<VERSION>-ce \
+  start --worker=worker-target:shared
 
-If you also need the scheduler to recover interrupted reindexes, run a third container with the command `scheduler` and `--no-healthcheck` (see [Docker Compose](../docker-compose/)).
+docker run -d --name yorishiro-jobs --restart unless-stopped --no-healthcheck \
+  -v yorishiro-data:/var/lib/yorishiro \
+  ghcr.io/yorishiro-ai/yorishiro:<VERSION>-ce \
+  start --worker=job-target:shared
 
-## Use PostgreSQL
-
-Set `DATABASE_URL` on both containers. With PostgreSQL, the queue uses PostgreSQL too.
-
-```console
--e DATABASE_URL=postgres://user:pass@host:5432/yorishiro
+docker run -d --name yorishiro-scheduler --restart unless-stopped --no-healthcheck \
+  -v yorishiro-data:/var/lib/yorishiro \
+  ghcr.io/yorishiro-ai/yorishiro:<VERSION>-ce scheduler
 ```
 
-The database needs the `vector` and `pg_trgm` extensions. See [Docker Compose](../docker-compose/#postgresql-and-valkey) for a working setup.
+The embedding worker downloads about 1 GiB on its first start. Keep all four containers running. Continue with [First run](../first-run/) at `http://localhost:5150`.
 
-## Use Valkey (Redis) for the queue
+## Database and configuration
 
-Set these on both containers:
+The example uses SQLite. All containers share the data volume; only the embedding worker needs the model volume. Do not delete the data volume when replacing containers.
 
-```console
--e YORISHIRO_QUEUE_KIND=Redis
--e QUEUE_URL=redis://user:pass@host:6379
+For PostgreSQL, set the same `DATABASE_URL` on all four containers. For a Valkey queue, also set `YORISHIRO_QUEUE_KIND=Redis` and `QUEUE_URL` on all four. The [Compose guide](../docker-compose/#postgresql-and-valkey) includes a complete example with database extensions.
+
+The image reads `/app/config/production.yaml`. Mount a complete configuration there if needed. A replacement file is not merged with the image's file. Set `HOST` to the URL your users connect to; `BINDING=0.0.0.0` lets the published port reach the server inside the container.
+
+## Logs and stopping
+
+```sh
+docker logs --tail 100 yorishiro-worker
+docker logs --tail 100 yorishiro-jobs
+docker stop yorishiro yorishiro-worker yorishiro-jobs yorishiro-scheduler
 ```
 
-## Choose a public URL
-
-`HOST` is the public URL that Yorishiro puts in links. It defaults to `http://localhost`; the example above sets it to `http://localhost:5150`. If you publish the container on another address or port, set `HOST` to match.
-
-## Data and permissions
-
-Keep the SQLite database and queue in the `/var/lib/yorishiro` volume. The model cache is `/home/yorishiro/.cache/yorishiro`. The container runs as the unprivileged user `yorishiro`. If you use a bind mount instead of a named volume, make sure that user can write to it.
-
-## Configuration
-
-See [Configuration](../../configuration/) for all settings. The image loads its configuration from `/app/config/production.yaml`. To replace it, mount a complete file at that path, or set `LOCO_CONFIG_FOLDER` to another directory that contains one. The file is not merged with the built-in one.
+For search failures or jobs that do not finish, see [Troubleshooting](../../operations/queue-start-objectives/).

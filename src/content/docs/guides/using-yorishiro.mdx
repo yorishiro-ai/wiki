@@ -1,0 +1,52 @@
+---
+title: Use Yorishiro with your AI assistant
+description: Choose a template, save a note, search it, and connect related information.
+sidebar:
+  order: 1
+---
+
+First [connect your MCP client](../../installation/first-run/#4-connect-an-mcp-client). The following are requests you can give your assistant, not commands to run in a terminal. Tool access depends on your API key.
+
+## Choose a place for your information
+
+A workspace is the collection your API key gives you access to. A schema defines what you store there: for example notes with a title, body, and tags. A saved item is called an entity. Relations connect items.
+
+Ask your assistant:
+
+> List the schemas in Yorishiro. If there is no general-notes schema, create one from the general-notes built-in template. Ask me before changing an existing schema.
+
+The assistant can use `list_schemas`, `list_templates`, and `create_schema`. Creating a schema requires `schema` scope. If your key cannot do this, ask the workspace administrator to prepare a schema for you.
+
+## Save your first note
+
+> Save a note in general-notes with title "Weekly planning", body "Review open tasks every Monday morning", and tag "planning". Tell me the saved note's ID.
+
+The assistant uses `create_entity` with the schema name, entity type `note`, and the note data. Saving succeeds before search data finishes updating. Keep the returned ID if you want to retrieve the exact item later.
+
+## Find information again
+
+> Search Yorishiro for how I organize my week.
+
+`search_entities` finds information by meaning. Results depend on the embedding model and on the worker having processed your notes. If a new note is not found yet, wait and retry, or ask for `list_entities` to browse notes directly.
+
+> Get the note with ID [the saved ID].
+
+`get_entity` retrieves an exact item without a similarity search.
+
+## Update and connect items
+
+> Read my Weekly planning note, keep its existing fields, and add that I review priorities on Friday. Show me the change before saving.
+
+`update_entity` replaces the entity body, so the assistant should read the current item and keep fields you do not want to remove.
+
+Create another note, then ask:
+
+> Connect these two notes with the references relation. Then show the information related to the first note.
+
+The `general-notes` template includes `references`. The assistant can use `create_relation` and `recall_context`. Other templates have different relation names; ask for the schema before creating a relation.
+
+## Delete and export
+
+Ask the assistant to identify an item before deleting it with `delete_entity` or `delete_relation`. These tools change stored information, not just the chat history.
+
+For moving saved content to another workspace, see [Export and import](../import-export/). For the full tool list and required permissions, see [MCP tools](../../reference/mcp-tools/).

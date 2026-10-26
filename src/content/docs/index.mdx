@@ -1,20 +1,24 @@
 ---
 title: Yorishiro Wiki
-description: User guide, configuration, and operations for Yorishiro.
+description: Save knowledge with your AI assistant and find it again when you need it.
 template: splash
 hero:
-  tagline: MCP-native, multi-tenant knowledge store with user-defined schemas.
+  tagline: Give your AI assistant a place to keep notes, structured information, and their connections.
   actions:
-    - text: Install
-      link: installation/
+    - text: Get started
+      link: installation/first-run/
       icon: right-arrow
-    - text: Configure
-      link: configuration/
+    - text: Install Yorishiro
+      link: installation/
       variant: minimal
 ---
 
 import PageList from "../../components/PageList.astro";
 
-<PageList />
+Connect your AI assistant through MCP, choose a template for your information, and ask it to save or find what you need. Yorishiro keeps that information in your own installation.
 
-The contributing guide (architecture, testing, contribution) is in the [Yorishiro repository](https://github.com/yorishiro-ai/yorishiro/blob/develop/CONTRIBUTING.md).
+- **New installation:** start with [Docker Compose](installation/docker-compose/), then [create your account](installation/first-run/).
+- **Already connected:** follow [Use Yorishiro with your AI assistant](guides/using-yorishiro/).
+- **Something is not working:** see [Troubleshooting](operations/queue-start-objectives/).
+
+<PageList />

@@ -1,83 +1,89 @@
 ---
-title: "Docker Compose"
-description: "Run the server, worker, and scheduler with Docker Compose."
+title: Docker Compose
+description: Start all required services with SQLite, or with PostgreSQL and Valkey.
 sidebar:
   order: 3
 ---
 
-Copy one of the files below to `compose.yml` and run it from that directory. Replace `<VERSION>` with a release tag from the [Releases](https://github.com/yorishiro-ai/yorishiro/releases) page, for example `20261015-1`.
-
-Each setup starts three services from one image: the server (`app`), a worker, and a scheduler. See [What runs](../#what-runs). The `5150:5150` mapping publishes the server on host port `5150`.
-
-Start with `docker compose up -d` and stop with `docker compose down`. Then follow [First run](../first-run/); the URL there is `http://localhost:5150`.
-
-The local embedding provider downloads its model on first use (about 1 GiB), and the first start waits for it. To skip the download, run `YORISHIRO_EMBEDDING_PROVIDER=none docker compose up -d`.
+Choose one setup below and save it as `compose.yml`. Replace `<VERSION>` with your chosen [release tag](https://github.com/yorishiro-ai/yorishiro/releases). These examples use Community; change the image suffix from `-ce` to `-ee` for Enterprise.
 
 ## SQLite
+
+Use this for a personal installation without an external database.
 
 ```yaml
 x-yorishiro: &yorishiro
   image: ghcr.io/yorishiro-ai/yorishiro:<VERSION>-ce
   restart: unless-stopped
   environment:
+    BINDING: 0.0.0.0
     HOST: http://localhost:5150
     YORISHIRO_EMBEDDING_PROVIDER: ${YORISHIRO_EMBEDDING_PROVIDER:-local}
   volumes:
     - data:/var/lib/yorishiro
-    - model-cache:/home/yorishiro/.cache/yorishiro
+    - models:/app/models
 
 services:
   app:
     <<: *yorishiro
     ports:
       - "5150:5150"
-
   worker:
     <<: *yorishiro
     command: ["start", "--worker=worker-target:shared"]
     healthcheck:
       disable: true
     depends_on:
-      - app
-
+      app:
+        condition: service_healthy
+  jobs:
+    <<: *yorishiro
+    command: ["start", "--worker=job-target:shared"]
+    healthcheck:
+      disable: true
+    depends_on:
+      app:
+        condition: service_healthy
   scheduler:
     <<: *yorishiro
     command: ["scheduler"]
     healthcheck:
       disable: true
     depends_on:
-      - app
+      app:
+        condition: service_healthy
 
 volumes:
   data:
-  model-cache:
+  models:
 ```
-
-All three services share one volume. SQLite supports a single tenant and is meant for evaluation and personal use. See [SQLite mode](../../guides/sqlite/).
 
 ## PostgreSQL and Valkey
 
-Use this setup for multi-tenant hosting (Enterprise edition with a licence) or when several workers share one queue. PostgreSQL stores the data, and Valkey (Redis-compatible) holds the job queue. The example uses the Community image. For Enterprise, change `-ce` to `-ee` in the image tag.
+Use PostgreSQL for several tenants or workers on different machines. Valkey provides the Redis-compatible queue. Change `change-me` in both database password settings before starting.
 
-Create `init-extensions.sql` next to `compose.yml`. PostgreSQL runs it once, when the data volume is first created:
+Create `init-extensions.sql` beside `compose.yml`:
 
 ```sql
 CREATE EXTENSION IF NOT EXISTS vector;
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 ```
 
+PostgreSQL runs this file only when its data volume is empty. For an existing database, have its administrator enable those extensions before starting Yorishiro.
+
 ```yaml
 x-yorishiro: &yorishiro
   image: ghcr.io/yorishiro-ai/yorishiro:<VERSION>-ce
   restart: unless-stopped
-  volumes:
-    - model-cache:/home/yorishiro/.cache/yorishiro
   environment:
+    BINDING: 0.0.0.0
     HOST: http://localhost:5150
     DATABASE_URL: postgres://yorishiro:change-me@db:5432/yorishiro
     YORISHIRO_QUEUE_KIND: Redis
     QUEUE_URL: redis://valkey:6379
     YORISHIRO_EMBEDDING_PROVIDER: ${YORISHIRO_EMBEDDING_PROVIDER:-local}
+  volumes:
+    - models:/app/models
 
 services:
   db:
@@ -91,14 +97,14 @@ services:
       - pg-data:/var/lib/postgresql
       - ./init-extensions.sql:/docker-entrypoint-initdb.d/init-extensions.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U yorishiro"]
+      test: ["CMD", "pg_isready", "-U", "yorishiro"]
       interval: 5s
       timeout: 3s
       retries: 5
-
   valkey:
-    image: valkey/valkey:9.1
+    image: valkey/valkey:9.1.2
     restart: unless-stopped
+    command: ["valkey-server", "--appendonly", "yes"]
     volumes:
       - valkey-data:/data
     healthcheck:
@@ -106,19 +112,15 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
-
   app:
     <<: *yorishiro
     ports:
       - "5150:5150"
-    healthcheck:
-      start_period: 15m
     depends_on:
       db:
         condition: service_healthy
       valkey:
         condition: service_healthy
-
   worker:
     <<: *yorishiro
     command: ["start", "--worker=worker-target:shared"]
@@ -129,7 +131,16 @@ services:
         condition: service_healthy
       valkey:
         condition: service_healthy
-
+  jobs:
+    <<: *yorishiro
+    command: ["start", "--worker=job-target:shared"]
+    healthcheck:
+      disable: true
+    depends_on:
+      app:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
   scheduler:
     <<: *yorishiro
     command: ["scheduler"]
@@ -142,28 +153,38 @@ services:
 volumes:
   pg-data:
   valkey-data:
-  model-cache:
+  models:
 ```
 
-Change the passwords before you use this beyond a local trial. The worker waits for a healthy server.
+To use PostgreSQL for the queue too, remove `YORISHIRO_QUEUE_KIND`, `QUEUE_URL`, the `valkey` service, its volume, and its entries under `depends_on`. The queue then uses `DATABASE_URL`.
 
-To use PostgreSQL for the queue as well, remove `YORISHIRO_QUEUE_KIND` and `QUEUE_URL`, remove the `valkey` service, and remove its entries from the `depends_on` of `app` and `worker`, or Compose fails. With PostgreSQL as the database, the queue then uses PostgreSQL too.
+## Start and connect
+
+Run these in the directory containing `compose.yml`:
+
+```sh
+docker compose up -d
+docker compose ps
+docker compose logs --tail 100 worker
+```
+
+The embedding worker downloads about 1 GiB on its first start. The server and other services do not need to load that model. To try saving data without semantic search, run `YORISHIRO_EMBEDDING_PROVIDER=none docker compose up -d` instead.
+
+Open [First run](../first-run/) and use `http://localhost:5150`. If users connect through another address, change `HOST` to their URL. Keep the same database and queue settings on all four services.
+
+## Keep your data
+
+`docker compose down` stops the installation without deleting its named volumes. Do not add `-v` unless you intend to delete those volumes and their data. Updating an image is not a backup; see [Update and back up](../../operations/queue-publisher-cutover/).
 
 ## Use a local embedding model offline
 
-If the host already has the model files, place them at `models/multilingual-e5-base/model.safetensors` and `models/multilingual-e5-base/tokenizer.json`. Add the mount to the existing `volumes` list under `x-yorishiro`. Keep the entries that are already there, because a new `volumes` key replaces the whole list. In the SQLite example, the list becomes:
+Place both files on the host:
 
-```yaml
-volumes:
-  - data:/var/lib/yorishiro
-  - model-cache:/home/yorishiro/.cache/yorishiro
-  - ./models:/app/models:ro
+```text
+models/multilingual-e5-base/model.safetensors
+models/multilingual-e5-base/tokenizer.json
 ```
 
-In the PostgreSQL example, keep `model-cache` and add the `./models` line to it.
+In the existing `x-yorishiro.volumes` list, replace `models:/app/models` with `./models:/app/models:ro`. Keep any other entries, including `data:/var/lib/yorishiro` in the SQLite example. Recreate the worker with `docker compose up -d worker`.
 
-Provide both files or neither. If only one is present, the server fails to start.
-
-## Configuration
-
-See [Configuration](../../configuration/) for all settings.
+The container user must be able to read both files. Providing only one prevents the embedding worker from starting. See [Embedding](../../configuration/embedding/) for provider options.

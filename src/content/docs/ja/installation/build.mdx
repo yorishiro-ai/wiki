@@ -1,51 +1,35 @@
 ---
-title: "ソースからのビルド"
-description: "ソースからYorishiroをビルドして実行します。"
+title: ソースからビルド
+description: 独自のバージョンをビルドし、必要なサービスを起動します。
 sidebar:
   order: 5
 ---
 
-カスタムビルドが必要な場合は、ソースからビルドします。
+独自のビルドが不要なら[パッケージ](../packages/)か[Docker Compose](../docker-compose/)を使ってください。ビルドには[rustup](https://rustup.rs/)で導入したRust、Python 3、C/C++ツールチェーンと、[開発ガイド](https://github.com/yorishiro-ai/yorishiro/blob/develop/CONTRIBUTING.md)にある環境ごとの依存関係が必要です。Linuxでは`mold`と`sccache`を使います。
 
-## 必要なもの
+## ビルドする
 
-- [rustup](https://rustup.rs/)のRustツールチェーン。
-- C/C++ツールチェーン、`pkg-config`、OpenSSLの開発用ヘッダー。
-- Linuxの場合: `mold`と`sccache`。
-- PostgreSQLを使う場合: `vector`拡張と`pg_trgm`拡張を備えたサーバー。
-
-## ビルド
-
-エディションはCargoのfeatureで選びます。指定しない場合、ビルドにはEnterpriseが含まれます。
-
-```console
-$ git clone https://github.com/yorishiro-ai/yorishiro && cd yorishiro
-$ cargo build --release --bin yorishiro --no-default-features --features community
+```sh
+git clone https://github.com/yorishiro-ai/yorishiro
+cd yorishiro
+git switch develop
+python3 patches/loco-rs/verify.py --prepare
+cargo build --locked --release --bin yorishiro --no-default-features --features community
 ```
 
-Enterpriseエディションの場合は、`cargo build --release --bin yorishiro`でビルドします。バイナリは`target/release/yorishiro`です。
+Rustのバージョンはリポジトリが指定します。新しいチェックアウトでは修正済み依存関係の準備が必要です。Enterpriseでは`--no-default-features --features community`を省略します。実行ファイルは`target/release/yorishiro`です。
 
-## 実行
+## 実行する
 
-ソースから実行する場合は`development`設定を使い、サーバーとワーカーを別々のプロセスとして起動する必要があります。
+リポジトリのディレクトリで、それぞれ別のターミナルから実行します。
 
-```console
-$ target/release/yorishiro start
-$ target/release/yorishiro start --worker=worker-target:shared
+```sh
+target/release/yorishiro start
+target/release/yorishiro start --worker=worker-target:shared
+target/release/yorishiro start --worker=job-target:shared
+target/release/yorishiro scheduler
 ```
 
-パッケージとDockerが使う`production`設定を使うには、`LOCO_ENV=production`を設定します。
+既定では`config/development.yaml`を使います。productionの設定を使う場合は、4つすべてで`LOCO_ENV=production`を設定し、書き込めるデータの保存先を指定してください。[設定](../../configuration/)を参照してください。
 
-続けて[初回起動](../first-run/)に進んでください。そこでのURLは`http://localhost:5150`です。
-
-## PostgreSQLまたはValkeyのキューを使う
-
-```console
-$ DATABASE_URL=postgres://user:pass@host:5432/yorishiro \
-  YORISHIRO_QUEUE_KIND=Redis \
-  QUEUE_URL=redis://host:6379 \
-  LOCO_ENV=production \
-  target/release/yorishiro start
-```
-
-ワーカーも同じ変数を指定して起動します。すべての設定項目については[設定](../../configuration/)を参照してください。
+`http://localhost:5150`で[初回起動](../first-run/)に進みます。埋め込みワーカーは初回にモデルをダウンロードします。最初のコマンドは起動したままになるため、4つを1つのターミナルで順番に実行しないでください。

@@ -1,11 +1,11 @@
 ---
-title: "Configuration"
-description: "Settings for the server, database, queue, logging, and security."
+title: Configuration
+description: Change connection addresses, storage, access settings, and time zone.
 sidebar:
   order: 1
 ---
 
-Yorishiro reads its settings from environment variables, so the settings on these pages need no configuration file. The time zone is set with `YORISHIRO_TIMEZONE`. In production, mail settings also come from environment variables, so they need no file edit.
+The installation examples work without a custom configuration. Change only what you need. If someone else operates your server, ask them to change server settings; your MCP client only needs its URL and API key.
 
 import PageList from "../../../components/PageList.astro";
 
@@ -13,114 +13,74 @@ import PageList from "../../../components/PageList.astro";
 
 ## Configuration files
 
-Yorishiro loads `config/<environment>.yaml`. `LOCO_ENV` selects the environment. It defaults to `development` for source runs, and Docker and the packages set it to `production`. `LOCO_CONFIG_FOLDER` points to another directory that holds the file.
+| Installation | Configuration                                                                                 |
+| ------------ | --------------------------------------------------------------------------------------------- |
+| Docker       | Environment entries in `compose.yml`, or `/app/config/production.yaml`                        |
+| Packages     | Copy `/etc/yorishiro/production.yaml.example` to `/etc/yorishiro/production.yaml` and edit it |
+| Source       | `config/development.yaml`; use `LOCO_ENV=production` for `config/production.yaml`             |
 
-The files read environment variables for deploy-time values such as `DATABASE_URL`. A configuration file you supply replaces the built-in one, and the two are not merged. A `production.local.yaml` file placed beside the base file is merged on top of it, and its values win.
+The production example reads the environment variables listed here. If you replace a value with a literal in YAML, that entry no longer reads its environment variable. Restart the affected services after a change, keeping database and queue settings consistent across all four.
 
-Package installs read `/etc/yorishiro/production.yaml` if it exists, and the packaged `production.yaml.example` otherwise. Docker installs read `/app/config/production.yaml`.
+A replacement `production.yaml` must be complete: it is not merged with the packaged file. A `production.local.yaml` beside the base configuration overrides selected values. `LOCO_CONFIG_FOLDER` selects a different configuration directory. See [Packages](../installation/packages/#configuration) for file permissions and database changes.
 
 ## Server address
 
-| Variable                      | Default                                           | Description                                                                                                                                             |
-| ----------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `BINDING`                     | `0.0.0.0` (production), `localhost` (development) | Interface the server listens on                                                                                                                         |
-| `PORT`                        | `5150`                                            | Listening port                                                                                                                                          |
-| `HOST`                        | `http://localhost`                                | Public URL used in links. It is not the listening address. In development the value is fixed and the variable is ignored.                               |
-| `YORISHIRO_MCP_ALLOWED_HOSTS` | Unset                                             | Extra `Host` values the `/mcp` endpoint accepts, comma-separated. By default it accepts `localhost`, `127.0.0.1`, and `::1`. Wildcards are not allowed. |
+| Production variable           | Default            | Set it when                                                                                          |
+| ----------------------------- | ------------------ | ---------------------------------------------------------------------------------------------------- |
+| `BINDING`                     | `localhost`        | Use `0.0.0.0` to accept connections from outside the host or container                               |
+| `PORT`                        | `5150`             | You need another listening port                                                                      |
+| `HOST`                        | `http://localhost` | Set the full URL users connect to, including port if needed                                          |
+| `YORISHIRO_MCP_ALLOWED_HOSTS` | Unset              | Add allowed MCP hostnames, comma-separated, when using a restricted listener behind another hostname |
+| `YORISHIRO_ALLOWED_ORIGINS`   | `[]`               | Allow browser clients from exact origins, as a JSON array                                            |
 
-If clients reach the server through another hostname (for example behind a reverse proxy), add that hostname to `YORISHIRO_MCP_ALLOWED_HOSTS`. Otherwise MCP requests are rejected.
+`HOST` does not change where the server listens. The [Docker examples](../installation/docker-compose/) explicitly set `BINDING=0.0.0.0` and `HOST=http://localhost:5150`.
 
-OAuth login, an Enterprise feature, also needs a public callback URL. See [Enterprise configuration](enterprise/).
+For browser clients on another origin, set `YORISHIRO_ALLOWED_ORIGINS`, for example `["https://assistant.example.com"]`. This is separate from MCP hostname validation and does not replace an API key. A wildcard listener (`0.0.0.0` or `::`) accepts any MCP Host; a restricted listener accepts loopback and its bind address plus explicitly allowed hosts.
 
 ## Database and queue
 
-Application data uses SQLite or PostgreSQL. The queue is chosen separately. With nothing set, both use SQLite files, so you need no external service.
+| Production variable    | Default                                                  | Use                                                                           |
+| ---------------------- | -------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `DATABASE_URL`         | `sqlite:///var/lib/yorishiro/yorishiro.sqlite3?mode=rwc` | Data storage; use a `postgres://` URI for PostgreSQL                          |
+| `YORISHIRO_QUEUE_KIND` | Follows the database URL                                 | `Sqlite`, `Postgres`, or `Redis` for Valkey and other Redis-compatible queues |
+| `QUEUE_URL`            | Provider default                                         | Queue connection URI                                                          |
 
-| Variable               | Default                                                               | Description                                                                                                   |
-| ---------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `DATABASE_URL`         | `sqlite:///var/lib/yorishiro/yorishiro.sqlite3?mode=rwc` (production) | Use a `postgres://` URI for PostgreSQL. In development the default is `sqlite://yorishiro.sqlite3?mode=rwc`.  |
-| `YORISHIRO_QUEUE_KIND` | Follows `DATABASE_URL`                                                | Queue type: `Sqlite`, `Postgres`, or `Redis` (any Redis-compatible service such as Valkey)                    |
-| `QUEUE_URL`            | Provider default                                                      | Queue URI, for example `redis://valkey:6379` or `rediss://…`                                                  |
-| `DB_AUTO_MIGRATE`      | `true`                                                                | Apply database migrations on start. Turn it off when you run several server instances and migrate separately. |
+Use SQLite with a separate SQLite queue file, PostgreSQL with a PostgreSQL queue, or either database with Valkey. The SQLite database and queue must not share a file. Do not place SQLite files on another host for remote workers.
 
-Supported combinations are:
-
-- SQLite database with a SQLite queue
-- PostgreSQL database with a PostgreSQL queue
-- Either database with a Valkey queue
-
-The other pairs (SQLite database with a PostgreSQL queue, or the reverse) are rejected at start. When both use SQLite, they must use separate files. The packaged default queue file is `sqlite:///var/lib/yorishiro/yorishiro_queue.sqlite3?mode=rwc`. Set `QUEUE_URL` explicitly when you move an existing installation or choose another location.
-
-PostgreSQL needs the `vector` and `pg_trgm` extensions.
-
-For queue sizing and worker processes, see [Workers and queues](workers-and-queues/).
+PostgreSQL needs the `vector` and `pg_trgm` extensions. The [Compose example](../installation/docker-compose/#postgresql-and-valkey) includes their setup. Changing a connection URL does not move existing data; see [Export and import](../guides/import-export/).
 
 ## Tenants
 
-| Variable                | Default | Description                                                                                                                                                                                                                                                                                |
-| ----------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `YORISHIRO_MAX_TENANTS` | `1`     | Maximum number of tenants. Only Enterprise with a valid licence honors other values. `0` means unlimited and turns off the first-run setup endpoint. Community and unlicensed Enterprise always allow one tenant and log a warning if you set another value. Negative values are rejected. |
+Community and unlicensed Enterprise allow one tenant. With a valid Enterprise licence, `YORISHIRO_MAX_TENANTS` sets a higher limit; `0` means unlimited and disables first-run setup. Negative values are invalid. SQLite always allows only one tenant.
 
-SQLite always allows one tenant.
+## Search and sign-in limits
 
-## Search quota
+| Production variable                     | Default  | Meaning                                                |
+| --------------------------------------- | -------- | ------------------------------------------------------ |
+| `YORISHIRO_SEARCH_TOKENS_PER_MINUTE`    | `100000` | Shared API/MCP search budget per workspace per minute  |
+| `YORISHIRO_AUTH_RATE_LIMIT_MAX`         | `10`     | Sign-in and sign-up requests per client IP in a window |
+| `YORISHIRO_AUTH_RATE_LIMIT_WINDOW_SECS` | `60`     | Sign-in window in seconds                              |
 
-| Variable                             | Default  | Description                                                                                                                                                                                                                                                                                                                                                           |
-| ------------------------------------ | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `YORISHIRO_SEARCH_TOKENS_PER_MINUTE` | `100000` | Search tokens a workspace can spend per minute. Each query is charged, and the API and MCP share the quota. The default is high and mainly stops runaway automated queries. The estimate counts bytes, at one token per four bytes rounded up. Japanese characters take three bytes each in UTF-8, so the same quota allows fewer Japanese queries than English ones. |
-
-## Sign-in rate limit
-
-| Variable                                | Default | Description                                                   |
-| --------------------------------------- | ------- | ------------------------------------------------------------- |
-| `YORISHIRO_AUTH_RATE_LIMIT_MAX`         | `10`    | Sign-in and sign-up requests allowed per client IP per window |
-| `YORISHIRO_AUTH_RATE_LIMIT_WINDOW_SECS` | `60`    | Window length in seconds                                      |
-
-Both must be greater than zero.
-
-The limit is applied per client IP. It covers `/auth/login` and `/auth/signup`, and Enterprise also applies it to `/auth/oauth/authorize` and `/auth/oauth/callback`.
-
-## Database load guard
-
-The load guard can switch a PostgreSQL deployment to read-only mode when the database is busy. It is off by default.
-
-Set `YORISHIRO_DB_LOAD_THRESHOLD` to the number of active connections that counts as busy. The guard samples every 5 seconds. It turns on read-only mode when the count stays at or above the threshold for 30 seconds, and it turns it off again after the same quiet period. It never clears a read-only or full-lock state that an operator set. It does nothing on SQLite.
-
-| Variable                         | Default   | Description                                                                 |
-| -------------------------------- | --------- | --------------------------------------------------------------------------- |
-| `YORISHIRO_DB_LOAD_THRESHOLD`    | `0` (off) | Active PostgreSQL connections at or above which the database counts as busy |
-| `YORISHIRO_DB_LOAD_SUSTAIN_SECS` | `30`      | How long the busy or quiet state must last. Must be greater than zero.      |
-| `YORISHIRO_DB_LOAD_POLL_SECS`    | `5`       | Seconds between samples. Must be greater than zero.                         |
-
-`yorishiro task db_load_guard` reports one sample without changing the maintenance state.
-
-## Logging
-
-`LOG_LEVEL` sets the verbosity: `debug`, `info`, `warn`, or `error`. `RUST_LOG` also works and takes priority. Logs are written as JSON in production.
-
-API keys, webhook secrets, OAuth credentials, OIDC tokens, and licence owner details are kept out of the logs. Error responses from providers are also left out because they can repeat credentials. Access logs record the request path but not the query string, so OAuth codes and state values are never logged.
-
-## Mail
-
-This release sends no mail. Nothing in the application sends mail yet, so the mail settings have no effect. In production, mail is configured only when `MAILER_HOST` is set, and the port and credentials come from `MAILER_PORT` (default `587`), `MAILER_USER`, and `MAILER_PASSWORD` in the environment. You do not edit the file for this. In development, `MAILER_HOST` defaults to `localhost` and the port is fixed at `1025`.
+The search budget uses an estimate based on query size, not a provider's token bill. If requests are rate-limited, reduce frequency before raising the limit. Sign-in values must be positive.
 
 ## API keys
 
-Tenant owners and admins manage workspace API keys through `/api/api-keys`.
+Owners and admins can manage workspace keys through the API:
 
-- `POST /api/api-keys` takes a `name` of 1 to 100 characters and returns the full key only in that response.
-- `GET /api/api-keys` lists names, prefixes, IDs, and creation times. It never returns key secrets.
-- `DELETE /api/api-keys/{id}` revokes a key immediately. It returns `404` if the ID does not exist or belongs to another tenant.
+| Request                                             | Result                                            |
+| --------------------------------------------------- | ------------------------------------------------- |
+| `POST /api/api-keys` with `{"name":"My assistant"}` | Creates a key; save `full_key` from this response |
+| `GET /api/api-keys`                                 | Lists keys without secrets                        |
+| `DELETE /api/api-keys/{id}`                         | Revokes a key immediately                         |
 
-You can revoke the key you are using for the request. This lets an administrator retire an old key without a second credential.
+Names must contain 1 to 100 characters. Revoking the key your client uses disconnects that access, so update the client with a replacement first.
+
+## Logging
+
+Production logs are JSON. Use `LOG_LEVEL=info` normally; use `debug` while diagnosing a problem, then change it back. `RUST_LOG` takes priority if set. See [Troubleshooting](../operations/queue-start-objectives/) for commands to read logs. Remove credentials before sharing logs or configuration.
 
 ## Time zone
 
-The default time zone is `UTC`. To use another zone, set `settings.timezone` in your configuration file to an IANA name such as `Asia/Tokyo`, then restart. You can also keep the existing environment-variable expression in the file and start with `YORISHIRO_TIMEZONE=Asia/Tokyo`. An invalid name prevents start.
+Set `YORISHIRO_TIMEZONE=Asia/Tokyo` in the production environment, or change `settings.timezone` in your configuration. The default is `UTC`; use an IANA time zone name. Restart all services with the same setting.
 
-```yaml
-settings:
-  timezone: Asia/Tokyo
-```
-
-Timestamps in workspace details, API key and audit responses, and log events use this zone. Changing it does not change when recorded events happened or when jobs run or expire. Use the same value on every server and worker that shares a database.
+This changes displayed timestamps, not when recorded events occurred. An invalid name prevents startup.

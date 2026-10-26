@@ -1,0 +1,46 @@
+---
+title: Export and import
+description: Move workspace schemas, entities, and relations with JSON Lines.
+sidebar:
+  order: 4
+---
+
+Export saves the schemas, entities, and relations in the workspace your API key accesses. It does not back up users, API keys, server settings, or the whole installation. See [Update and back up](../../operations/queue-publisher-cutover/) for a full backup.
+
+## Export workspace content
+
+Use a key with `read` scope. Replace the URL and key:
+
+```sh
+curl --fail-with-body http://localhost:5150/api/export.jsonl \
+  -H 'Authorization: Bearer <api-key>' \
+  -o workspace.jsonl
+```
+
+Check that the command succeeded before using the file. Keep the export private: it contains workspace content in plain text.
+
+## Import into a workspace
+
+Use the destination workspace's key with `schema` scope. Test in an empty workspace first; do not repeatedly import the same file into a working workspace.
+
+```sh
+curl --fail-with-body -X POST http://localhost:5150/api/import.jsonl \
+  -H 'Authorization: Bearer <destination-api-key>' \
+  -H 'Content-Type: application/x-ndjson' \
+  --data-binary @workspace.jsonl
+```
+
+The response contains a `job_id`. This means the request was accepted, not that import has finished. Keep the application-job worker running and poll:
+
+```sh
+curl --fail-with-body http://localhost:5150/api/import-jobs/<job-id> \
+  -H 'Authorization: Bearer <destination-api-key>'
+```
+
+Wait for `completed`. If it reports `failed`, inspect the error and logs before retrying. The worker imports the records together; a record error rolls the import back.
+
+## Import through your assistant
+
+Your MCP assistant can submit JSON Lines with `import_jsonl` and poll `import_job_status` using the returned ID. Both require `schema` access. Check the export's size against your client's limits before sending its full contents through chat.
+
+After import, search data may need rebuilding. Ask the administrator to run [resync_embeddings](../../configuration/embedding/#change-the-embedding-model) for the destination workspace if embeddings are missing. Verify imported items with a list or exact-ID read as well as a search.

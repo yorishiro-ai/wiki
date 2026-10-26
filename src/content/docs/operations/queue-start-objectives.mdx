@@ -1,50 +1,81 @@
 ---
-title: "Queue start times"
-description: "How Yorishiro measures how long background jobs wait, and how to monitor it."
+title: Troubleshooting
+description: Fix connection errors, search failures, and background work that does not finish.
 sidebar:
   order: 1
 ---
 
-Yorishiro records the life of every background job it submits: when it was queued, when a worker started it, and how it ended. You can use this to see whether jobs start as fast as you expect.
+Start by checking the services and the error returned to your client. Keep the server, embedding worker, application jobs, and scheduler running with the same database and queue settings.
 
-## How timing is measured
+## Cannot connect
 
-- **Queued time** is when the server saves the job. The time before the job is published to the queue counts toward the queue start time.
-- **Start time** is when a worker first receives the job.
-- **Queue start time** is start time minus queued time.
+1. Run `curl http://localhost:5150/_ping` on the server host. Replace the URL if you changed the port.
+2. If that fails, check whether the server is running and inspect its logs.
+3. If local access works but remote access fails, check the published Docker port, `BINDING`, firewall, and reverse proxy. Use the server's address, not the client's `localhost`.
+4. For MCP, use the `/mcp` endpoint and an `Authorization: Bearer <api-key>` header. Check hostname and browser-origin settings in [Configuration](../../configuration/#server-address).
 
-A retry or redelivery keeps the original queued time. The queue start time therefore includes the time a job spent waiting for another attempt.
+`/_ping` checks the HTTP process, not whether searches or jobs work.
 
-## Job status
+## Authentication or permission errors
 
-A job is `queued`, `running`, `retrying`, `completed`, `failed`, `cancelled`, or `unavailable`. Missing queue capacity and provider failures do not count as successful starts. A job becomes `unavailable` only when Yorishiro refuses it before it reaches the queue, for example when its worker target, concurrency policy, or starvation policy cannot be determined. Queue and provider failures do not set this status. When publishing fails, Yorishiro logs `dispatch outbox: enqueue failed and will be retried`, and the job stays `queued` or `retrying`. Publishing is asynchronous, so the request that submitted the job does not receive the provider error.
+For `401`, check that the key is complete, not revoked, and sent in the bearer header. For `403` or a tool permission error, ask the administrator whether the key allows that operation. Creating schemas and importing data need `schema` access; reading needs `read` access.
 
-If the worker running a job stops responding for five minutes, the job counts as expired. The next delivery then starts a new attempt, and the earlier worker can no longer complete or retry the job.
+Do not recreate the installation to fix a client key. Ask for a replacement key and update the MCP client.
 
-Job records are stored in the application database, even though the queue runs in Valkey. When you diagnose a job, check both the queue and the job record.
+## Search returns 503
 
-## Monitor start times
+Check the embedding worker first, not just the server:
 
-When a job starts, Yorishiro logs the message `queue job admitted` with the field `queue_start_seconds`, which holds the job's queue start time in seconds. Filter for these events in your logging system to chart start times.
+```sh
+docker compose ps
+docker compose logs --tail 100 worker
+```
 
-Terminal failures log `terminal worker failure`. With Enterprise plan policy on, a job held back because its target is at its limit logs `queue capacity saturated`, along with the current active capacity and the capacity limit for that target. The worker then logs `worker capacity saturated`.
+For packages:
 
-If more and more jobs stay `queued`, `retrying`, or `unavailable`, check worker capacity and queue health before you judge start times.
+```sh
+sudo systemctl status yorishiro-worker
+sudo journalctl -u yorishiro-worker -n 100 --no-pager
+```
 
-## Objectives by plan
+Wait for the first model download to finish. Check available disk space, model file permissions, and connectivity to an external embedding service. If embeddings are disabled with `none`, enable a provider before using semantic search.
 
-Enterprise plans define these objectives for how long a job should wait before it starts:
+Search also returns `503` during a workspace reindex. Wait for successful completion. After fixing provider failures, use the [embedding recovery instructions](../../configuration/embedding/#change-the-embedding-model).
 
-| Plan | Objective   |
-| ---- | ----------- |
-| Free | Best effort |
-| Pro  | 60 seconds  |
-| Team | 15 seconds  |
+## A saved item does not appear in search
 
-Yorishiro records the timings but does not enforce the objectives. Compare your recorded start times with them. Automatic Official bursts and compute charging are not available.
+Ask your assistant to retrieve it by ID or list the entities. Search data updates in the background, so a successful save does not mean similarity search is ready immediately. If the delay persists, inspect the embedding worker logs.
 
-## Capacity
+## Import or other work stays queued
 
-Run workers for the targets you need to reserve capacity for. See [Workers and queues](../../configuration/workers-and-queues/). A worker that serves several targets shares its slots across them and reserves none.
+Imports, filling defaults, undo, and Enterprise inference need the application-job worker. The embedding worker does not run them.
 
-When a target reaches its limit, the job waits and tries again at its original priority and target. It does not move to another target. The Enterprise limits are described in [Enterprise configuration](../../configuration/enterprise/#plan-policy-and-job-limits).
+```sh
+docker compose logs --tail 100 jobs
+```
+
+For packages:
+
+```sh
+sudo systemctl status yorishiro-jobs yorishiro-scheduler
+sudo journalctl -u yorishiro-jobs -u yorishiro-scheduler -n 100 --no-pager
+```
+
+Check that `start --worker=job-target:shared` is running and that all services use the same database and queue. For an import, poll `import_job_status` with the returned `job_id` rather than submitting the same import repeatedly.
+
+For dedicated Enterprise pools, check both the [declared target and running workers](../../configuration/workers-and-queues/#worker-targets). A declared target does not prove a worker is running. If limits are enabled, work can wait for existing jobs to finish.
+
+## A service will not restart
+
+Fix the error in the logs before retrying. For a systemd unit that reached its restart limit:
+
+```sh
+sudo systemctl reset-failed yorishiro-worker
+sudo systemctl start yorishiro-worker
+```
+
+Replace the unit name with the failing service. Check configuration syntax, connection URLs, and read permissions. Avoid deleting database or queue files as a troubleshooting step.
+
+## Ask for help
+
+Include the release tag, edition, installation method, database and queue types, failing operation, and relevant error messages. Remove API keys, passwords, and private content. Say which services are running and whether the problem also occurs with a direct API request.
