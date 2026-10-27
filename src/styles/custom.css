@@ -8,3 +8,27 @@
   --sl-font-mono:
     "JetBrains Mono Variable", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
+
+/* Keep preferences reachable on splash pages and outside the mobile sidebar. */
+@media (max-width: 49.999rem) {
+  :root {
+    --sl-nav-height: 7.5rem;
+  }
+
+  .header > .header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.5rem 1rem;
+  }
+
+  .header .right-group {
+    display: flex;
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
+
+  .header .right-group .social-icons {
+    margin-inline-end: auto;
+  }
+}

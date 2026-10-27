@@ -28,6 +28,7 @@ export default defineConfig({
       locales,
       lastUpdated: true,
       customCss: ["./src/styles/tailwind.css", "./src/styles/custom.css"],
+      components: { MobileMenuFooter: "./src/components/MobileMenuFooter.astro" },
       editLink: { baseUrl: `${repo}/edit/main/` },
       social: [{ icon: "github", label: "GitHub", href: productRepo }],
       sidebar,
