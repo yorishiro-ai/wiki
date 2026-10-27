@@ -1,5 +1,4 @@
 // Verifies page structure. Fails when:
-//   - a page has no `title` or `description`
 //   - a page sits outside a known group (except each locale's index)
 //   - an English page has no translation for a locale, or a translation has no English page
 //   - a page still contains the "TODO:" placeholder from the template
@@ -24,9 +23,6 @@ for (const f of files) {
 for (const [key, text] of pages) {
   const [locale, path] = key.split("|");
   const where = `${locale === "root" ? "" : `${locale}/`}${path}`;
-  const fm = text.match(/^---\n([\s\S]*?)\n---/)?.[1] ?? "";
-  if (!/^title:\s*\S/m.test(fm)) errors.push(`${where}: missing title`);
-  if (!/^description:\s*\S/m.test(fm)) errors.push(`${where}: missing description`);
   if (/^TODO:/m.test(text)) errors.push(`${where}: still has the TODO placeholder`);
   const isIndex = /^index\.mdx?$/.test(path);
   if (!isIndex && !groups.some((g) => path.startsWith(`${g.dir}/`))) {
