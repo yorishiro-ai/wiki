@@ -2,6 +2,7 @@
 title: Yorishiro Wiki
 description: AIアシスタントと情報を保存し、必要なときに探すためのガイドです。
 template: splash
+pageList: all
 hero:
   tagline: メモや構造化した情報、そのつながりをAIアシスタントと保存できます。
   actions:
@@ -13,12 +14,8 @@ hero:
       variant: minimal
 ---
 
-import PageList from "../../../components/PageList.astro";
-
 AIアシスタントをMCPで接続し、用途に合うテンプレートを選んで、情報の保存や検索を依頼します。情報は自分で運用するYorishiroに保存されます。
 
 - これから導入する方は[Docker Compose](installation/docker-compose/)で起動し、[アカウントを作成](installation/first-run/)してください。
 - 接続済みの方は[AIアシスタントで使う](guides/using-yorishiro/)へ進んでください。
 - うまく動かない場合は、[トラブルシューティング](operations/queue-start-objectives/)を参照してください。
-
-<PageList />

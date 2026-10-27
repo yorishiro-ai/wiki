@@ -1,0 +1,11 @@
+---
+import DefaultMarkdownContent from "@astrojs/starlight/components/MarkdownContent.astro";
+import PageList from "./PageList.astro";
+
+const { pageList } = Astro.locals.starlightRoute.entry.data;
+---
+
+<DefaultMarkdownContent>
+  <slot />
+  {pageList && <PageList section={pageList === "all" ? undefined : pageList} />}
+</DefaultMarkdownContent>

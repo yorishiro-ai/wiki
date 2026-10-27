@@ -34,7 +34,7 @@ pnpm preview
    This writes `src/content/docs/guides/backup.mdx` and `src/content/docs/ja/guides/backup.mdx`.
 
 2. Replace the `TODO:` text in both files. Pages are MDX, so write `{` and a bare `<` in prose as `&#123;` and `&lt;`, or put them in backticks. Write the English page first; the Japanese page mirrors its structure.
-3. Run `pnpm check:pages`. It fails on a missing title or description, a page outside a known section, a missing translation, or a leftover `TODO:`.
+3. Run `pnpm check`. Astro's content schema validates titles, descriptions, and page-list settings. The page structure check catches unknown sections, missing translations, and leftover `TODO:` text.
 
 The page appears in the sidebar, home page directory, and search index automatically. No route registration or link list needs updating. Add matching English and Japanese MDX files under an existing section; `pnpm new` is optional. A page only needs `title`, `description`, and its body:
 
@@ -51,15 +51,15 @@ Set `sidebar.order` to control ordering; otherwise the lists sort by title after
 
 ### Automatic Page Lists
 
-`src/components/PageList.astro` renders cards from each page's `title` and `description`, filtered to the current language. The home pages use it to list all sections. A section landing page can use it without maintaining links by hand:
+`src/components/PageList.astro` renders cards from each page's `title` and `description`, filtered to the current language. Starlight's shared Markdown wrapper adds the list after the page body when `pageList` is set in frontmatter:
 
-```mdx
-import PageList from "../../../components/PageList.astro";
-
-<PageList section="guides" />
+```yaml
+title: Guides
+description: Instructions for everyday tasks.
+pageList: guides
 ```
 
-This import path is for `src/content/docs/guides/index.mdx`; Japanese pages need one extra `../`. The list excludes the current page, drafts, and pages with `sidebar.hidden: true`. Grouping follows the source directory, and links respect custom `slug` values. Omit `section` to list all configured sections. The component uses Starlight's existing cards and needs no client-side JavaScript.
+Use `pageList: all` to list all configured sections, as the home pages do. Omit `pageList` for no list. Values are validated against `groups` in `wiki.config.mjs`; no component imports or locale-specific paths are needed. The list excludes the current page, drafts, and pages with `sidebar.hidden: true`. Grouping follows the source directory, and links respect custom `slug` values. The component uses Starlight's existing cards and needs no client-side JavaScript.
 
 ## Add a section
 
