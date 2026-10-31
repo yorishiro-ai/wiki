@@ -1,0 +1,66 @@
+---
+title: API keys
+description: Get a connection key for your assistant, keep it safe, and replace it when needed.
+sidebar:
+  order: 6
+---
+
+An API key is the secret that connects your assistant to Yorishiro. Add the key supplied by your administrator to your MCP client. Anyone holding it can use its permissions, so do not paste it into chats or shared logs.
+
+Use a separate key for each client and grant only the access it needs. This lets you stop or replace one connection independently. Ask a tenant Admin/Owner to issue and manage keys. Workspace Admin alone cannot issue them.
+
+## Issue a key
+
+An administrator can ask a connected assistant:
+
+> Create a key named Notes assistant for saving notes, with write scope and no audit access. Confirm its permissions and workspace before issuing it.
+
+Use `create_api_key`. Choose `read` for reading, `write` for saving/editing, or `schema` for schema administration. `migration` is a higher content scope. The `audit` grant for reading audit records is separate from this ladder. The defaults are `read` and `audit=false`.
+
+Names must contain 1 to 100 characters. For a time limit, set `expires_at` to a future RFC 3339 timestamp. A new key cannot exceed its issuer's scope, audit grant, binding, or expiry. The user's role also limits access.
+
+The returned `full_key` is shown once. Store it in a password manager and configure your [MCP client](../../installation/first-run/#4-connect-an-mcp-client).
+
+To use the API directly, replace the URL and `<api-key>` below. Unsupported security-sensitive fields are rejected.
+
+```sh
+curl -X POST http://localhost:5150/api/api-keys \
+  -H 'Authorization: Bearer <api-key>' \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"Notes assistant","scope":"write","audit":false}'
+```
+
+## Inspect grants and history
+
+> Check which workspace I am connected to and what this key allows. Do not display secrets.
+
+Use `whoami` for the connected context and effective access, and `capabilities` for key permissions. Even satisfied `scope_satisfied` or `grants_satisfied` flags do not guarantee that a role, resource-access rule, or licence permits an action. Promoting a user does not widen an existing key's scope.
+
+Administrators can use `list_api_keys` or `GET /api/api-keys` to check names, binding, attribution, stored/effective grants, `last_used_at`, and lifecycle dates. `active` means usable, `revoked` means revoked, and `expired` means past expiry. Dates use the configured time zone. Revoked and expired keys remain in history, but secrets and `key_hash` cannot be retrieved.
+
+`discover_workspaces` returns candidates in the current key's tenant; service credentials see only the selected workspace. Seeing a candidate does not grant access. Workspace-bound keys cannot switch targets. Enterprise tenant-bound keys use an authorized workspace UUID in `X-Workspace-Id`, not a name. This does not bypass access restrictions.
+
+## Rotate or revoke
+
+When replacing a key, plan for the point at which the current connection stops working.
+
+1. `rotate_api_key` issues one new key with the same scope, audit grant, attribution, binding, and expiry, and revokes the old key at the same time.
+2. Save the returned `full_key` and immediately update the client settings.
+3. Reconnect and try a read operation.
+
+Inactive keys cannot be rotated. Concurrent rotations still produce only one successor. If a request conflicts, ask the administrator rather than assuming the secret will be returned again. History identifies the successor with `replaced_by_id`.
+
+If you need the old key to work during the changeover, issue a separate key, update and check the client, then revoke the old key with `revoke_api_key`. Rotation does not keep both active. Revoked keys no longer authenticate, but their secret-free history remains.
+
+| Action  | REST                             | MCP              |
+| ------- | -------------------------------- | ---------------- |
+| Replace | `POST /api/api-keys/{id}/rotate` | `rotate_api_key` |
+| Revoke  | `DELETE /api/api-keys/{id}`      | `revoke_api_key` |
+
+Removing tenant membership revokes the person's attributed tenant keys; revoking direct workspace access revokes affected bound keys. Disabling a tenant revokes all its keys while keeping data and history. Complete operator deletion removes key history too, retaining only secret-free retirement records. See [Tenant retirement](../../operations/tenant-retirement/).
+
+## Audit and error handling
+
+Ask an administrator for a separate `audit` grant if you need audit records. `list_audit_log` reads paginated records for the selected workspace. Administrator roles and higher content scopes alone do not allow this.
+
+If an operation fails, check expiry, revocation, your role, key binding, resource restrictions, and licence requirements. HTTP 200 can still accompany a failed operation; ask the assistant to check the tool error. JSON-RPC errors and `isError` in the client's detailed result can help. Keep keys, passwords, and private content out of support requests.

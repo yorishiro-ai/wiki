@@ -1,6 +1,6 @@
 // Parses the MCP tool inventory markdown produced by the Yorishiro server tests.
 
-const SCOPE_RE = /\s*\(requires (\w+) scope(?:, [^)]*)?\)\.?/;
+const SCOPE_RE = /\(requires (read|write|schema|migration) scope\b/;
 
 function typeLabel(p) {
   const base = Array.isArray(p.type)
@@ -17,13 +17,11 @@ function parseTools(section) {
   )) {
     const [, name, rawDescription, schemaJson] = m;
     const schema = JSON.parse(schemaJson);
-    const scope = rawDescription.match(SCOPE_RE)?.[1];
+    const scope =
+      rawDescription.match(SCOPE_RE)?.[1] ??
+      (rawDescription.includes("requires the independent audit grant") ? "audit" : undefined);
     if (!scope) throw new Error(`No scope found in description of ${name}`);
     const description = rawDescription
-      .replace(SCOPE_RE, (m, _s, offset, whole) => {
-        if (/[.。]$/.test(whole.slice(0, offset))) return "";
-        return whole.slice(offset + m.length).trim() ? "." : "";
-      })
       .replace(/\s*\n\s*/g, " ")
       .trim()
       .replace(/([^.。])$/, "$1.");

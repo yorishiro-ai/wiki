@@ -5,6 +5,8 @@ sidebar:
   order: 2
 ---
 
+If you only use an assistant connected to Yorishiro, ask the server operator to handle updates and backups. This page is for people running their own server.
+
 Before updating, read the chosen release's notes and back up your database and configuration. A content export is useful for moving information, but it is not a complete installation backup.
 
 ## Back up
@@ -45,4 +47,4 @@ Test restoration separately before replacing your installation. A database migra
 
 For moving workspace content, use [Export and import](../../guides/import-export/). Changing `DATABASE_URL` or `QUEUE_URL` does not migrate data or pending jobs. Do not switch queues while work is pending without a tested migration procedure.
 
-Older documentation referred to publisher-epoch cutover tasks. Those commands are not available in the current product; do not use them for an update.
+Publisher-epoch cutover commands are not available in the current product; do not use them for an update.

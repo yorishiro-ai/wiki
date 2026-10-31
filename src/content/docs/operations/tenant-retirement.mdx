@@ -1,0 +1,48 @@
+---
+title: Tenant retirement
+description: Inspect retained data, disable a tenant, and distinguish operator-only permanent deletion.
+sidebar:
+  order: 3
+---
+
+Before stopping use, [export the information you need](../../guides/import-export/) and arrange a [backup](../queue-publisher-cutover/) with the server operator. Disabling a tenant does not erase its data. Ask the operator separately if you need permanent deletion.
+
+## Inspect before disabling
+
+As the tenant Owner, ask your connected assistant:
+
+> I want to stop using this tenant. Check retained data, unfinished work, and effects on schema copies in other workspaces. Do not disable anything yet.
+
+Use `tenant_retirement_inventory` to review retained records, unfinished work, shared user accounts, and external schema forks. The REST endpoint is `GET /api/tenants/current/retirement`. The inventory reflects the time of the check; it does not authorize a later action. External forks may need attention before permanent deletion.
+
+## Disable and retain data
+
+Only an Owner can disable a tenant; a tenant Admin cannot. Check the name and UUID with `whoami`, save what you need, then request `disable_tenant`. Supply the target tenant UUID as `confirmed_tenant_id`. With the API, send the same value to `POST /api/tenants/current/disable`.
+
+Disablement revokes every tenant key, including the one used for the request, so clients lose access. Pending work is cancelled, but data and occupied capacity remain. This is not a way to free space under a plan quota or manual cap.
+
+Already-authenticated requests may finish. Not every external call already in progress can be stopped.
+
+## Operator-only permanent cleanup
+
+Permanent deletion cannot be undone. Save what you need and give the server operator the target UUID. Ordinary REST/MCP keys cannot perform it. Normal workspace deletion also protects the last workspace.
+
+The operator selects the intended installation's configuration and uses the operator CLI. Keep production UUIDs and secrets out of shared examples.
+
+| Task                        | Values and checks                                                                               |
+| --------------------------- | ----------------------------------------------------------------------------------------------- |
+| `inspect_tenant_retirement` | Use `tenant_id` to inspect retained data and consequences                                       |
+| `disable_tenant`            | Match `confirmed_tenant_id` to `tenant_id`; data is retained                                    |
+| `delete_tenant`             | Disable first, then match `confirmed_tenant_id` to `tenant_id`; permanently deletes tenant data |
+
+Actual cleanup releases the occupied tenant capacity. It removes API-key history too, but preserves shared user accounts and secret-free retirement records.
+
+## Separate user identity cleanup
+
+Leaving a tenant and deleting an account are different. Removing membership revokes the person's attributed tenant keys, but leaves the shared account. Tenant administrators cannot delete someone's identity in other tenants.
+
+Ask the server operator to delete the account itself. The operator checks the target with `list_users`, verifies that it has no tenant memberships, then uses `delete_user`. The same UUID is required in `user_id` and `confirmed_user_id`. Remaining attributed keys are revoked before attribution is cleared and the account is deleted.
+
+## Check limits
+
+Retained usage after disablement, plan quotas, and manual caps are separate. If you only need to change a limit, see [Enterprise configuration](../../configuration/enterprise/#plan-policy-and-job-limits) rather than retiring the tenant.

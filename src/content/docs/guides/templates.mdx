@@ -25,3 +25,21 @@ For a template saved in your tenant's own library, use `list_template_library` t
 ## Deprecated template
 
 `worldbuilding` is deprecated. For new work, use `creative-writing`, `trpg-campaign`, or `game-dev-lore`. The `template_id` value `worldbuilding` keeps working, and existing schemas stay unchanged.
+
+## Schema versions and archival
+
+Before changing the fields you save, inspect the current definition.
+
+> Show this schema's current fields and version history. Let me review any changes before creating a new version.
+
+The assistant checks `get_active_schema`, `get_schema_by_id`, and `list_schemas`, then uses `create_schema` for a new schema or its next version. Earlier version definitions are not rewritten.
+
+With `schema` access, use `archive_schema` for a version you no longer need. Archiving does not delete entities, historical definitions, bindings, or fork references. It does not automatically activate an earlier version. Creating the same name again advances the version number. Do not treat this as data deletion.
+
+## Tenant template library
+
+Use your tenant's template library to reuse a format across your organization. Ask a tenant Admin/Owner to create, edit, delete, or copy a shared definition. Each tool's scope requirement also applies.
+
+The tools are `create_template_library_item`, `update_template_library_item`, `delete_template_library_item`, and `fork_template_library_item`. Editing or deleting a library definition leaves existing workspace copies and their versions separate.
+
+This library shares information formats; it is not a physical PostgreSQL schema. For copying a schema from another workspace and following its changes in Enterprise, see [Enterprise configuration](../../configuration/enterprise/#template-updates-and-schema-forks). Marketplace publishing is a separate operation too.

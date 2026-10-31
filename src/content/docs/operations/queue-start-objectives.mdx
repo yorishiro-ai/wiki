@@ -5,7 +5,7 @@ sidebar:
   order: 1
 ---
 
-Start by checking the services and the error returned to your client. Keep the server, embedding worker, application jobs, and scheduler running with the same database and queue settings.
+Start with the connection URL, API key, and error shown by your assistant. If someone else runs the server, ask them to check logs or restart services in the steps below. If you run it yourself, keep the server, embedding worker, application jobs, and scheduler running with the same database and queue settings.
 
 ## Cannot connect
 
@@ -79,3 +79,20 @@ Replace the unit name with the failing service. Check configuration syntax, conn
 ## Ask for help
 
 Include the release tag, edition, installation method, database and queue types, failing operation, and relevant error messages. Remove API keys, passwords, and private content. Say which services are running and whether the problem also occurs with a direct API request.
+
+## Login recovery
+
+If sign-in does not give you a usable workspace, ask the administrator for help based on the returned error. Signing up or joining a tenant does not necessarily prepare a workspace you can use.
+
+| Code                              | What to do                                                        |
+| --------------------------------- | ----------------------------------------------------------------- |
+| `tenant_membership_required`      | Ask a tenant Admin for membership or an invitation                |
+| `workspace_provisioning_required` | Ask the server operator to create a workspace, then sign in again |
+| `workspace_access_required`       | Ask a tenant or workspace administrator for access                |
+| `workspace_selection_required`    | Choose a candidate workspace UUID and sign in again               |
+
+For direct API sign-in, send email and password to `POST /auth/login`. One accessible workspace is selected automatically. With several, retry with the chosen UUID in `workspace_id`. Invalid credentials do not reveal candidates. Check `error.code` and the hint for details.
+
+For server operators preparing a workspace, the command is `cargo loco task create_workspace tenant_id:<tenant_id> name:<workspace_name>`. Check tenant capacity, licence, and storage restrictions, then ask the user to retry `/auth/login`.
+
+If an assistant action fails, check the tool result even when HTTP status is 200. JSON-RPC errors and `isError` in the detailed result can help. See [API keys](../../guides/api-keys/) for expiry and role checks. Capability flags alone do not prove an action is authorized.

@@ -62,15 +62,7 @@ The search budget uses an estimate based on query size, not a provider's token b
 
 ## API keys
 
-Owners and admins can manage workspace keys through the API:
-
-| Request                                             | Result                                            |
-| --------------------------------------------------- | ------------------------------------------------- |
-| `POST /api/api-keys` with `{"name":"My assistant"}` | Creates a key; save `full_key` from this response |
-| `GET /api/api-keys`                                 | Lists keys without secrets                        |
-| `DELETE /api/api-keys/{id}`                         | Revokes a key immediately                         |
-
-Names must contain 1 to 100 characters. Revoking the key your client uses disconnects that access, so update the client with a replacement first.
+Tenant Admin/Owner can issue least-privilege keys, inspect retained history, and revoke or rotate them. Creation defaults to `read`; audit is an independent grant. See [API keys](../guides/api-keys/) for scope, expiry, one-time secrets, and rotation procedures.
 
 ## Logging
 
@@ -81,3 +73,7 @@ Production logs are JSON. Use `LOG_LEVEL=info` normally; use `debug` while diagn
 Set `YORISHIRO_TIMEZONE=Asia/Tokyo` in the production environment, or change `settings.timezone` in your configuration. The default is `UTC`; use an IANA time zone name. Restart all services with the same setting.
 
 This changes displayed timestamps, not when recorded events occurred. An invalid name prevents startup.
+
+## Configuration ownership
+
+For the environment variables listed on this page, check that the corresponding YAML field reads the variable. A field set to a literal value cannot be changed through that environment variable. Check and edit the configuration example used by your installation. Packages use `/etc/yorishiro/production.yaml`; a separate `yorishiro.env` is unnecessary. Remove secrets from shared configuration examples.

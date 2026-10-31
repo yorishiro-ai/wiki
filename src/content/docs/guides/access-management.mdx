@@ -1,0 +1,82 @@
+---
+title: Access management
+description: Invite collaborators and choose which workspaces and roles to share.
+sidebar:
+  order: 5
+---
+
+Invite people and share only the workspaces they need. Ask a tenant Admin or Owner to handle invitations and tenant-wide membership. A tenant is the account area for a person or organization; workspaces separate the information stored within it.
+
+## Invite a collaborator
+
+As a tenant Admin or Owner, you can ask your connected assistant:
+
+> Invite this email address as a Member. Show me the recipient, role, and expiry before creating the invitation.
+
+1. Receive the invitation token created with `create_invite`. Only an Owner can invite another Owner.
+2. Deliver the token privately. Invitation emails are not sent automatically.
+3. The recipient signs up with the invitation, or authenticates with an existing account and uses `accept_invite`. The account's persisted email must match the recipient. Service credentials cannot accept invitations.
+4. Grant a Member or Viewer access to the intended workspace as well. Joining the tenant alone does not open a workspace.
+
+Accepting an invitation does not issue a login credential or switch the connected workspace. Use the normal authentication flow for sign-in and signup. A mutable, unverified email alone is not proof of identity.
+
+Check invitations with `list_invites`. Use `revoke_invite` to cancel an unused invitation, or `reissue_invite` with a new expiry to replace its token. Reissuing invalidates the old token. Deliver the new token yourself; listings do not show tokens.
+
+## Roles and effective access
+
+An action must be allowed by both your role and your API key. A more powerful key cannot grant an action that your role does not permit.
+
+| Tenant role   | Maximum access                                                   | Workspace membership                          |
+| ------------- | ---------------------------------------------------------------- | --------------------------------------------- |
+| Owner / Admin | Content operations up to `migration`, plus tenant administration | Inherited administration of tenant workspaces |
+| Member        | Content operations up to `write`                                 | A direct workspace grant is required          |
+| Viewer        | Content operations up to `read`                                  | A direct workspace grant is required          |
+
+Direct workspace roles are Admin, Member, and Viewer, with content ceilings of `migration`, `write`, and `read`. The tenant-role ceiling still applies. For example, a tenant Member who becomes a workspace Admin remains limited to `write` content operations. They can manage direct workspace grants but do not gain `schema` access. Team-based grants are not supported.
+
+> Show the people with direct access to this workspace, then grant the selected member Viewer access. Show me the person and workspace before changing anything.
+
+Workspace Admins use `list_workspace_members`, `grant_workspace_member`, and `revoke_workspace_member` to manage individual grants. Recipients must already belong to the tenant. The list shows direct grants only, not inherited access from tenant Owner/Admin roles.
+
+Workspace Admin alone does not grant invitations, tenant membership administration, key issuance, ownership transfer, or billing powers. Revoking a direct grant also revokes affected workspace-bound keys when access is not inherited. It does not remove tenant membership.
+
+A promotion does not widen the scope of an existing key. Audit records require a separate `audit` grant, even for administrators. Service credentials have no attributed human role and cannot act as a human administrator or change a personal profile. Their scope, binding, expiry, and the tenant's active status still apply.
+
+## Change membership and ownership
+
+> Before changing this person's role, show me which workspaces and keys would be affected. Do not make the change yet.
+
+Use `preview_member_role_change` or `preview_member_removal` before requesting a change. A preview describes the situation when checked, not permission for a later action.
+
+Use `list_members` and `set_member_role` to add an existing account or change a role. Invite people who do not have an account. Removing membership with `remove_member` also revokes that person's attributed tenant keys, but keeps their shared account for other tenants.
+
+Only an Owner can add or remove Owner authority. The last Owner cannot be removed or demoted. To hand over ownership, check an existing member's UUID and use `transfer_ownership`. The caller becomes an Admin as part of the transfer.
+
+## Tenant and workspace administration
+
+> Show the name and UUID of the connected tenant and workspace. Do not change anything.
+
+Matching names can refer to different places. Check UUIDs with `whoami` before requesting administration.
+
+| What you want to do                            | Tools                                                                      | Who can do it and what to check                                                                           |
+| ---------------------------------------------- | -------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Change the tenant name or manual workspace cap | `get_tenant`, `update_tenant`                                              | Tenant Admin/Owner; plan quotas do not change                                                             |
+| Create, inspect, or delete a workspace         | `create_workspace`, `list_workspaces`, `get_workspace`, `delete_workspace` | Creation/deletion require tenant Admin/Owner; deletion removes data and the last workspace is protected   |
+| Rename a workspace                             | `update_workspace`                                                         | Workspace Admin; schema binding does not change                                                           |
+| Change a manual entity cap                     | `update_workspace`                                                         | Tenant Admin/Owner required                                                                               |
+| Change your display name                       | `get_current_user`, `update_current_user`                                  | An attributed user key is required; the name is shared across tenants; email/password/OAuth do not change |
+
+To change a manual cap, supply `replace_max_workspaces=true` with `max_workspaces` for a tenant, or `replace_max_entities=true` with `max_entities` for a workspace. Set the value to `null` to clear it. Omitting the field does not clear it, and plan quotas still apply separately.
+
+Selected-workspace detail, update, and schema operations cannot switch a key's binding. Direct-grant administration and workspace deletion take an explicit same-tenant target and check permission for that operation. This does not make the key generally retargetable.
+
+## Management boundaries
+
+The tools above cover ordinary collaboration. These operations work differently:
+
+- Tenant creation, server-wide tenant inventory, and physical deletion require the server operator's CLI, not a tenant-bound key. See [Tenant retirement](../../operations/tenant-retirement/).
+- Ask the operator for server-wide user inventory or account deletion. This is separate from leaving a tenant.
+- Archiving a schema does not physically delete its data. The shared template library is also separate from physical PostgreSQL schemas. See [Templates](../templates/#schema-versions-and-archival).
+- Not every REST action is available through MCP. Marketplace publishing, inference job execution, sign-in/OAuth, Stripe webhooks, streaming export, and server maintenance are outside management MCP coverage. Provider configuration neither runs inference nor removes licence restrictions.
+
+After access is revoked, already-authenticated requests may finish. Queued work rechecks permission before writes/publication, but not every external call already in progress can be stopped. See [API keys](../api-keys/) for replacing credentials.
