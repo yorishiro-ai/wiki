@@ -79,3 +79,18 @@ Replace the unit name with the failing service. Check configuration syntax, conn
 ## Ask for help
 
 Include the release tag, edition, installation method, database and queue types, failing operation, and relevant error messages. Remove API keys, passwords, and private content. Say which services are running and whether the problem also occurs with a direct API request.
+
+## Login recovery
+
+`POST /auth/login` accepts email, password, and an optional `workspace_id`. With one accessible workspace it resolves automatically. With several, retry with the selected UUID. Read the typed `error.code` and returned hint:
+
+| Code                              | Action                                                            |
+| --------------------------------- | ----------------------------------------------------------------- |
+| `tenant_membership_required`      | Ask a tenant Admin to add membership or issue an invitation       |
+| `workspace_provisioning_required` | Ask an operator to provision a workspace, then retry login        |
+| `workspace_access_required`       | Ask a tenant/workspace administrator for a direct workspace grant |
+| `workspace_selection_required`    | Select a returned workspace UUID and retry with `workspace_id`    |
+
+For provisioning, the precise bootstrap hint is `cargo loco task create_workspace tenant_id:<tenant_id> name:<workspace_name>`, then retry `/auth/login`. Tenant capacity, licence, and backend restrictions still apply. Do not promise that signup or tenant membership always creates a usable workspace. Invalid credentials disclose no candidate workspaces.
+
+For MCP, inspect JSON-RPC errors and `isError` even with HTTP 200. Check key expiry/revocation and effective role/binding with [API keys](../../guides/api-keys/); do not use capability satisfaction flags as authorization guarantees. Queued work revalidates access before writes/publication, but already-authenticated requests or external calls may finish.

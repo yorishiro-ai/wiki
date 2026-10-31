@@ -1,0 +1,44 @@
+---
+title: Tenant retirement
+description: Inspect retained data, disable a tenant, and distinguish operator-only permanent deletion.
+sidebar:
+  order: 3
+---
+
+Disablement and deletion are different operations. Disablement retains data and quota occupancy; physical deletion is irreversible and requires a deployment operator. Back up and review the target before either operation. Never use production tenant UUIDs or secrets in shared examples.
+
+## Inspect before disabling
+
+An Owner can read `GET /api/tenants/current/retirement` or call `tenant_retirement_inventory`. Review shared user identities, pending work, retained records, and external schema forks. Inventory is a snapshot, not authorization for a later action. External forks may need explicit resolution before permanent cleanup.
+
+## Disable and retain data
+
+An Owner can use `POST /api/tenants/current/disable` with `confirmed_tenant_id` equal to the current tenant UUID, or MCP `disable_tenant` with the same confirmation. A tenant Admin without Owner authority cannot disable it.
+
+Disablement revokes tenant credentials, including the caller's, and cancels pending work. Data and quota occupancy remain. Ordinary requests already authenticated may finish, and already-running external calls cannot be universally cancelled. Do not promise that disabling instantly stops every external effect.
+
+## Operator-only permanent cleanup
+
+The operator CLI provides these tasks:
+
+| Task                        | Inputs and purpose                                                                                              |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `inspect_tenant_retirement` | `tenant_id`; inspect retained data and consequences                                                             |
+| `disable_tenant`            | Matching `tenant_id` and `confirmed_tenant_id`; retain data                                                     |
+| `delete_tenant`             | Matching `tenant_id` and `confirmed_tenant_id`; requires prior disablement and irreversibly deletes tenant data |
+
+Run tasks against the intended deployment configuration, not a development database by accident. Physical deletion is not exposed to tenant-bound REST/MCP credentials. Normal workspace deletion protects the last workspace; explicit tenant retirement is the separate cleanup procedure, not a workaround through ordinary workspace deletion.
+
+Complete deletion releases occupied tenant capacity through actual cleanup. It removes API-key history as well as retained tenant data, preserves shared user identities, and retains secret-free retirement events. It is not a global user-deletion operation.
+
+## Separate user identity cleanup
+
+Removing tenant membership revokes attributed tenant keys but does not delete the shared account. Global user inventory uses operator task `list_users`; `delete_user` requires zero tenant memberships and matching `user_id` / `confirmed_user_id`. It revokes remaining attributed credentials before clearing attribution and deleting the identity. Tenant administrators cannot use membership management to delete a person from other tenants.
+
+## Limits and verification
+
+Do not confuse retained occupancy with plan quotas or manual caps; see [Enterprise configuration](../../configuration/enterprise/#plan-policy-and-job-limits).
+
+The PR #598 source baseline was verified at `837daada84e1bdf559004ba3865aa8020f9a914b` in [CI 41123543635](https://github.com/yorishiro-ai/yorishiro/actions/runs/41123543635), across eight CE/EE database/queue configurations and the required checks. Management runtime suites ran in GHA only; no real deployment tenant was deleted. These are source-test results, not an end-to-end validation of your installation.
+
+The separately authorized live Qwen check covered CE/SQLite only. It does not establish all-backend/EE live-provider behavior, local multilingual-E5 numerical equivalence, or general retrieval quality.

@@ -79,3 +79,18 @@ sudo systemctl start yorishiro-worker
 ## 問い合わせる
 
 リリースタグ、エディション、導入方法、データベースとキューの種類、失敗した操作、関係するエラーメッセージを添えてください。APIキー、パスワード、非公開の内容は取り除きます。動いているサービスと、APIに直接リクエストしても発生するかも伝えてください。
+
+## ログインの復旧
+
+`POST /auth/login`にはメールアドレス、パスワード、任意の`workspace_id`を指定します。アクセスできるワークスペースが1つなら自動で選ばれます。複数ある場合は、選んだUUIDを指定して再試行します。型付きの`error.code`と返されたhintを確認してください。
+
+| コード                            | 対処                                                         |
+| --------------------------------- | ------------------------------------------------------------ |
+| `tenant_membership_required`      | テナントのAdminに参加または招待を依頼                        |
+| `workspace_provisioning_required` | operatorにワークスペースの作成を依頼し、ログインを再試行     |
+| `workspace_access_required`       | テナントまたはワークスペースの管理者に直接の権限付与を依頼   |
+| `workspace_selection_required`    | 返されたワークスペースのUUIDを`workspace_id`に指定して再試行 |
+
+ワークスペースの作成が必要な場合のbootstrap hintは、`cargo loco task create_workspace tenant_id:<tenant_id> name:<workspace_name>`を実行してから`/auth/login`を再試行するというものです。テナントの上限、ライセンス、backendの制限も適用されます。登録やテナントへの参加だけで必ず使えるワークスペースができるとは限りません。認証情報が不正な場合は候補のワークスペースを開示しません。
+
+MCPではHTTP 200でもJSON-RPCエラーと`isError`を確認します。[APIキー](../../guides/api-keys/)で期限・失効・実効的な役割・対象範囲を確認し、capabilitiesの充足フラグを許可の保証に使わないでください。キューの処理は書き込み・公開前にアクセスを再確認しますが、認証済みのリクエストや外部呼び出しは完了する場合があります。

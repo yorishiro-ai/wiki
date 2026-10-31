@@ -21,6 +21,21 @@ test("inventory parses scopes, required and nullable parameters, and CRLF", () =
   }
 });
 
+test("inventory preserves role restrictions and the independent audit grant", () => {
+  for (const [requirement, scope] of [
+    ["read scope and tenant Admin or Owner; issuer ceilings apply", "read"],
+    ["read scope and matching account email", "read"],
+    [
+      "the independent audit grant; tenant or workspace administration does not grant audit access",
+      "audit",
+    ],
+  ]) {
+    const { community } = parseInventory(inventory.replace("read scope", requirement));
+    assert.equal(community[0].scope, scope);
+    assert.ok(community[0].description.includes(requirement));
+  }
+});
+
 test("invalid inventories fail instead of silently dropping tools", () => {
   for (const input of [
     "Not found",

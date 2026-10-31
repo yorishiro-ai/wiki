@@ -1,0 +1,69 @@
+---
+title: Access management
+description: Manage tenant membership, workspace grants, invitations, and ownership without confusing their authority.
+sidebar:
+  order: 5
+---
+
+These instructions follow product `develop` after [PR #598](https://github.com/yorishiro-ai/yorishiro/pull/598). Use tenant and workspace UUIDs as identities; names are display labels. Check the selected workspace with `whoami` before changing access.
+
+## Roles and effective access
+
+For a user-attributed key, content authority is the minimum of its stored scope, tenant role, and workspace authority. A broader key cannot override a narrower role, and promotion never expands a key's stored scope. The `audit` grant is separate from the `read` → `write` → `schema` → `migration` ladder.
+
+| Tenant role   | Content ceiling | Workspace access                              |
+| ------------- | --------------- | --------------------------------------------- |
+| Owner / Admin | `migration`     | Inherited administration of tenant workspaces |
+| Member        | `write`         | Requires a direct workspace grant             |
+| Viewer        | `read`          | Requires a direct workspace grant             |
+
+Direct workspace roles are Admin (`migration` ceiling), Member (`write`), and Viewer (`read`). The tenant-role ceiling still applies: a tenant Member with workspace Admin can administer direct grants but does not gain `schema` content access from that grant. `list_workspace_members` lists direct grants, not inherited Owner/Admin access. Teams are not part of this per-user grant mechanism.
+
+Workspace Admin can list, grant/change, and revoke direct workspace roles with `list_workspace_members`, `grant_workspace_member`, and `revoke_workspace_member`. Recipients must already belong to the tenant. This role grants no tenant member administration, key issuance, ownership transfer, or billing authority. Revoking a direct grant revokes affected workspace-bound keys when access is not inherited; it does not remove tenant membership.
+
+Service credentials have no attributed human role. Their scope, workspace binding, tenant activity, and expiry still apply. They cannot impersonate a human administrator or use self-profile tools. Audit access is never implied by an administrator role.
+
+## Invite a collaborator
+
+Tenant Admin or Owner can manage invitations without server shell access:
+
+1. Use `create_invite` with the recipient email, tenant role, and expiry. Only an Owner can invite another Owner.
+2. Deliver the returned token privately. Yorishiro does not send invitation email automatically.
+3. The recipient signs up with the invitation or accepts it using their existing authenticated identity. `accept_invite` requires a human account with a matching persisted recipient email; service credentials cannot accept it. Acceptance issues no login credential and does not retarget the selected workspace.
+4. For a Member or Viewer, grant access to the intended workspace explicitly. Tenant membership alone does not open private workspaces.
+
+Use `list_invites` to see invitation records without tokens, `revoke_invite` to cancel an unused invitation, or `reissue_invite` with a new expiry to replace its token. Reissue invalidates the old token and returns the new one for caller delivery; it is not an email resend service.
+
+REST equivalents are `POST` / `GET /api/members/invites`, `DELETE /api/members/invites/{invite_id}`, and `POST /api/members/invites/{invite_id}/reissue`. Password sign-in, signup, and OAuth remain authentication endpoints, not MCP tools. An unverified mutable email is not proof of identity.
+
+## Change membership and ownership
+
+Use `list_members` and `set_member_role` to add an existing account or change its tenant role. REST reuses `POST /api/members` with `email` and `role`; it attaches an existing account rather than creating a global identity. Invite people without accounts instead.
+
+Before a change, inspect `preview_member_role_change` or `preview_member_removal`. Previews show a snapshot of affected workspace/key access, not authorization for a later mutation. Remove membership with `remove_member` (`DELETE /api/members/{user_id}`); attributed tenant keys are revoked, but the shared user identity remains.
+
+Only an Owner can grant/remove Owner authority. The final Owner cannot be removed or demoted, including during concurrent changes. `transfer_ownership` (`POST /api/members/transfer-ownership`) transfers to an existing member and demotes the caller to Admin atomically. Verify the successor UUID before confirming.
+
+## Tenant and workspace administration
+
+| Task                           | MCP tools                                                                                      | Authority and limits                                                                                 |
+| ------------------------------ | ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Current tenant detail / update | `get_tenant`, `update_tenant`                                                                  | Tenant Admin/Owner; name and explicit manual workspace cap, not plan quotas                          |
+| Workspace lifecycle            | `create_workspace`, `list_workspaces`, `get_workspace`, `update_workspace`, `delete_workspace` | Creation/deletion require tenant Admin/Owner; last workspace is protected; deletion removes its data |
+| Workspace metadata             | `update_workspace`                                                                             | Workspace Admin for name; tenant Admin additionally for manual entity cap; schema binding unchanged  |
+| Own profile                    | `get_current_user`, `update_current_user`                                                      | Attributed user only; display name only, shared across tenants; no email/password/OAuth changes      |
+
+Selected-workspace detail/update/schema operations do not retarget a bound key. Direct-grant administration and workspace deletion use explicit same-tenant targets under their own role checks; this does not make a bound key generally retargetable. See [API keys](../api-keys/) for credential administration and [Tenant retirement](../../operations/tenant-retirement/) for Owner-only disablement.
+
+To replace or clear a manual cap, set `replace_max_workspaces=true` for the tenant or `replace_max_entities=true` for the workspace, with the corresponding `max_workspaces` / `max_entities` value (or `null` to clear). Merely omitting a cap does not clear it. Plan quotas remain separate.
+
+## Management boundaries
+
+Supported management operations are available through REST/MCP as described here and in [MCP tools](../../reference/mcp-tools/); this does not mean every REST operation has an MCP equivalent.
+
+- Tenant creation, deployment-wide tenant inventory, and physical tenant deletion are operator CLI operations, not tenant-bound MCP operations.
+- Global user inventory/deletion also remains operator CLI. Deletion requires zero tenant memberships and matching user UUID confirmation; remaining attributed keys are revoked before attribution is detached. Removing tenant membership is not deleting an identity.
+- Workspace schemas use immutable versions and non-destructive archival. Tenant-shared template-library definitions are separate resources, not physical PostgreSQL schemas. See [Templates and schema lifecycle](../templates/#schema-versions-and-archival).
+- Marketplace publishing, inference job execution, browser login/OAuth, Stripe webhooks, streaming export, and deployment maintenance are outside management MCP parity. Provider-setting tools do not run inference or bypass its licence gate.
+
+Already-authenticated ordinary requests may finish after access changes. Queued operations revalidate access before writes/publication; cancellation of all already-running external calls is not guaranteed.

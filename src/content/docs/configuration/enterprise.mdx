@@ -26,6 +26,8 @@ Register Yorishiro with your identity provider and configure:
 
 Set an explicit public redirect URI ending in `/auth/oauth/callback`, and register exactly that URI with the provider. Use HTTPS except for local loopback testing. The default redirect is only for local testing and follows the configured listener; `HOST` does not configure it. MCP clients still use API keys.
 
+OAuth target selection is signed and uses workspace UUIDs. The flow checks issuer/nonce and verified email for provisioning; invitation acceptance uses the persisted identity rather than trusting a mutable unverified email. Keep the browser authorization/callback flow intact instead of reproducing it with MCP tools. For typed selection and recovery errors, see [Login recovery](../../operations/queue-start-objectives/#login-recovery).
+
 ## Per-workspace embedding provider
 
 Use `PUT /api/workspace/embedding-key` to give a workspace its own service. Supply `base_url`, `model`, `api_key`, and the model's `dimensions`; use `send_dimensions_param` only if the provider expects it. Reading the settings does not return the API key.
@@ -62,6 +64,10 @@ For a schema linked to a template, ask your assistant to use `list_upstream_chan
 
 Leave `YORISHIRO_PLAN_POLICY_ENABLED=false` unless you operate plan-based hosting. Enabling it applies plan limits to workspaces, entities, and concurrent work.
 
+Plan policy requires EE, a currently valid authenticated licence, and `YORISHIRO_PLAN_POLICY_ENABLED=true`. When enabled, resolution prefers a recognized active deployment licence plan, then tenant billing, then Free. Disabling policy bypasses plan resolution, not authentication or explicit operational caps. Stored manual limits and operation-time plan quotas combine using the stricter bound; Stripe does not overwrite manual caps.
+
+`get_tenant_overview` reports billing metadata, usage, stored manual caps, and separate `active_plan` / `effective_max_workspaces`. Workspace details separately report `effective_max_entities`. Overview requires tenant Admin/Owner and does not change billing.
+
 | Production variable                           | Default | Limit                                                 |
 | --------------------------------------------- | ------- | ----------------------------------------------------- |
 | `YORISHIRO_WORKER_CLASS_SHARED_LIMIT`         | `1`     | Concurrent shared work                                |
@@ -71,3 +77,19 @@ Leave `YORISHIRO_PLAN_POLICY_ENABLED=false` unless you operate plan-based hostin
 Explicit limits must be positive. These settings do not create workers or increase the provider's capacity. In a configuration file, use `initializers.plan_policy_enabled` and `initializers.worker_admission`.
 
 For Stripe integration, configure `YORISHIRO_STRIPE_WEBHOOK_SECRET`, `YORISHIRO_STRIPE_PRICE_PRO`, and `YORISHIRO_STRIPE_PRICE_TEAM`, or the corresponding `initializers.stripe` fields. Keep the webhook secret private.
+
+## Administration through MCP
+
+These tools share the corresponding REST policy; they do not bypass resource or licence checks. Service keys can perform scope-authorized workspace settings operations but cannot impersonate human tenant administrators.
+
+| Setting              | Tools                                                                                                    | Required content scope                                                              |
+| -------------------- | -------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Entity-table columns | `list_entity_columns`, `set_entity_columns`, `reset_entity_columns`                                      | `read` to list, `write` to change; shared display preferences, not schema changes   |
+| Worker assignment    | `get_worker_class`, `set_worker_class`, `reset_worker_class`                                             | `read` to inspect, `schema` to change; configured destination required              |
+| Embedding provider   | `get_embedding_provider`, `set_embedding_provider`, `reset_embedding_provider`                           | `read` for secret-free metadata, `schema` to change; full reindex queued atomically |
+| Inference provider   | `get_llm_provider`, `set_llm_provider`, `reset_llm_provider`                                             | `read` for secret-free metadata, `schema` to change; no inference execution         |
+| Schema forks         | `create_schema_fork`, `list_schema_forks`, `get_schema_fork`, `update_schema_fork`, `delete_schema_fork` | `read` to inspect, `schema` to mutate; selected-workspace ownership enforced        |
+
+Provider secrets are write-only. Resetting a worker assignment falls back to shared compute; queued jobs retain their routing. A declared worker target is not a health check. Fork updates enforce expected-head/history checks and cycle validation; deletion preserves the source and is guarded against entity references. Following a source requires `force` when discarding local edits.
+
+Provider configuration does not execute inference or remove its licence gate. Marketplace publication, inference jobs, OAuth/Stripe, streaming exports, and deployment maintenance remain outside management MCP parity. See [Management boundaries](../../guides/access-management/#management-boundaries).

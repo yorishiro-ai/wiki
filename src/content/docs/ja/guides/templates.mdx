@@ -25,3 +25,15 @@ sidebar:
 ## 非推奨のテンプレート
 
 `worldbuilding` は非推奨です。新しく作成する場合は、`creative-writing`、`trpg-campaign`、`game-dev-lore` のいずれかを使ってください。`template_id` の値 `worldbuilding` は引き続き使え、既存のスキーマも変更されません。
+
+## スキーマのバージョンとarchive
+
+`create_schema`はワークスペースのスキーマ、または次の不変のバージョンを作成します。過去の定義は書き換えません。変更前に`get_active_schema`、`get_schema_by_id`、`list_schemas`で定義を確認してください。
+
+`archive_schema`には`schema`スコープが必要です。指定したバージョンをarchiveしても、エンティティ、過去の定義、紐付け、forkの参照は削除されません。古いバージョンが再び有効になることもありません。その後に同名で作成すると次のバージョンに進みます。archiveは物理削除ではありません。
+
+## テナントのtemplate library
+
+テナントのAdmin/Ownerは、ツールのスコープ要件のもとで`create_template_library_item`、`update_template_library_item`、`delete_template_library_item`、`fork_template_library_item`を使い、共有定義を管理できます。これらはtemplate libraryの資源であり、物理的なPostgreSQL schemaではありません。ライブラリの定義を変更・削除しても、ワークスペースのコピーと既存のバージョンは別に保持されます。
+
+Enterpriseのスキーマfork管理は、テナントのライブラリやMarketplace公開とは別の機能です。[Enterprise設定](../../configuration/enterprise/#テンプレートの更新とスキーマのフォーク)を参照してください。

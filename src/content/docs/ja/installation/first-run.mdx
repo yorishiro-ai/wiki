@@ -63,3 +63,9 @@ curl http://localhost:5150/api/api-keys \
 再接続し、AIアシスタントにスキーマの一覧を尋ねてください。`list_schemas`を呼び出せれば接続できています。新しいワークスペースなら一覧が空でも正常です。
 
 続けて[AIアシスタントで使う](../../guides/using-yorishiro/)でメモの保存と検索を試してください。エラーが出る場合は[トラブルシューティング](../../operations/queue-start-objectives/)を参照してください。
+
+## 接続先と権限を確認する
+
+AIアシスタントに`whoami`、`discover_workspaces`、`capabilities`を呼び出すよう依頼します。変更前にテナント・ワークスペースのUUID、実効スコープ、対象範囲、audit権限を確認してください。候補の名前は表示用であり、識別子ではありません。候補の取得はアクセスの許可ではなく、capabilitiesのスコープやgrantのフラグも役割・資源・ライセンスによる許可を保証しません。
+
+ワークスペースに紐付くキーでは対象を切り替えられません。Enterpriseのテナントに紐付くキーでは、許可されたワークスペースを`X-Workspace-Id`で指定します。共同利用と必要最小限のキーは[アクセス管理](../../guides/access-management/)と[APIキー](../../guides/api-keys/)、ログインの復旧は[トラブルシューティング](../../operations/queue-start-objectives/#ログインの復旧)を参照してください。

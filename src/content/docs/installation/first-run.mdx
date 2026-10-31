@@ -63,3 +63,9 @@ Use your server's address instead of `localhost` if the client runs on another m
 Reconnect the client and ask it to list the available schemas. If it can call `list_schemas`, the connection works. An empty list is normal for a new workspace.
 
 Continue with [Use Yorishiro with your AI assistant](../../guides/using-yorishiro/) to save and search your first note. For errors, see [Troubleshooting](../../operations/queue-start-objectives/).
+
+## Inspect the connected context
+
+Ask the assistant to call `whoami`, `discover_workspaces`, and `capabilities`. Check tenant/workspace UUIDs, effective scope, binding, and audit access before changes. Candidate names are display labels, not identities. Discovery does not grant access, and capability scope/grant flags do not guarantee role, resource, or licence authorization.
+
+Workspace-bound keys cannot retarget. Enterprise tenant-bound keys use `X-Workspace-Id` for an authorized workspace. For collaborators and least-privilege client keys, see [Access management](../../guides/access-management/) and [API keys](../../guides/api-keys/). Login recovery is covered in [Troubleshooting](../../operations/queue-start-objectives/#login-recovery).
