@@ -5,7 +5,7 @@ sidebar:
   order: 4
 ---
 
-This page is for administrators of an Enterprise (`ee`) installation. Ordinary MCP use is the same as Community. Use the Enterprise image or package and configure a valid licence for licensed features.
+Enterprise adds sign-in through an identity provider and a choice of AI services for each workspace. Everyday saving and searching work as in Community. Ask your server operator to make the server changes on this page. If you run the server yourself, use an Enterprise (`ee`) image or package and configure the licence required by the features you use.
 
 ## Licence
 
@@ -26,7 +26,7 @@ Register Yorishiro with your identity provider and configure:
 
 Set an explicit public redirect URI ending in `/auth/oauth/callback`, and register exactly that URI with the provider. Use HTTPS except for local loopback testing. The default redirect is only for local testing and follows the configured listener; `HOST` does not configure it. MCP clients still use API keys.
 
-OAuth target selection is signed and uses workspace UUIDs. The flow checks issuer/nonce and verified email for provisioning; invitation acceptance uses the persisted identity rather than trusting a mutable unverified email. Keep the browser authorization/callback flow intact instead of reproducing it with MCP tools. For typed selection and recovery errors, see [Login recovery](../../operations/queue-start-objectives/#login-recovery).
+Sign in through the browser authorization flow, not MCP tools. If you have several workspaces, check their UUIDs as well as their names. Invitation acceptance uses your persisted identity; changing an unverified email alone does not allow acceptance. For sign-in problems, see [Login recovery](../../operations/queue-start-objectives/#login-recovery).
 
 ## Per-workspace embedding provider
 
@@ -64,7 +64,7 @@ For a schema linked to a template, ask your assistant to use `list_upstream_chan
 
 Leave `YORISHIRO_PLAN_POLICY_ENABLED=false` unless you operate plan-based hosting. Enabling it applies plan limits to workspaces, entities, and concurrent work.
 
-Plan policy requires EE, a currently valid authenticated licence, and `YORISHIRO_PLAN_POLICY_ENABLED=true`. When enabled, resolution prefers a recognized active deployment licence plan, then tenant billing, then Free. Disabling policy bypasses plan resolution, not authentication or explicit operational caps. Stored manual limits and operation-time plan quotas combine using the stricter bound; Stripe does not overwrite manual caps.
+Plan-based limits require EE, a currently valid authenticated licence, and `YORISHIRO_PLAN_POLICY_ENABLED=true`. The plan is chosen from a recognized active server licence plan, then tenant billing, then Free. If a manual cap also exists, the stricter of that cap and the plan quota applies. Stripe does not overwrite manual caps. Disabling plan limits does not bypass authentication or explicit operational caps.
 
 `get_tenant_overview` reports billing metadata, usage, stored manual caps, and separate `active_plan` / `effective_max_workspaces`. Workspace details separately report `effective_max_entities`. Overview requires tenant Admin/Owner and does not change billing.
 
@@ -80,7 +80,9 @@ For Stripe integration, configure `YORISHIRO_STRIPE_WEBHOOK_SECRET`, `YORISHIRO_
 
 ## Administration through MCP
 
-These tools share the corresponding REST policy; they do not bypass resource or licence checks. Service keys can perform scope-authorized workspace settings operations but cannot impersonate human tenant administrators.
+Ask a connected assistant to change displayed columns or the workspace's AI services. Check the connected workspace and current settings first. REST and MCP apply the same permission and licence requirements. Service keys can change workspace settings allowed by their scope, but cannot act as a human tenant administrator.
+
+> Check this workspace's AI services and worker settings. Do not display secrets or change anything yet.
 
 | Setting              | Tools                                                                                                    | Required content scope                                                              |
 | -------------------- | -------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
@@ -90,6 +92,8 @@ These tools share the corresponding REST policy; they do not bypass resource or 
 | Inference provider   | `get_llm_provider`, `set_llm_provider`, `reset_llm_provider`                                             | `read` for secret-free metadata, `schema` to change; no inference execution         |
 | Schema forks         | `create_schema_fork`, `list_schema_forks`, `get_schema_fork`, `update_schema_fork`, `delete_schema_fork` | `read` to inspect, `schema` to mutate; selected-workspace ownership enforced        |
 
-Provider secrets are write-only. Resetting a worker assignment falls back to shared compute; queued jobs retain their routing. A declared worker target is not a health check. Fork updates enforce expected-head/history checks and cycle validation; deletion preserves the source and is guarded against entity references. Following a source requires `force` when discarding local edits.
+Registered provider secrets cannot be retrieved. Resetting a worker assignment returns to shared compute, but queued jobs still use their original route. A configured target does not prove its worker is running.
 
-Provider configuration does not execute inference or remove its licence gate. Marketplace publication, inference jobs, OAuth/Stripe, streaming exports, and deployment maintenance remain outside management MCP parity. See [Management boundaries](../../guides/access-management/#management-boundaries).
+Fork updates check the expected latest state, history, and cycles. Following the source while discarding local edits requires `force`, so review the differences first. Deleting a fork leaves its source intact and is guarded when entities reference it.
+
+Choosing a provider does not run inference or remove its licence requirement. Use the separate procedures for Marketplace publishing, inference jobs, OAuth/Stripe, streaming exports, and server maintenance; these are not management MCP actions. See [Management boundaries](../../guides/access-management/#management-boundaries).

@@ -28,12 +28,18 @@ sidebar:
 
 ## スキーマのバージョンとarchive
 
-`create_schema`はワークスペースのスキーマ、または次の不変のバージョンを作成します。過去の定義は書き換えません。変更前に`get_active_schema`、`get_schema_by_id`、`list_schemas`で定義を確認してください。
+保存する情報の項目を変えたいときは、現在の定義を先に確認してください。
 
-`archive_schema`には`schema`スコープが必要です。指定したバージョンをarchiveしても、エンティティ、過去の定義、紐付け、forkの参照は削除されません。古いバージョンが再び有効になることもありません。その後に同名で作成すると次のバージョンに進みます。archiveは物理削除ではありません。
+> このスキーマの現在の項目と過去のバージョンを見せてください。変更する場合は、新しいバージョンとして作成する前に内容を確認させてください。
+
+アシスタントは`get_active_schema`、`get_schema_by_id`、`list_schemas`で確認し、`create_schema`で新しいスキーマか次のバージョンを作成します。過去のバージョンの定義は書き換えません。
+
+使わないバージョンは`schema`権限で`archive_schema`を使ってarchiveできます。エンティティ、過去の定義、紐付け、forkの参照は削除されません。古いバージョンが自動で有効になることもありません。同名で作り直すと次のバージョンになります。データを消す操作とは区別してください。
 
 ## テナントのtemplate library
 
-テナントのAdmin/Ownerは、ツールのスコープ要件のもとで`create_template_library_item`、`update_template_library_item`、`delete_template_library_item`、`fork_template_library_item`を使い、共有定義を管理できます。これらはtemplate libraryの資源であり、物理的なPostgreSQL schemaではありません。ライブラリの定義を変更・削除しても、ワークスペースのコピーと既存のバージョンは別に保持されます。
+同じ形式を組織内で使い回したい場合は、テナントのテンプレートライブラリを使います。テナントのAdmin/Ownerに、共有定義の作成・変更・削除・コピーを依頼してください。操作にはツールごとのスコープも必要です。
 
-Enterpriseのスキーマfork管理は、テナントのライブラリやMarketplace公開とは別の機能です。[Enterprise設定](../../configuration/enterprise/#テンプレートの更新とスキーマのフォーク)を参照してください。
+対応するツールは`create_template_library_item`、`update_template_library_item`、`delete_template_library_item`、`fork_template_library_item`です。ライブラリの定義を編集・削除しても、ワークスペースに作成済みのコピーやそのバージョンは別に残ります。
+
+このライブラリは保存形式の共有用であり、物理的なPostgreSQL schemaではありません。Enterpriseでほかのワークスペースのスキーマをコピーして追従する機能は[Enterprise設定](../../configuration/enterprise/#テンプレートの更新とスキーマのフォーク)を参照してください。Marketplaceへの公開とも別の操作です。

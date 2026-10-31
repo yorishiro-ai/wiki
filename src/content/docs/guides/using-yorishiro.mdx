@@ -21,7 +21,7 @@ The assistant can use `list_schemas`, `list_templates`, and `create_schema`. Cre
 
 > Save a note in general-notes with title "Weekly planning", body "Review open tasks every Monday morning", and tag "planning". Tell me the saved note's ID.
 
-The assistant uses `create_entity` with the schema name, entity type `note`, and the note data. Saving succeeds before search data finishes updating. Keep the returned ID if you want to retrieve the exact item later.
+Ask the assistant to confirm that the note was saved, and keep its ID so you can request that exact note later. The assistant saves it with `create_entity`, specifying the schema name, type `note`, and note data. Search data updates after saving, so a new note may not appear in search immediately.
 
 ## Find information again
 

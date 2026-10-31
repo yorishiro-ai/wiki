@@ -5,7 +5,7 @@ sidebar:
   order: 4
 ---
 
-Export saves the schemas, entities, and relations in the workspace your API key accesses. It does not back up users, API keys, server settings, or the whole installation. See [Update and back up](../../operations/queue-publisher-cutover/) for a full backup.
+To move information to another workspace, export it to a file and import that file at the destination. Export includes the formats, saved items, and connections (schemas, entities, and relations) in the workspace your key accesses. It does not back up users, API keys, server settings, or the whole installation. See [Update and back up](../../operations/queue-publisher-cutover/) for a full backup.
 
 ## Export workspace content
 
@@ -41,6 +41,10 @@ Wait for `completed`. If it reports `failed`, inspect the error and logs before 
 
 ## Import through your assistant
 
-Your MCP assistant can submit JSON Lines with `import_jsonl` and poll `import_job_status` using the returned ID. Both require `schema` access. Check the export's size against your client's limits before sending its full contents through chat.
+Ask your connected assistant:
+
+> Import this JSON Lines content. Check the destination workspace before starting, then check whether the import finishes.
+
+The assistant submits the content with `import_jsonl` and checks `import_job_status` using the returned ID. Both require `schema` access. Check the export's size against your client's limits before sending its full contents through chat.
 
 After import, search data may need rebuilding. Ask the administrator to run [resync_embeddings](../../configuration/embedding/#change-the-embedding-model) for the destination workspace if embeddings are missing. Verify imported items with a list or exact-ID read as well as a search.

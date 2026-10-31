@@ -76,4 +76,4 @@ This changes displayed timestamps, not when recorded events occurred. An invalid
 
 ## Configuration ownership
 
-Keep ordinary deployment settings in the selected YAML configuration (or the environment entries it explicitly reads). Direct runtime environment inputs are centrally registered in the product; not every environment variable is an override for every YAML field. Package deployments continue to use `/etc/yorishiro/production.yaml`, not a separate `yorishiro.env`. Keep secrets out of shared configuration examples.
+For the environment variables listed on this page, check that the corresponding YAML field reads the variable. A field set to a literal value cannot be changed through that environment variable. Check and edit the configuration example used by your installation. Packages use `/etc/yorishiro/production.yaml`; a separate `yorishiro.env` is unnecessary. Remove secrets from shared configuration examples.

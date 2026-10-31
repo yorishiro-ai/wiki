@@ -28,12 +28,18 @@ For a template saved in your tenant's own library, use `list_template_library` t
 
 ## Schema versions and archival
 
-`create_schema` creates a workspace-owned schema or its next immutable version; it does not rewrite historical versions. Inspect `get_active_schema`, `get_schema_by_id`, and `list_schemas` before changing a definition.
+Before changing the fields you save, inspect the current definition.
 
-`archive_schema` requires `schema` scope and archives the specified version without deleting entities, historical definitions, bindings, or fork references. It does not reactivate an older version. Future creation under the same name advances the version sequence; archive is not physical deletion.
+> Show this schema's current fields and version history. Let me review any changes before creating a new version.
+
+The assistant checks `get_active_schema`, `get_schema_by_id`, and `list_schemas`, then uses `create_schema` for a new schema or its next version. Earlier version definitions are not rewritten.
+
+With `schema` access, use `archive_schema` for a version you no longer need. Archiving does not delete entities, historical definitions, bindings, or fork references. It does not automatically activate an earlier version. Creating the same name again advances the version number. Do not treat this as data deletion.
 
 ## Tenant template library
 
-Tenant Admin/Owner can use `create_template_library_item`, `update_template_library_item`, `delete_template_library_item`, and `fork_template_library_item` to manage tenant-shared definitions under the tool's scope requirements. These are template-library resources, not physical PostgreSQL schemas. Workspace copies and their existing versions remain distinct when a library definition is edited or deleted.
+Use your tenant's template library to reuse a format across your organization. Ask a tenant Admin/Owner to create, edit, delete, or copy a shared definition. Each tool's scope requirement also applies.
 
-Enterprise schema-fork management is separate from the tenant library and from Marketplace publishing. See [Enterprise configuration](../../configuration/enterprise/#template-updates-and-schema-forks).
+The tools are `create_template_library_item`, `update_template_library_item`, `delete_template_library_item`, and `fork_template_library_item`. Editing or deleting a library definition leaves existing workspace copies and their versions separate.
+
+This library shares information formats; it is not a physical PostgreSQL schema. For copying a schema from another workspace and following its changes in Enterprise, see [Enterprise configuration](../../configuration/enterprise/#template-updates-and-schema-forks). Marketplace publishing is a separate operation too.

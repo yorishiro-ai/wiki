@@ -1,15 +1,27 @@
 ---
 title: API keys
-description: Issue least-privilege keys, inspect secret-free history, and rotate or revoke credentials.
+description: Get a connection key for your assistant, keep it safe, and replace it when needed.
 sidebar:
   order: 6
 ---
 
-Use a separate key for each client and grant only the access it needs. Tenant Admin/Owner can issue and manage keys through REST or MCP, within the issuer's scope, independent audit grant, binding, and lifetime. A workspace Admin role alone cannot issue keys. See [Access management](../access-management/) for role ceilings.
+An API key is the secret that connects your assistant to Yorishiro. Add the key supplied by your administrator to your MCP client. Anyone holding it can use its permissions, so do not paste it into chats or shared logs.
+
+Use a separate key for each client and grant only the access it needs. This lets you stop or replace one connection independently. Ask a tenant Admin/Owner to issue and manage keys. Workspace Admin alone cannot issue them.
 
 ## Issue a key
 
-`POST /api/api-keys` accepts `name`, optional `scope`, optional `audit`, and an optional future `expires_at`. The default scope is `read`, and `audit` defaults to `false`. Unsupported security-sensitive fields are rejected. Names must contain 1 to 100 characters.
+An administrator can ask a connected assistant:
+
+> Create a key named Notes assistant for saving notes, with write scope and no audit access. Confirm its permissions and workspace before issuing it.
+
+Use `create_api_key`. Choose `read` for reading, `write` for saving/editing, or `schema` for schema administration. `migration` is a higher content scope. The `audit` grant for reading audit records is separate from this ladder. The defaults are `read` and `audit=false`.
+
+Names must contain 1 to 100 characters. For a time limit, set `expires_at` to a future RFC 3339 timestamp. A new key cannot exceed its issuer's scope, audit grant, binding, or expiry. The user's role also limits access.
+
+The returned `full_key` is shown once. Store it in a password manager and configure your [MCP client](../../installation/first-run/#4-connect-an-mcp-client).
+
+To use the API directly, replace the URL and `<api-key>` below. Unsupported security-sensitive fields are rejected.
 
 ```sh
 curl -X POST http://localhost:5150/api/api-keys \
@@ -18,33 +30,37 @@ curl -X POST http://localhost:5150/api/api-keys \
   -d '{"name":"Notes assistant","scope":"write","audit":false}'
 ```
 
-Replace the URL and placeholder key. Store `full_key` privately: creation and rotation return the new secret only once. The MCP equivalent is `create_api_key`. Use a future RFC 3339 timestamp for `expires_at` when a time limit is needed; it cannot exceed the issuer's expiry. Issuance cannot widen the issuer's scope, audit access, or binding.
-
-`write` permits content changes but not schema administration. `schema` and `migration` are higher content scopes; audit remains independent. Role changes can reduce effective access without changing the stored grant. Promoting a user does not widen an existing narrower key.
-
 ## Inspect grants and history
 
-Use `GET /api/api-keys` or `list_api_keys`. Records include stored/effective grants, binding, attribution, `last_used_at`, lifecycle dates, and active/revoked/expired state. History includes revoked and expired keys. Listings do not return plaintext secrets or `key_hash`. Lifecycle dates use the configured time zone.
+> Check which workspace I am connected to and what this key allows. Do not display secrets.
 
-Use `whoami` to identify the current tenant/workspace and effective authority, `discover_workspaces` for candidates within the current credential's tenant, and `capabilities` for current grant metadata. Service credentials discover only the selected workspace. Discovery grants no access. Capability `scope_satisfied` / `grants_satisfied` flags are not role, resource-access, or licence guarantees.
+Use `whoami` for the connected context and effective access, and `capabilities` for key permissions. Even satisfied `scope_satisfied` or `grants_satisfied` flags do not guarantee that a role, resource-access rule, or licence permits an action. Promoting a user does not widen an existing key's scope.
 
-Workspace-bound keys cannot retarget. Enterprise tenant-bound keys select an authorized workspace using `X-Workspace-Id`; use its UUID, not its display name. This header does not bypass direct grants or other authorization checks.
+Administrators can use `list_api_keys` or `GET /api/api-keys` to check names, binding, attribution, stored/effective grants, `last_used_at`, and lifecycle dates. `active` means usable, `revoked` means revoked, and `expired` means past expiry. Dates use the configured time zone. Revoked and expired keys remain in history, but secrets and `key_hash` cannot be retrieved.
+
+`discover_workspaces` returns candidates in the current key's tenant; service credentials see only the selected workspace. Seeing a candidate does not grant access. Workspace-bound keys cannot switch targets. Enterprise tenant-bound keys use an authorized workspace UUID in `X-Workspace-Id`, not a name. This does not bypass access restrictions.
 
 ## Rotate or revoke
 
-| Task   | REST                             | MCP              |
-| ------ | -------------------------------- | ---------------- |
-| Rotate | `POST /api/api-keys/{id}/rotate` | `rotate_api_key` |
-| Revoke | `DELETE /api/api-keys/{id}`      | `revoke_api_key` |
+When replacing a key, plan for the point at which the current connection stops working.
 
-Rotation atomically creates one successor and revokes the predecessor, preserving scope, audit, attribution, binding, and expiry. Store the returned `full_key` and update the client immediately; the predecessor no longer authenticates. Inactive keys cannot be rotated. Concurrent attempts produce only one successor; handle conflicts rather than assuming another secret will be returned. History records `replaced_by_id`.
+1. `rotate_api_key` issues one new key with the same scope, audit grant, attribution, binding, and expiry, and revokes the old key at the same time.
+2. Save the returned `full_key` and immediately update the client settings.
+3. Reconnect and try a read operation.
 
-Revocation destroys the authenticating hash while retaining secret-free grant history. If you need an overlap during client migration, issue a separate permitted key, update the client, then revoke the old key instead of expecting rotation to keep both active.
+Inactive keys cannot be rotated. Concurrent rotations still produce only one successor. If a request conflicts, ask the administrator rather than assuming the secret will be returned again. History identifies the successor with `replaced_by_id`.
 
-Membership removal revokes attributed tenant keys; direct workspace grant removal also revokes affected bound credentials. Tenant disablement revokes all tenant credentials while retaining history and data. Full operator tenant deletion removes that key history too, retaining only secret-free retirement evidence. See [Tenant retirement](../../operations/tenant-retirement/).
+If you need the old key to work during the changeover, issue a separate key, update and check the client, then revoke the old key with `revoke_api_key`. Rotation does not keep both active. Revoked keys no longer authenticate, but their secret-free history remains.
+
+| Action  | REST                             | MCP              |
+| ------- | -------------------------------- | ---------------- |
+| Replace | `POST /api/api-keys/{id}/rotate` | `rotate_api_key` |
+| Revoke  | `DELETE /api/api-keys/{id}`      | `revoke_api_key` |
+
+Removing tenant membership revokes the person's attributed tenant keys; revoking direct workspace access revokes affected bound keys. Disabling a tenant revokes all its keys while keeping data and history. Complete operator deletion removes key history too, retaining only secret-free retirement records. See [Tenant retirement](../../operations/tenant-retirement/).
 
 ## Audit and error handling
 
-`list_audit_log` reads paginated audit records for the selected workspace only with the independent audit grant. Neither a higher content scope nor tenant/workspace administrator status supplies that grant.
+Ask an administrator for a separate `audit` grant if you need audit records. `list_audit_log` reads paginated records for the selected workspace. Administrator roles and higher content scopes alone do not allow this.
 
-MCP clients must check JSON-RPC errors and tool-result `isError`, not HTTP 200 alone. For access failures, verify expiry, revocation, effective role, binding, and resource/licence restrictions before asking for a broader key. Never paste secrets into logs, screenshots, or support requests.
+If an operation fails, check expiry, revocation, your role, key binding, resource restrictions, and licence requirements. HTTP 200 can still accompany a failed operation; ask the assistant to check the tool error. JSON-RPC errors and `isError` in the client's detailed result can help. Keep keys, passwords, and private content out of support requests.
