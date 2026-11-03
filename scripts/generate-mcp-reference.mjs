@@ -5,7 +5,7 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { defaultLocale, docsDir, translatedLocales } from "../wiki.config.mjs";
-import { parseInventory } from "./lib/mcp-inventory.mjs";
+import { escapeMdxText, parseInventory } from "./lib/mcp-inventory.mjs";
 import { labels } from "./lib/mcp-labels.mjs";
 
 const DEFAULT_SOURCE =
@@ -22,7 +22,7 @@ if (/^https?:/.test(source)) {
 
 const { community, enterprise } = parseInventory(text);
 
-const cell = (s) => s.replace(/\|/g, "\\|");
+const cell = (s) => escapeMdxText(s).replace(/\|/g, "\\|");
 
 function render(l) {
   const out = [];
@@ -41,7 +41,14 @@ function render(l) {
     out.push(`## ${heading}`, "");
     if (note) out.push(note, "");
     for (const t of tools) {
-      out.push(`### ${t.name}`, "", t.description, "", `${l.scope}: \`${t.scope}\``, "");
+      out.push(
+        `### ${t.name}`,
+        "",
+        escapeMdxText(t.description),
+        "",
+        `${l.scope}: \`${t.scope}\``,
+        "",
+      );
       if (t.params.length === 0) {
         out.push(l.noParams, "");
         continue;

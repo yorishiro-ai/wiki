@@ -1,6 +1,13 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { parseInventory } from "./lib/mcp-inventory.mjs";
+import { escapeMdxText, parseInventory } from "./lib/mcp-inventory.mjs";
+
+test("reference text escapes JSON and tags without changing inline code", () => {
+  assert.equal(
+    escapeMdxText('Export {"kind":"schema"} <limit>; use `{"id":1}` or ``a`b``.'),
+    'Export &#123;"kind":"schema"&#125; &lt;limit>; use `{"id":1}` or ``a`b``.',
+  );
+});
 
 const tool =
   '### `get_note`\n\nGets a note (requires read scope).\n\nInput schema:\n\n```json\n{"type":"object","required":["id"],"properties":{"id":{"type":["string","null"],"format":"uuid","description":"Note ID"}}}\n```';

@@ -2,6 +2,12 @@
 
 const SCOPE_RE = /\(requires (read|write|schema|migration) scope\b/;
 
+// Preserve inline code while preventing prose examples from becoming MDX expressions or tags.
+export function escapeMdxText(text) {
+  const entities = { "{": "&#123;", "}": "&#125;", "<": "&lt;" };
+  return text.replace(/(`+)([\s\S]*?)\1|[{}<]/g, (match, code) => (code ? match : entities[match]));
+}
+
 function typeLabel(p) {
   const base = Array.isArray(p.type)
     ? p.type.filter((t) => t !== "null").join(" or ")
