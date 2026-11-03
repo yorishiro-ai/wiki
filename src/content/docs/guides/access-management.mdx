@@ -72,9 +72,9 @@ Selected-workspace detail, update, and schema operations cannot switch a key's b
 
 ## Prepare a new workspace
 
-A workspace created without `schema_id` starts with `status: "schema_pending"`. Creating its first schema changes it to `status: "active"` and records that version in `schema_id`. Check both fields with `GET /api/workspaces`.
+A new workspace without a schema shows `schema_pending`: ask an administrator to prepare the format for the information you want to save. Creating the first schema changes the status to `active` and records that version in `schema_id`. Ask your assistant to check the workspace details before saving information.
 
-Creating a workspace does not copy another workspace's embedding-provider settings or model/dimension stamps. Without a workspace override, provider resolution can fall back to the deployment-wide provider. Before relying on meaning-based search, ask the administrator to check the effective provider and embedding processing using [Embedding configuration](../../configuration/embedding/). Configuring a workspace provider after entities exist triggers a reindex; an empty workspace has no existing entities to reindex.
+Another workspace's embedding settings and recorded model/dimension information are not copied. Search may use the server's default provider if this workspace has no individual setting. Before relying on meaning-based search, ask the administrator to check the provider and whether search data is ready using [Embedding configuration](../../configuration/embedding/). Setting a workspace provider after items have been saved rebuilds their search data; an empty workspace has no existing items to rebuild.
 
 ## Management boundaries
 
@@ -87,6 +87,8 @@ The tools above cover ordinary collaboration. These operations work differently:
 
 Content export/import is available on both surfaces: `export_jsonl` maps to `GET /api/export.jsonl`; `import_jsonl` and `import_job_status` map to the import endpoints. See [Export and import](../import-export/) for limits. Invitation acceptance also has REST endpoints: `POST /auth/invites/accept-authenticated` for an authenticated account, or `POST /auth/invites/accept` with the existing account's credentials.
 
-MCP-only tools include `capabilities` (protocol capability discovery), `recall_context` (combined context retrieval), `get_entity_drift` (comparison with the active schema), `discover_workspaces` (reachable workspace discovery), and `migration_dry_run` (schema-change preview). REST-only surfaces include `/api/schemas/active/{name}/infer-fill`, `/api/inference-jobs/*`, `/api/marketplace` and its operations, `/api/system/maintenance`, `POST /api/stripe/webhook`, `/auth/oauth/*`, and first-run setup.
+Through your assistant, use `capabilities` to inspect the key's permissions, `recall_context` to retrieve related information, `get_entity_drift` to compare an item with the active schema, or `discover_workspaces` to find accessible workspaces. Before migrating saved items to the current active schema, `migration_dry_run` counts items that are current, behind without missing required values, or missing required values. It does not preview a proposed schema change or fully validate the active schema.
+
+For Marketplace publishing, inference jobs and reviewed AI completion, sign-in/OAuth, Stripe integration, first-run setup, and server maintenance, follow the relevant service or administration procedure rather than asking for an equivalent MCP tool.
 
 After access is revoked, already-authenticated requests may finish. Queued work rechecks permission before writes/publication, but not every external call already in progress can be stopped. See [API keys](../api-keys/) for replacing credentials.

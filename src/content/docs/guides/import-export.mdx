@@ -19,11 +19,15 @@ curl --fail-with-body http://localhost:5150/api/export.jsonl \
 
 Check that the command succeeded before using the file. Keep the export private: it contains workspace content in plain text.
 
-You can also ask your assistant to export the connected workspace with `export_jsonl` (`read` scope, no arguments). The result is JSON Lines text, not one JSON value: parse each non-empty line separately. Each line contains `kind` (`schema`, `entity`, or `relation`) and `record`.
+You can also ask your assistant:
 
-Both REST and MCP exports are limited to 8 MiB and 10,000 total records, including schemas and relations. Exceeding either limit returns REST `422` or an MCP tool error, without a partial document. For larger workspaces, use the paginated schema, entity, and relation list APIs instead.
+> Export the connected workspace with `export_jsonl`. Check that it succeeded before giving me the JSON Lines content to save.
 
-Schemas come first in name/version order, followed by entities and then relations. Reads use keyset paging rather than offsets, so deleting an earlier row does not shift later pages. This is not a point-in-time backup: concurrent changes can still produce an inconsistent snapshot. Use the database backup procedure when you need a consistent backup.
+This requires `read` access. Keep the returned JSON Lines content unchanged for import; it contains one record per line, not one JSON value for the whole file.
+
+Both REST and MCP exports are limited to 8 MiB and 10,000 total records, including schemas and relations. Exceeding either limit returns REST `422` or an MCP tool error, without a partial document. If your workspace exceeds these limits, ask the server operator to help plan the move. Paginated lists can help inspect the content, but they are not an import-ready export: schema lists omit full definitions, and moving relations also requires preserving connections between the destination items.
+
+The file contains schemas in name/version order, followed by entities and then relations. Changes made during export can leave the content inconsistent; the file does not capture one fixed point in time. For a consistent backup of your installation, ask the server operator to follow [Update and back up](../../operations/queue-publisher-cutover/).
 
 ## Import into a workspace
 

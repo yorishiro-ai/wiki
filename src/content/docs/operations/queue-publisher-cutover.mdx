@@ -43,9 +43,9 @@ sudo systemctl restart yorishiro yorishiro-worker yorishiro-jobs yorishiro-sched
 
 ## Migrations during startup
 
-Migration-up calls are serialized inside `migration::Migrator::up`, including real CLI service startup, `db migrate`, and Hooks boot. PostgreSQL takes an advisory transaction lock on the same transaction and connection that apply migrations. SQLite starts an immediate transaction before checking pending migrations, including for in-memory databases. No separate lock connection or session lock is used.
+When service startup or `db migrate` applies database updates, concurrent runs against the same database wait so that only one migration proceeds at a time. This applies to both PostgreSQL and SQLite.
 
-This protects concurrent migration-up calls, not destructive commands such as `db fresh` or `db reset`. Keep the backup and update precautions above; serialization is not a backup or rollback procedure.
+You still need the backup and update precautions above. This protection does not cover destructive commands such as `db fresh` or `db reset`, and it cannot restore data or undo an update.
 
 ## Restore or change storage
 

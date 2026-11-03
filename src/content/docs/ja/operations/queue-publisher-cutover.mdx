@@ -43,9 +43,9 @@ sudo systemctl restart yorishiro yorishiro-worker yorishiro-jobs yorishiro-sched
 
 ## 起動時のデータベース移行
 
-移行を進める処理は`migration::Migrator::up`内で直列化されます。実際のCLIによるサービス起動、`db migrate`、Hooksのboot処理が対象です。PostgreSQLでは、移行を実行するのと同じトランザクション・接続でadvisory transaction lockを取得します。SQLiteでは、メモリ内のデータベースも含め、未適用の移行を調べる前にimmediate transactionを開始します。別のロック用接続やsession lockは使いません。
+サービス起動時や`db migrate`でデータベースを更新する際は、同じデータベースに対する移行が重ならないよう、一度に1つの処理が進みます。PostgreSQLとSQLiteのどちらも対象です。
 
-これは同時に移行を進める処理の保護であり、`db fresh`や`db reset`などの破壊的なコマンドは対象外です。上記のバックアップと更新時の注意事項も守ってください。直列化はバックアップや復元の代わりにはなりません。
+上記のバックアップと更新時の注意事項も守ってください。この保護は`db fresh`や`db reset`などの破壊的なコマンドには適用されず、データの復元や更新の取り消しもできません。
 
 ## 復元や保存先の変更
 
