@@ -16,6 +16,12 @@ Start with the connection URL, API key, and error shown by your assistant. If so
 
 `/_ping` checks the HTTP process, not whether searches or jobs work.
 
+## MCP workspace selection and expired sessions
+
+For a tenant-scoped key, configure `X-Workspace-Id` with the authorized workspace UUID on every MCP request, just as for REST. A workspace-bound key cannot select another workspace. A mismatched workspace or a workspace in another tenant returns REST `403 scope_insufficient` or an MCP tool-level denial. A header value that is not a UUID returns `422 validation_failed`.
+
+If an established MCP session returns `Session not found (HTTP 404)`, the client must send a fresh `initialize` request and continue with the new session. Reconnect or restart the client's MCP connection if it does not recover automatically. This is not a reason to recreate the workspace or issue a broader key.
+
 ## Authentication or permission errors
 
 For `401`, check that the key is complete, not revoked, and sent in the bearer header. For `403` or a tool permission error, ask the administrator whether the key allows that operation. Creating schemas and importing data need `schema` access; reading needs `read` access.

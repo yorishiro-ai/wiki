@@ -70,6 +70,12 @@ To change a manual cap, supply `replace_max_workspaces=true` with `max_workspace
 
 Selected-workspace detail, update, and schema operations cannot switch a key's binding. Direct-grant administration and workspace deletion take an explicit same-tenant target and check permission for that operation. This does not make the key generally retargetable.
 
+## Prepare a new workspace
+
+A workspace created without `schema_id` starts with `status: "schema_pending"`. Creating its first schema changes it to `status: "active"` and records that version in `schema_id`. Check both fields with `GET /api/workspaces`.
+
+Creating a workspace does not copy another workspace's embedding-provider settings or model/dimension stamps. Without a workspace override, provider resolution can fall back to the deployment-wide provider. Before relying on meaning-based search, ask the administrator to check the effective provider and embedding processing using [Embedding configuration](../../configuration/embedding/). Configuring a workspace provider after entities exist triggers a reindex; an empty workspace has no existing entities to reindex.
+
 ## Management boundaries
 
 The tools above cover ordinary collaboration. These operations work differently:
@@ -77,6 +83,10 @@ The tools above cover ordinary collaboration. These operations work differently:
 - Tenant creation, server-wide tenant inventory, and physical deletion require the server operator's CLI, not a tenant-bound key. See [Tenant retirement](../../operations/tenant-retirement/).
 - Ask the operator for server-wide user inventory or account deletion. This is separate from leaving a tenant.
 - Archiving a schema does not physically delete its data. The shared template library is also separate from physical PostgreSQL schemas. See [Templates](../templates/#schema-versions-and-archival).
-- Not every REST action is available through MCP. Marketplace publishing, inference job execution, sign-in/OAuth, Stripe webhooks, streaming export, and server maintenance are outside management MCP coverage. Provider configuration neither runs inference nor removes licence restrictions.
+- Not every REST action is available through MCP. Marketplace publishing, inference job execution, sign-in/OAuth, Stripe webhooks, and server maintenance are outside management MCP coverage. Provider configuration neither runs inference nor removes licence restrictions.
+
+Content export/import is available on both surfaces: `export_jsonl` maps to `GET /api/export.jsonl`; `import_jsonl` and `import_job_status` map to the import endpoints. See [Export and import](../import-export/) for limits. Invitation acceptance also has REST endpoints: `POST /auth/invites/accept-authenticated` for an authenticated account, or `POST /auth/invites/accept` with the existing account's credentials.
+
+MCP-only tools include `capabilities` (protocol capability discovery), `recall_context` (combined context retrieval), `get_entity_drift` (comparison with the active schema), `discover_workspaces` (reachable workspace discovery), and `migration_dry_run` (schema-change preview). REST-only surfaces include `/api/schemas/active/{name}/infer-fill`, `/api/inference-jobs/*`, `/api/marketplace` and its operations, `/api/system/maintenance`, `POST /api/stripe/webhook`, `/auth/oauth/*`, and first-run setup.
 
 After access is revoked, already-authenticated requests may finish. Queued work rechecks permission before writes/publication, but not every external call already in progress can be stopped. See [API keys](../api-keys/) for replacing credentials.

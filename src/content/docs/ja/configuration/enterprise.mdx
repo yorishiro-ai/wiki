@@ -96,4 +96,4 @@ Stripeと連携する場合は`YORISHIRO_STRIPE_WEBHOOK_SECRET`、`YORISHIRO_STR
 
 forkを更新するときは、変更元の最新状態と履歴、循環が確認されます。ローカルの編集を破棄して元に追従する場合は`force`が必要なので、先に差分を確認してください。forkを削除しても元のスキーマは残り、エンティティから参照されている場合は削除が保護されます。
 
-providerの設定は推論を実行せず、ライセンスの制限も解除しません。Marketplace公開、推論ジョブ、OAuth/Stripe、stream export、デプロイ保守は管理MCPとの対応範囲外です。[管理操作の境界](../../guides/access-management/#管理操作の境界)を参照してください。
+providerの設定は推論を実行せず、ライセンスの制限も解除しません。Marketplace公開、推論ジョブ、OAuth/Stripe、デプロイ保守は管理MCPとの対応範囲外です。情報の書き出しはRESTとMCPの両方で使えます。[エクスポートとインポート](../../guides/import-export/)と[管理操作の境界](../../guides/access-management/#管理操作の境界)を参照してください。

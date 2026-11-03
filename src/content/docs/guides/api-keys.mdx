@@ -30,6 +30,14 @@ curl -X POST http://localhost:5150/api/api-keys \
   -d '{"name":"Notes assistant","scope":"write","audit":false}'
 ```
 
+## Issue a key for several workspaces
+
+By default, `create_api_key` and `POST /api/api-keys` issue a workspace-bound key (`tenant_scoped=false`). To select a workspace for each request, set `tenant_scoped=true`. Issuance requires both tenant Admin/Owner authority and a tenant-scoped issuing credential. A workspace-bound key cannot issue one (REST `403`). Scope, independent audit access, and expiry remain capped by the issuer.
+
+The returned record has `workspace_id: null`; `full_key` is still shown only once. Listing, revocation, and rotation use the same operations as workspace-bound keys. The operator CLI task `create_tenant_api_key` remains available.
+
+In REST and MCP, send the authorized workspace's UUID in `X-Workspace-Id` on every request. MCP uses this header for workspace selection, not a separate per-tool selection argument. Without the header, a tenant-scoped key selects the single reachable workspace when there is exactly one; with several, the request asks for the header. An explicit target never bypasses role or resource restrictions.
+
 ## Inspect grants and history
 
 > Check which workspace I am connected to and what this key allows. Do not display secrets.
@@ -38,7 +46,7 @@ Use `whoami` for the connected context and effective access, and `capabilities` 
 
 Administrators can use `list_api_keys` or `GET /api/api-keys` to check names, binding, attribution, stored/effective grants, `last_used_at`, and lifecycle dates. `active` means usable, `revoked` means revoked, and `expired` means past expiry. Dates use the configured time zone. Revoked and expired keys remain in history, but secrets and `key_hash` cannot be retrieved.
 
-`discover_workspaces` returns candidates in the current key's tenant; service credentials see only the selected workspace. Seeing a candidate does not grant access. Workspace-bound keys cannot switch targets. Enterprise tenant-bound keys use an authorized workspace UUID in `X-Workspace-Id`, not a name. This does not bypass access restrictions.
+`discover_workspaces` returns candidates in the current key's tenant; service credentials see only the selected workspace. Seeing a candidate does not grant access. Workspace-bound keys cannot switch targets. Tenant-bound keys use an authorized workspace UUID in `X-Workspace-Id`, not a name. This does not bypass access restrictions.
 
 ## Rotate or revoke
 

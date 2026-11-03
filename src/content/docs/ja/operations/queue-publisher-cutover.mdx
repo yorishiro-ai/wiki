@@ -41,6 +41,12 @@ docker compose logs --tail 100 app worker jobs scheduler
 sudo systemctl restart yorishiro yorishiro-worker yorishiro-jobs yorishiro-scheduler
 ```
 
+## 起動時のデータベース移行
+
+移行を進める処理は`migration::Migrator::up`内で直列化されます。実際のCLIによるサービス起動、`db migrate`、Hooksのboot処理が対象です。PostgreSQLでは、移行を実行するのと同じトランザクション・接続でadvisory transaction lockを取得します。SQLiteでは、メモリ内のデータベースも含め、未適用の移行を調べる前にimmediate transactionを開始します。別のロック用接続やsession lockは使いません。
+
+これは同時に移行を進める処理の保護であり、`db fresh`や`db reset`などの破壊的なコマンドは対象外です。上記のバックアップと更新時の注意事項も守ってください。直列化はバックアップや復元の代わりにはなりません。
+
 ## 復元や保存先の変更
 
 環境を置き換える前に、別の環境で復元を試してください。データベースの移行後は、古いバイナリで読めない場合があります。イメージタグを戻すだけで復旧できるとは限りません。リリースごとの手順に従い、必要なら対応するバックアップを復元します。

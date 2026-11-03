@@ -41,6 +41,12 @@ Stop new work, stop all four services, and take a backup. Install the new packag
 sudo systemctl restart yorishiro yorishiro-worker yorishiro-jobs yorishiro-scheduler
 ```
 
+## Migrations during startup
+
+Migration-up calls are serialized inside `migration::Migrator::up`, including real CLI service startup, `db migrate`, and Hooks boot. PostgreSQL takes an advisory transaction lock on the same transaction and connection that apply migrations. SQLite starts an immediate transaction before checking pending migrations, including for in-memory databases. No separate lock connection or session lock is used.
+
+This protects concurrent migration-up calls, not destructive commands such as `db fresh` or `db reset`. Keep the backup and update precautions above; serialization is not a backup or rollback procedure.
+
 ## Restore or change storage
 
 Test restoration separately before replacing your installation. A database migration may prevent an older binary from reading an upgraded database; changing the image tag back is not a recovery plan. Follow release-specific guidance and restore the matching backup when required.
