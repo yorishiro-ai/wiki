@@ -36,6 +36,14 @@ The assistant checks `get_active_schema`, `get_schema_by_id`, and `list_schemas`
 
 With `schema` access, use `archive_schema` for a version you no longer need. Archiving does not delete entities, historical definitions, bindings, or fork references. It does not automatically activate an earlier version. Creating the same name again advances the version number. Do not treat this as data deletion.
 
+## Delete an unused schema version
+
+Prefer archival when you want to stop using a definition but keep its history. Permanent deletion uses `delete_schema` with `schema_id`, or `DELETE /api/schemas/{schema_id}`, and requires `schema` scope. REST returns `204 No Content` on success.
+
+The version must be `archived` with no references. An active version returns a conflict (REST `409`); archive it first. A referenced archived version is also refused, with every blocking category listed: `entities`, `entity snapshots`, `inference proposals`, `workspaces`, `schema forks`, or `schema fork heads`. References are not deleted automatically. Review the blockers rather than deleting retained history just to make the request succeed.
+
+The workspace's `schema_id` remains bound to its first activated schema version; creating later versions does not rebind it. That first version therefore remains blocked by `workspaces` while the workspace exists. Archive it instead.
+
 ## Tenant template library
 
 Use your tenant's template library to reuse a format across your organization. Ask a tenant Admin/Owner to create, edit, delete, or copy a shared definition. Each tool's scope requirement also applies.

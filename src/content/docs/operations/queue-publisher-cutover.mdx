@@ -41,6 +41,12 @@ Stop new work, stop all four services, and take a backup. Install the new packag
 sudo systemctl restart yorishiro yorishiro-worker yorishiro-jobs yorishiro-scheduler
 ```
 
+## Migrations during startup
+
+When service startup or `db migrate` applies database updates, concurrent runs against the same database wait so that only one migration proceeds at a time. This applies to both PostgreSQL and SQLite.
+
+You still need the backup and update precautions above. This protection does not cover destructive commands such as `db fresh` or `db reset`, and it cannot restore data or undo an update.
+
 ## Restore or change storage
 
 Test restoration separately before replacing your installation. A database migration may prevent an older binary from reading an upgraded database; changing the image tag back is not a recovery plan. Follow release-specific guidance and restore the matching backup when required.

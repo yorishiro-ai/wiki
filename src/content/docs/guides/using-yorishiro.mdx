@@ -39,6 +39,12 @@ Ask the assistant to confirm that the note was saved, and keep its ID so you can
 
 `update_entity` replaces the entity body, so the assistant should read the current item and keep fields you do not want to remove.
 
+To avoid overwriting someone else's edit, ask:
+
+> Save my changes only if this item has not changed since you read it. If someone else edited it, show me the latest content before retrying.
+
+The assistant can pass the exact `updated_at` from the read as `expected_updated_at` with `update_entity` (or `PUT /api/entities/{id}`). Keep the returned timestamp unchanged: it uses RFC 3339 UTC with a `Z` suffix. If another update wins, yours is refused with a conflict (REST `409`). Read the item again, reconcile the changes, and retry with the new timestamp. Without this field, the update replaces the content unconditionally. This protects edits to an existing item; it does not prevent duplicate items created separately.
+
 Create another note, then ask:
 
 > Connect these two notes with the references relation. Then show the information related to the first note.

@@ -60,6 +60,8 @@ In an MCP client that supports remote HTTP servers and custom headers, add:
 
 Use your server's address instead of `localhost` if the client runs on another machine. For a hosted instance, use the HTTPS URL supplied by its administrator. Client configuration screens differ; the `/mcp` URL and bearer header remain the same.
 
+If your administrator gave you a tenant-scoped key for several workspaces, also add `X-Workspace-Id` with the UUID of the workspace you are allowed to use. Ask the administrator for that UUID before the first tool call; do not use its display name. Keep this header on every request. A workspace-bound key needs no workspace-selection header and cannot switch to another workspace.
+
 Reconnect the client and ask it to list the available schemas. If it can call `list_schemas`, the connection works. An empty list is normal for a new workspace.
 
 Continue with [Use Yorishiro with your AI assistant](../../guides/using-yorishiro/) to save and search your first note. For errors, see [Troubleshooting](../../operations/queue-start-objectives/).
@@ -72,6 +74,6 @@ Once connected, ask your assistant:
 
 Use `whoami` for the connected context and `capabilities` for key permissions. Roles and licences also affect authorization, so satisfied flags do not guarantee that an operation will succeed.
 
-If you have several workspaces, check candidates with `discover_workspaces`. Use UUIDs to distinguish matching names. Listing candidates does not grant access. A workspace-bound key cannot switch targets. An Enterprise tenant-bound key selects an authorized workspace UUID through `X-Workspace-Id`; see [API keys](../../guides/api-keys/).
+If you have several workspaces, check candidates with `discover_workspaces`. Use UUIDs to distinguish matching names. Listing candidates does not grant access. A workspace-bound key cannot switch targets. A tenant-bound key selects an authorized workspace UUID through `X-Workspace-Id`; see [API keys](../../guides/api-keys/).
 
 For collaboration, continue to [Access management](../../guides/access-management/). If you cannot sign in, see [Troubleshooting](../../operations/queue-start-objectives/#login-recovery).

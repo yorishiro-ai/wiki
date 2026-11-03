@@ -9,13 +9,15 @@ description: "YorishiroがMCPクライアントに公開するツールの一覧
 
 MCPクライアントはStreamable HTTPで `/mcp` に接続します。APIキーは `Authorization: Bearer <api-key>` ヘッダーに設定します。接続手順は[初回起動](../../installation/first-run/)を参照してください。
 
+テナント用キーでは、RESTと同じく、毎回のリクエストの `X-Workspace-Id` でワークスペースを選びます。ワークスペース専用のキーで対象は切り替えられません。`Session not found (HTTP 404)` が返った場合は、新しい `initialize` リクエストを送り、新しいセッションを使います。[トラブルシューティング](../../operations/queue-start-objectives/#mcpの接続先選択とセッション切れ)を参照してください。
+
 コンテンツのスコープは `read`、`write`、`schema`、`migration` の順に高くなります。独立した `audit` grantはこの順序に含まれません。スコープだけでは操作は許可されず、テナントとワークスペースの役割、対象へのアクセス、キーの対象範囲、ライセンスの条件も適用されます。[アクセス管理](../../guides/access-management/)と[APIキー](../../guides/api-keys/)を参照してください。
 
 限定した待受アドレスを別のホスト名経由で使う場合は、`YORISHIRO_MCP_ALLOWED_HOSTS` を設定します。ワイルドカードで待ち受ける場合は任意のMCP Hostを受け付けます。ブラウザーの接続元は別の設定です。詳しくは[設定](../../configuration/)を参照してください。
 
 最初に `whoami`、`discover_workspaces`、`capabilities` で現在の接続先と権限を確認します。capabilitiesの `scope_satisfied` と `grants_satisfied` はキーの要件を満たすかどうかだけを示し、役割、対象へのアクセス、ライセンスによる許可を保証しません。HTTPステータスが200でも、JSON-RPCエラーとツールの戻り値の `isError` を確認してください。
 
-Community 67、Enterprise 21の計88ツールを掲載しています。使えるツールはサーバーのエディションとバージョンによって異なるため、MCPクライアントの一覧でも確認してください。このwikiは製品の `develop` に追従しており、古いリリースでは使えるツールが少ない場合があります。すべてのREST操作にMCPツールがあるわけではありません。[管理操作の境界](../../guides/access-management/#管理操作の境界)を参照してください。
+Community 69、Enterprise 21の計90ツールを掲載しています。使えるツールはサーバーのエディションとバージョンによって異なるため、MCPクライアントの一覧でも確認してください。このwikiは製品の `develop` に追従しており、古いリリースでは使えるツールが少ない場合があります。すべてのREST操作にMCPツールがあるわけではありません。[管理操作の境界](../../guides/access-management/#管理操作の境界)を参照してください。
 
 ツールとパラメーターの説明は、サーバーが返す英語のまま掲載しています。
 
@@ -26,7 +28,7 @@ Community 67、Enterprise 21の計88ツールを掲載しています。使え�
 | [`accept_invite`](#accept_invite) | Community | `read` | Accept a tenant invitation as the authenticated human account (requires read scope and matching account email); service credentials cannot accept, no login credential is issued and the selected workspace does not change. |
 | [`archive_schema`](#archive_schema) | Community | `schema` | Archive a schema version in the selected workspace without deleting entities, version history or fork references; no older version is reactivated and future same-name creation advances the version (requires schema scope). |
 | [`capabilities`](#capabilities) | Community | `read` | Inspect current grants and visible tools' required scopes and scope satisfaction; this snapshot does not guarantee operation success or authorize later requests (requires read scope). |
-| [`create_api_key`](#create_api_key) | Community | `read` | Issue a workspace-bound API key and return its secret once; cannot exceed issuer scope, audit grant or expiry (requires read scope and tenant Admin or Owner). |
+| [`create_api_key`](#create_api_key) | Community | `read` | Issue an API key and return its secret once; workspace-bound by default, tenant-scoped (per-request X-Workspace-Id) when tenant_scoped is true, which also requires a tenant-scoped issuing credential; cannot exceed issuer scope, audit grant or expiry (requires read scope and tenant Admin or Owner). |
 | [`create_entity`](#create_entity) | Community | `write` | Create a new entity (requires write scope). |
 | [`create_invite`](#create_invite) | Community | `read` | Create an expiring tenant invitation and return its token for caller delivery, without sending email (requires read scope and tenant Admin or Owner; inviting an Owner requires Owner). |
 | [`create_relation`](#create_relation) | Community | `write` | Create a relation between two entities (requires write scope). |
@@ -35,10 +37,12 @@ Community 67、Enterprise 21の計88ツールを掲載しています。使え�
 | [`create_workspace`](#create_workspace) | Community | `read` | Create a workspace in the current tenant without retargeting the current credential (requires read scope and tenant Admin or Owner). |
 | [`delete_entity`](#delete_entity) | Community | `write` | Delete an entity (requires write scope). |
 | [`delete_relation`](#delete_relation) | Community | `write` | Delete a relation (requires write scope). |
+| [`delete_schema`](#delete_schema) | Community | `schema` | Delete an archived schema version that nothing references (no entities, snapshots, inference proposals, workspaces or forks); an active version or any remaining reference is refused with the blockers named (requires schema scope). |
 | [`delete_template_library_item`](#delete_template_library_item) | Community | `read` | Delete an owned tenant template while preserving existing workspace schemas (requires read scope and tenant Admin or Owner). |
 | [`delete_workspace`](#delete_workspace) | Community | `read` | Permanently delete a current-tenant workspace and its data; the last workspace is protected (requires read scope and tenant Admin or Owner). |
 | [`disable_tenant`](#disable_tenant) | Community | `read` | Disable the current tenant after confirming its UUID, revoking all its credentials and cancelling work; data and identities remain and quota stays occupied (requires read scope and tenant Owner; physical deletion is operator-only). |
 | [`discover_workspaces`](#discover_workspaces) | Community | `read` | Discover workspace candidates within the current credential's tenant; service credentials list only the selected workspace, and discovery does not grant access (requires read scope). |
+| [`export_jsonl`](#export_jsonl) | Community | `read` | Export schemas, entities, and relations in the selected workspace as newline-delimited JSON (requires read scope); one &#123;"kind":"schema"\|"entity"\|"relation","record":&#123;...&#125;&#125; object per line, the same format import_jsonl reads back. |
 | [`fill_defaults`](#fill_defaults) | Community | `migration` | Enqueue a fill-defaults job (requires migration scope). |
 | [`fork_template_library_item`](#fork_template_library_item) | Community | `read` | Fork a visible schema template into the current tenant's library (requires read scope and tenant Admin or Owner). |
 | [`get_active_schema`](#get_active_schema) | Community | `read` | Get the currently active schema definition by name (requires read scope). |
@@ -85,7 +89,7 @@ Community 67、Enterprise 21の計88ツールを掲載しています。使え�
 | [`transfer_ownership`](#transfer_ownership) | Community | `read` | Atomically transfer tenant ownership to an existing member and demote the caller to Admin (requires read scope and tenant Owner). |
 | [`undo_migration_job`](#undo_migration_job) | Community | `migration` | Enqueue undo of a migration job's snapshots (requires migration scope). |
 | [`update_current_user`](#update_current_user) | Community | `read` | Update or clear your own global display name across all tenants, not another user's identity; email, password and OAuth subjects cannot be changed here (requires read scope). |
-| [`update_entity`](#update_entity) | Community | `write` | Replace the data of an existing entity (requires write scope). |
+| [`update_entity`](#update_entity) | Community | `write` | Replace the data of an existing entity (requires write scope); pass expected_updated_at from a prior read to refuse the write with a conflict when the entity changed in between. |
 | [`update_template_library_item`](#update_template_library_item) | Community | `read` | Update an owned tenant template; existing workspace schema versions are unchanged (requires read scope and tenant Admin or Owner). |
 | [`update_tenant`](#update_tenant) | Community | `read` | Update current tenant name or explicitly replace/clear its manual workspace cap without altering plan quotas (requires read scope and tenant Admin or Owner). |
 | [`update_workspace`](#update_workspace) | Community | `read` | Update selected workspace name (workspace Admin) or replace/clear manual entity cap (tenant Admin); schema binding is immutable here (requires read scope). |
@@ -144,7 +148,7 @@ Inspect current grants and visible tools' required scopes and scope satisfaction
 
 ### create_api_key
 
-Issue a workspace-bound API key and return its secret once; cannot exceed issuer scope, audit grant or expiry (requires read scope and tenant Admin or Owner).
+Issue an API key and return its secret once; workspace-bound by default, tenant-scoped (per-request X-Workspace-Id) when tenant_scoped is true, which also requires a tenant-scoped issuing credential; cannot exceed issuer scope, audit grant or expiry (requires read scope and tenant Admin or Owner).
 
 必要なスコープ: `read`
 
@@ -154,6 +158,7 @@ Issue a workspace-bound API key and return its secret once; cannot exceed issuer
 | `expires_at` | string (date-time) or null | いいえ |  |
 | `name` | string | はい |  |
 | `scope` | any | いいえ |  |
+| `tenant_scoped` | boolean | いいえ | Issue a tenant-scoped key (no workspace binding, per-request `X-Workspace-Id`) instead of a workspace-bound one. Requires tenant Admin or Owner and a tenant-scoped issuing credential. |
 
 ### create_entity
 
@@ -250,6 +255,16 @@ Delete a relation (requires write scope).
 | --- | --- | --- | --- |
 | `id` | string (uuid) | はい |  |
 
+### delete_schema
+
+Delete an archived schema version that nothing references (no entities, snapshots, inference proposals, workspaces or forks); an active version or any remaining reference is refused with the blockers named (requires schema scope).
+
+必要なスコープ: `schema`
+
+| パラメーター | 型 | 必須 | 説明 |
+| --- | --- | --- | --- |
+| `schema_id` | string (uuid) | はい |  |
+
 ### delete_template_library_item
 
 Delete an owned tenant template while preserving existing workspace schemas (requires read scope and tenant Admin or Owner).
@@ -283,6 +298,14 @@ Disable the current tenant after confirming its UUID, revoking all its credentia
 ### discover_workspaces
 
 Discover workspace candidates within the current credential's tenant; service credentials list only the selected workspace, and discovery does not grant access (requires read scope).
+
+必要なスコープ: `read`
+
+このツールにパラメーターはありません。
+
+### export_jsonl
+
+Export schemas, entities, and relations in the selected workspace as newline-delimited JSON (requires read scope); one &#123;"kind":"schema"|"entity"|"relation","record":&#123;...&#125;&#125; object per line, the same format import_jsonl reads back. Limited to 8 MiB and 10,000 records; larger workspaces must use paginated list APIs.
 
 必要なスコープ: `read`
 
@@ -765,13 +788,14 @@ Update or clear your own global display name across all tenants, not another use
 
 ### update_entity
 
-Replace the data of an existing entity (requires write scope).
+Replace the data of an existing entity (requires write scope); pass expected_updated_at from a prior read to refuse the write with a conflict when the entity changed in between.
 
 必要なスコープ: `write`
 
 | パラメーター | 型 | 必須 | 説明 |
 | --- | --- | --- | --- |
 | `data` | any | はい | Replacement entity body. Validated against the schema version in effect when the entity was created. |
+| `expected_updated_at` | string (date-time) or null | いいえ | The entity's `updated_at` as the client read it; a mismatch is refused with a conflict so a stale writer cannot clobber a newer write. |
 | `id` | string (uuid) | はい |  |
 
 ### update_template_library_item
