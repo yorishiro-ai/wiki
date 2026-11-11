@@ -16,11 +16,17 @@ If you use the [Compose example](../../installation/docker-compose/) or [package
 | Server           | `yorishiro start`                               | API and MCP requests                                  |
 | Embedding worker | `yorishiro start --worker=worker-target:shared` | Embedding updates, query embeddings, reindexing       |
 | Application jobs | `yorishiro start --worker=job-target:shared`    | Imports, filling defaults, undo, Enterprise inference |
-| Scheduler        | `yorishiro scheduler`                           | Recovery and scheduled tasks                          |
+| Scheduler        | `yorishiro scheduler`                           | Recovery, search index maintenance, scheduled tasks   |
 
 Keep the two worker commands in separate processes. Do not mix `worker-target:*` and `job-target:*` in one command. A bare `--worker`, `--all`, or `--server-and-worker` is not supported.
 
 Use the same database, queue, and relevant provider settings on every service. If the database or queue uses SQLite, keep all services on one host and use absolute paths to the same files. Workers on another machine require PostgreSQL data storage and a PostgreSQL or Valkey queue.
+
+## Scheduled index maintenance
+
+The scheduler runs the `embedding_index_maintenance` task, which creates and removes per-workspace search indexes on PostgreSQL. It does nothing on SQLite. Details are in [Search speed on PostgreSQL](../embedding/#search-speed-on-postgresql).
+
+`recover_worker_dispatches` does not run index maintenance. A schedule that runs it by name needs its own `embedding_index_maintenance` job.
 
 ## Worker targets
 

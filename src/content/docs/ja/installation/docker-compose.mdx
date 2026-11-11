@@ -170,7 +170,7 @@ docker compose ps
 docker compose logs --tail 100 worker
 ```
 
-埋め込みワーカーは初回に約1 GiBのモデルをダウンロードします。サーバーなど、ほかのサービスはモデルを読み込みません。意味による検索を使わず保存を試す場合は、代わりに`YORISHIRO_EMBEDDING_PROVIDER=none docker compose up -d`を実行してください。
+サーバーなど、ほかのサービスはモデルを読み込みません。意味による検索を使わず保存を試す場合は、代わりに`YORISHIRO_EMBEDDING_PROVIDER=none docker compose up -d`を実行してください。
 
 [初回起動](../first-run/)に進み、`http://localhost:5150`を使います。別のアドレスから接続する場合は、`HOST`を利用者向けのURLに変更してください。データベースとキューの設定は4つのサービスでそろえます。
 

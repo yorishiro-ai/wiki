@@ -68,11 +68,32 @@ Tenant Admin/Owner can issue least-privilege keys, inspect retained history, and
 
 Production logs are JSON. Use `LOG_LEVEL=info` normally; use `debug` while diagnosing a problem, then change it back. `RUST_LOG` takes priority if set. See [Troubleshooting](../operations/queue-start-objectives/) for commands to read logs. Remove credentials before sharing logs or configuration.
 
+Logs go to standard output only. A configuration that sets `logger.file_appender` is rejected at startup. Timestamps follow the [time zone](#time-zone) setting.
+
 ## Time zone
 
 Set `YORISHIRO_TIMEZONE=Asia/Tokyo` in the production environment, or change `settings.timezone` in your configuration. The default is `UTC`; use an IANA time zone name. Restart all services with the same setting.
 
 This changes displayed timestamps, not when recorded events occurred. An invalid name prevents startup.
+
+## Limits and timeouts
+
+These optional values go under `settings` in your YAML configuration; they have no production environment variables. Each must be greater than zero, and an invalid value prevents startup.
+
+| Setting                                              | Default | Use                                                                              |
+| ---------------------------------------------------- | ------- | -------------------------------------------------------------------------------- |
+| `settings.limits.invite_ttl_hours`                   | `72`    | Invitation lifetime when an operator creates one without specifying hours        |
+| `settings.limits.maintenance_retry_after_seconds`    | `300`   | `Retry-After` sent while maintenance is on, when the caller does not name a time |
+| `settings.http_timeouts.embedding_request_seconds`   | `30`    | One request to an external embedding service                                     |
+| `settings.http_timeouts.local_embedding_seconds`     | `30`    | One batch through the local embedding model                                      |
+| `settings.http_timeouts.model_fetch_connect_seconds` | `30`    | Connecting to the host that serves local model files                             |
+| `settings.http_timeouts.model_fetch_read_seconds`    | `60`    | Reading local model files from that host                                         |
+| `settings.http_timeouts.inference_request_seconds`   | `120`   | One Enterprise inference request                                                 |
+| `settings.http_timeouts.oauth_discovery_seconds`     | `10`    | One OAuth/OIDC discovery or token call                                           |
+
+## Email settings
+
+Yorishiro does not send email, and the shipped configurations have no SMTP `mailer:` block. `MAILER_HOST` and related variables have no effect. Invitations are covered in [Access management](../guides/access-management/).
 
 ## Configuration ownership
 

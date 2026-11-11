@@ -16,11 +16,17 @@ sidebar:
 | サーバー               | `yorishiro start`                               | APIとMCPのリクエスト                                       |
 | 埋め込みワーカー       | `yorishiro start --worker=worker-target:shared` | 埋め込みの更新、検索文の埋め込み、再インデックス           |
 | アプリケーションジョブ | `yorishiro start --worker=job-target:shared`    | インポート、デフォルト値の補完、取り消し、Enterpriseの推論 |
-| スケジューラー         | `yorishiro scheduler`                           | 回復と定期処理                                             |
+| スケジューラー         | `yorishiro scheduler`                           | 回復、検索用索引のメンテナンス、定期処理                   |
 
 2種類のワーカーは別々のプロセスで動かします。1つのコマンドに`worker-target:*`と`job-target:*`を混在させないでください。対象のない`--worker`、`--all`、`--server-and-worker`は使えません。
 
 すべてのサービスでデータベース、キュー、処理に必要なプロバイダーの設定をそろえてください。データベースかキューがSQLiteなら、同じホストで同じファイルの絶対パスを使います。別マシンのワーカーにはPostgreSQLのデータベースと、PostgreSQLかValkeyのキューが必要です。
+
+## 索引の定期メンテナンス
+
+スケジューラーは`embedding_index_maintenance`タスクを実行し、PostgreSQLでワークスペースごとの検索用索引を作成・削除します。SQLiteでは何もしません。詳しくは[PostgreSQLでの検索の速さ](../embedding/#postgresqlでの検索の速さ)を参照してください。
+
+`recover_worker_dispatches`は索引のメンテナンスを実行しません。このタスクを名前で指定したスケジュールには、`embedding_index_maintenance`のジョブが別に必要です。
 
 ## ワーカーの対象
 

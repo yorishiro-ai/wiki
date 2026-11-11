@@ -9,12 +9,12 @@ sidebar:
 
 ## 導入方法を選ぶ
 
-| 方法                                 | 用途                                                         |
-| ------------------------------------ | ------------------------------------------------------------ |
-| [Docker Compose](docker-compose/)    | 初めての導入におすすめです。必要なサービスがそろっています。 |
-| [パッケージ（deb / rpm）](packages/) | systemdで管理するLinuxホストで動かします。                   |
-| [Docker](docker/)                    | コンテナを個別に管理します。                                 |
-| [ソースからビルド](build/)           | リリースにないバージョンをビルドします。                     |
+| 方法                                 | 用途                                       |
+| ------------------------------------ | ------------------------------------------ |
+| [Docker Compose](docker-compose/)    | 必要なサービスがすべて含まれます。         |
+| [パッケージ（deb / rpm）](packages/) | systemdで管理するLinuxホストで動かします。 |
+| [Docker](docker/)                    | コンテナを個別に管理します。               |
+| [ソースからビルド](build/)           | リリースにないバージョンをビルドします。   |
 
 個人で使う場合はSQLiteから始められます。複数のテナントや別のマシンで動くワーカーが必要ならPostgreSQLを選んでください。[SQLiteモード](../guides/sqlite/)を参照してください。
 
@@ -29,7 +29,7 @@ sidebar:
 | サーバー               | APIとMCPの接続                                             | `yorishiro start`                               |
 | 埋め込みワーカー       | 意味による検索と検索データの更新                           | `yorishiro start --worker=worker-target:shared` |
 | アプリケーションジョブ | インポート、デフォルト値の補完、取り消し、Enterpriseの推論 | `yorishiro start --worker=job-target:shared`    |
-| スケジューラー         | 中断したバックグラウンド処理の回復と定期処理               | `yorishiro scheduler`                           |
+| スケジューラー         | 中断した処理の回復、検索用索引の維持、定期処理             | `yorishiro scheduler`                           |
 
 ## エディションとバージョン
 

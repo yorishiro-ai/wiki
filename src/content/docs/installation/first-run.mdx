@@ -5,7 +5,7 @@ sidebar:
   order: 6
 ---
 
-Install Yorishiro with [Docker Compose](../docker-compose/) or [packages](../packages/) first. If an administrator has already given you a server URL and API key, skip to step 4.
+Install Yorishiro with [Docker Compose](../docker-compose/) or [packages](../packages/) first. Steps 1 to 3 are for the person setting up the server. If an administrator has already given you a server URL and API key, skip to [step 4](#4-connect-an-mcp-client).
 
 These examples use `http://localhost:5150`. Replace it with your server URL when connecting to another installation. Account creation uses the API, not a web setup screen.
 
@@ -60,7 +60,7 @@ In an MCP client that supports remote HTTP servers and custom headers, add:
 
 Use your server's address instead of `localhost` if the client runs on another machine. For a hosted instance, use the HTTPS URL supplied by its administrator. Client configuration screens differ; the `/mcp` URL and bearer header remain the same.
 
-If your administrator gave you a tenant-scoped key for several workspaces, also add `X-Workspace-Id` with the UUID of the workspace you are allowed to use. Ask the administrator for that UUID before the first tool call; do not use its display name. Keep this header on every request. A workspace-bound key needs no workspace-selection header and cannot switch to another workspace.
+If your administrator gave you a tenant-scoped key for several workspaces, also send `X-Workspace-Id` with the UUID of an allowed workspace on every request. See [API keys](../../guides/api-keys/#inspect-grants-and-history).
 
 Reconnect the client and ask it to list the available schemas. If it can call `list_schemas`, the connection works. An empty list is normal for a new workspace.
 
@@ -72,8 +72,6 @@ Once connected, ask your assistant:
 
 > Check which tenant and workspace I am connected to, and whether I can save notes. Do not change anything yet.
 
-Use `whoami` for the connected context and `capabilities` for key permissions. Roles and licences also affect authorization, so satisfied flags do not guarantee that an operation will succeed.
-
-If you have several workspaces, check candidates with `discover_workspaces`. Use UUIDs to distinguish matching names. Listing candidates does not grant access. A workspace-bound key cannot switch targets. A tenant-bound key selects an authorized workspace UUID through `X-Workspace-Id`; see [API keys](../../guides/api-keys/).
+Ask your assistant to use `whoami` for the connected context and `capabilities` for key permissions. Use UUIDs, not names, to tell workspaces apart. For details on workspace candidates and selection, see [API keys](../../guides/api-keys/#inspect-grants-and-history).
 
 For collaboration, continue to [Access management](../../guides/access-management/). If you cannot sign in, see [Troubleshooting](../../operations/queue-start-objectives/#login-recovery).

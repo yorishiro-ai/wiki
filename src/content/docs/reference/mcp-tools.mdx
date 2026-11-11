@@ -80,7 +80,7 @@ This list contains 90 tools: 69 Community and 21 Enterprise tools. Available too
 | [`revoke_invite`](#revoke_invite) | Community | `read` | Cancel an unused current-tenant invitation; repeated cancellation is safe (requires read scope and tenant Admin or Owner). |
 | [`revoke_workspace_member`](#revoke_workspace_member) | Community | `read` | Revoke a direct workspace grant and affected workspace-bound credentials; inherited tenant authority remains (requires read scope and workspace Admin). |
 | [`rotate_api_key`](#rotate_api_key) | Community | `read` | Atomically rotate a current-tenant API key, revoke its predecessor and return the successor secret once (requires read scope and tenant Admin or Owner; issuer ceilings apply). |
-| [`search_entities`](#search_entities) | Community | `read` | Vector similarity search over entities using a natural-language query (requires read scope). |
+| [`search_entities`](#search_entities) | Community | `read` | Search entities by vector similarity and selective literal text; PostgreSQL uses gated rank fusion, SQLite uses text fallback (requires read scope). |
 | [`set_member_role`](#set_member_role) | Community | `read` | Add an existing user to the current tenant or change their tenant role, returning existing key grant metadata (requires read scope and tenant Admin or Owner; Owner changes require Owner). |
 | [`set_relation_status`](#set_relation_status) | Community | `write` | Set a relation's status to active, deprecated or archived (requires write scope). |
 | [`tenant_retirement_inventory`](#tenant_retirement_inventory) | Community | `read` | Inspect current-tenant retirement inventory and retention consequences without changing data (requires read scope and tenant Owner). |
@@ -108,7 +108,7 @@ This list contains 90 tools: 69 Community and 21 Enterprise tools. Available too
 | [`reset_entity_columns`](#reset_entity_columns) | Enterprise | `write` | Reset the selected workspace's entity-table columns for one entity type to schema-derived defaults (requires write scope); this removes only the display preference. |
 | [`reset_llm_provider`](#reset_llm_provider) | Enterprise | `schema` | Remove the selected workspace's inference LLM credentials (requires schema scope); future inference requires configuration again, and already-started external calls are not cancelled. |
 | [`reset_worker_class`](#reset_worker_class) | Enterprise | `schema` | Remove the selected workspace's worker-class assignment and fall back to shared compute (requires schema scope); queued jobs retain their existing routing. |
-| [`set_embedding_provider`](#set_embedding_provider) | Enterprise | `schema` | Configure the selected workspace's OpenAI-compatible embedding provider and queue a full reindex atomically (requires schema scope); the supplied API key is stored and never returned. |
+| [`set_embedding_provider`](#set_embedding_provider) | Enterprise | `schema` | Configure the selected workspace's OpenAI-compatible embedding provider (requires schema scope); document changes queue a full reindex atomically, query-instruction-only changes do not; the supplied API key is stored and never returned. |
 | [`set_entity_columns`](#set_entity_columns) | Enterprise | `write` | Replace the selected workspace's visible columns for one entity type (requires write scope); validates duplicate columns and the display limit without changing schema definitions. |
 | [`set_llm_provider`](#set_llm_provider) | Enterprise | `schema` | Configure the selected workspace's inference LLM endpoint, model and API key (requires schema scope); stores the secret without returning it or invoking inference. |
 | [`set_worker_class`](#set_worker_class) | Enterprise | `schema` | Assign the selected workspace's worker class (requires schema scope); the deployment must declare the destination worker target, which does not guarantee a worker is online. |
@@ -713,7 +713,7 @@ Required scope: `read`
 
 ### search_entities
 
-Vector similarity search over entities using a natural-language query (requires read scope).
+Search entities by vector similarity and selective literal text; PostgreSQL uses gated rank fusion, SQLite uses text fallback (requires read scope).
 
 Required scope: `read`
 
@@ -722,7 +722,7 @@ Required scope: `read`
 | `entity_type` | string or null | No |  |
 | `filter` | any | No | JSONB containment filter matched against entity data, e.g. `{"status": "active"}`. |
 | `limit` | integer (int64) or null | No | Upper bound on the number of results returned (defaults to 10 if omitted). |
-| `query_text` | string | Yes | Natural-language query text. Vectorized via the embedding provider and matched against entities' `x-embed` field by cosine distance. Also used, as-is, for an auxiliary pg_trgm fuzzy text match against entities that have no embedding. |
+| `query_text` | string | Yes | Natural-language query text. Vectorized via the embedding provider and matched against entities' `x-embed` field by cosine distance. PostgreSQL also fuses NFKC-normalized literal text matches when at most 20 entities match. SQLite fills remaining slots from unembedded entities using quoted FTS5 terms of at least three characters. |
 
 ### set_member_role
 
@@ -997,7 +997,7 @@ This tool takes no parameters.
 
 ### set_embedding_provider
 
-Configure the selected workspace's OpenAI-compatible embedding provider and queue a full reindex atomically (requires schema scope); the supplied API key is stored and never returned.
+Configure the selected workspace's OpenAI-compatible embedding provider (requires schema scope); document changes queue a full reindex atomically, query-instruction-only changes do not; the supplied API key is stored and never returned.
 
 Required scope: `schema`
 
@@ -1006,7 +1006,9 @@ Required scope: `schema`
 | `api_key` | string | Yes | Stored as given and never returned. |
 | `base_url` | string | Yes |  |
 | `dimensions` | integer (int32) | Yes |  |
+| `document_prefix` | string | No |  |
 | `model` | string | Yes |  |
+| `query_instruction` | string | No |  |
 | `send_dimensions_param` | boolean | No |  |
 
 ### set_entity_columns
