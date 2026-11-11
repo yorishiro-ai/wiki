@@ -37,7 +37,7 @@ Ask the assistant to confirm that the note was saved, and keep its ID so you can
 
 > Read my Weekly planning note, keep its existing fields, and add that I review priorities on Friday. Show me the change before saving.
 
-`update_entity` replaces the entity body, so the assistant should read the current item and keep fields you do not want to remove.
+`update_entity` replaces the entire entity body. Fields missing from the new body are removed.
 
 To avoid overwriting someone else's edit, ask:
 
