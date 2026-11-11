@@ -68,11 +68,34 @@ CommunityとライセンスのないEnterpriseは1テナントです。有効な
 
 productionのログはJSONです。通常は`LOG_LEVEL=info`を使い、調査中だけ`debug`にして、終わったら戻してください。`RUST_LOG`を設定するとそちらが優先されます。確認コマンドは[トラブルシューティング](../operations/queue-start-objectives/)に掲載しています。ログや設定を共有する前に認証情報を取り除いてください。
 
+ログは標準出力にだけ出力されます。`logger.file_appender`を設定した設定ファイルは起動時に拒否されるため、削除し、Docker、systemd（`journalctl`）、ログ収集の仕組みで出力を集めてください。タイムスタンプは[タイムゾーン](#タイムゾーン)の設定に従います。
+
 ## タイムゾーン
 
 productionの環境変数に`YORISHIRO_TIMEZONE=Asia/Tokyo`を設定するか、設定ファイルの`settings.timezone`を変更します。既定値は`UTC`です。IANAのタイムゾーン名を使い、すべてのサービスを同じ設定で再起動してください。
 
 表示する日時が変わるだけで、記録済みの出来事が起きた時刻は変わりません。不正な名前を指定すると起動できません。
+
+## 上限とタイムアウト
+
+次の値は任意で、YAML設定の`settings`の下に指定します。productionの環境変数はありません。どれも0より大きい値が必要で、不正な値があると起動しません。
+
+| 設定                                                 | 既定値 | 用途                                                                |
+| ---------------------------------------------------- | ------ | ------------------------------------------------------------------- |
+| `settings.limits.invite_ttl_hours`                   | `72`   | operatorが時間を指定せずに招待を作成したときの招待の有効時間        |
+| `settings.limits.maintenance_retry_after_seconds`    | `300`  | メンテナンス中に、呼び出し側が時間を指定しなければ返す`Retry-After` |
+| `settings.http_timeouts.embedding_request_seconds`   | `30`   | 外部の埋め込みサービスへの1回のリクエスト                           |
+| `settings.http_timeouts.local_embedding_seconds`     | `30`   | ローカルの埋め込みモデルによる1バッチの処理                         |
+| `settings.http_timeouts.model_fetch_connect_seconds` | `30`   | ローカルモデルのファイルを配布するホストへの接続                    |
+| `settings.http_timeouts.model_fetch_read_seconds`    | `60`   | そのホストからのモデルファイルの読み取り                            |
+| `settings.http_timeouts.inference_request_seconds`   | `120`  | Enterpriseの推論の1回のリクエスト                                   |
+| `settings.http_timeouts.oauth_discovery_seconds`     | `10`   | OAuth/OIDCのdiscoveryまたはトークンの1回の呼び出し                  |
+
+変更する項目だけを既存の`settings`に追加し、すべてのサービスを再起動してください。
+
+## メールの設定
+
+Yorishiroはメールを送信しません。同梱の設定からSMTPの`mailer:`ブロックはなくなりました。`MAILER_HOST`などの変数は何の効果もないため、独自の設定からは削除してください。招待のトークンは自分で相手に渡します。[アクセス管理](../guides/access-management/)を参照してください。
 
 ## 設定の管理先
 

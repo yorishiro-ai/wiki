@@ -24,12 +24,12 @@ After installation, [create the first account and connect your AI assistant](fir
 
 Keep these four services running. The Compose examples include all four; the packages provide four systemd units.
 
-| Service          | What you need it for                                       | Command                                         |
-| ---------------- | ---------------------------------------------------------- | ----------------------------------------------- |
-| Server           | API and MCP connections                                    | `yorishiro start`                               |
-| Embedding worker | Search by meaning and updating search data                 | `yorishiro start --worker=worker-target:shared` |
-| Application jobs | Imports, filling defaults, undo, and Enterprise inference  | `yorishiro start --worker=job-target:shared`    |
-| Scheduler        | Recovering interrupted background work and scheduled tasks | `yorishiro scheduler`                           |
+| Service          | What you need it for                                                                  | Command                                         |
+| ---------------- | ------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| Server           | API and MCP connections                                                               | `yorishiro start`                               |
+| Embedding worker | Search by meaning and updating search data                                            | `yorishiro start --worker=worker-target:shared` |
+| Application jobs | Imports, filling defaults, undo, and Enterprise inference                             | `yorishiro start --worker=job-target:shared`    |
+| Scheduler        | Recovering interrupted background work, search index maintenance, and scheduled tasks | `yorishiro scheduler`                           |
 
 ## Editions and versions
 

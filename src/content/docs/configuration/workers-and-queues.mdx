@@ -16,11 +16,17 @@ If you use the [Compose example](../../installation/docker-compose/) or [package
 | Server           | `yorishiro start`                               | API and MCP requests                                  |
 | Embedding worker | `yorishiro start --worker=worker-target:shared` | Embedding updates, query embeddings, reindexing       |
 | Application jobs | `yorishiro start --worker=job-target:shared`    | Imports, filling defaults, undo, Enterprise inference |
-| Scheduler        | `yorishiro scheduler`                           | Recovery and scheduled tasks                          |
+| Scheduler        | `yorishiro scheduler`                           | Recovery, search index maintenance, scheduled tasks   |
 
 Keep the two worker commands in separate processes. Do not mix `worker-target:*` and `job-target:*` in one command. A bare `--worker`, `--all`, or `--server-and-worker` is not supported.
 
 Use the same database, queue, and relevant provider settings on every service. If the database or queue uses SQLite, keep all services on one host and use absolute paths to the same files. Workers on another machine require PostgreSQL data storage and a PostgreSQL or Valkey queue.
+
+## Scheduled index maintenance
+
+On PostgreSQL, the scheduler runs the `embedding_index_maintenance` task to create and remove per-workspace search indexes (see [Search speed on PostgreSQL](../embedding/#search-speed-on-postgresql)). The shipped production and development configurations run it once at start and every 10 minutes. It runs only while `yorishiro scheduler` is running. Without the scheduler, workspaces never get indexes; search stays correct but scans exactly, which gets slower as a workspace grows. On SQLite the task does nothing.
+
+Index maintenance used to be part of the `recover_worker_dispatches` task. If you copied your own schedule that runs `recover_worker_dispatches` by name, add a job for `embedding_index_maintenance` as well. Compare your configuration with the shipped example after upgrading.
 
 ## Worker targets
 

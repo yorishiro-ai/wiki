@@ -150,3 +150,15 @@ Search in the workspace returns `503` during reindexing and becomes available af
 New or updated items can take time to appear in similarity results. You can still retrieve an item by ID. Search returns `503` if the worker or provider cannot produce the query embedding in time; it does not silently become text-only search.
 
 The production variable `YORISHIRO_QUERY_EMBEDDING_TIMEOUT_MS` defaults to `15000` and supports up to `120000`. Check worker logs and provider connectivity before increasing it. See [Troubleshooting](../../operations/queue-start-objectives/).
+
+## Search speed on PostgreSQL
+
+Embedding widths from 1 to 4,096 dimensions are supported. Searching stays correct either way; the index only affects speed.
+
+- Below 2,000 embedded items, a workspace is searched exactly. SQLite always searches this way and never builds an index.
+- On PostgreSQL, a workspace that reaches 2,000 embedded items gets its own search index. It keeps the index if the count later falls below 2,000.
+- Index creation happens in the background, so a workspace may be searched exactly for a while after it crosses the threshold. The task that builds indexes runs only while the [scheduler](../workers-and-queues/#scheduled-index-maintenance) is running. Without it, search still works but scans exactly.
+- The index selects at most 1,000 candidates per search. The final order is calculated from the stored full-precision vectors for those candidates, so ranking among them is exact.
+- Nothing needs to be configured for this. The earlier in-process search graph and its table are gone, so there is nothing to tune or clean up.
+
+One limit: in a workspace dominated by many identical embeddings, an item saved after the index was built may not appear in results, because approximate search cannot tell identical vectors apart. Realistic content rarely hits this.
