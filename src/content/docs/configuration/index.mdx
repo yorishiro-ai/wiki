@@ -68,7 +68,7 @@ Tenant Admin/Owner can issue least-privilege keys, inspect retained history, and
 
 Production logs are JSON. Use `LOG_LEVEL=info` normally; use `debug` while diagnosing a problem, then change it back. `RUST_LOG` takes priority if set. See [Troubleshooting](../operations/queue-start-objectives/) for commands to read logs. Remove credentials before sharing logs or configuration.
 
-Logs go to standard output only. A configuration that sets `logger.file_appender` is rejected at startup, so remove it and collect output with Docker, systemd (`journalctl`), or your log collector. Timestamps follow the [time zone](#time-zone) setting.
+Logs go to standard output only. A configuration that sets `logger.file_appender` is rejected at startup. Timestamps follow the [time zone](#time-zone) setting.
 
 ## Time zone
 
@@ -91,11 +91,9 @@ These optional values go under `settings` in your YAML configuration; they have 
 | `settings.http_timeouts.inference_request_seconds`   | `120`   | One Enterprise inference request                                                 |
 | `settings.http_timeouts.oauth_discovery_seconds`     | `10`    | One OAuth/OIDC discovery or token call                                           |
 
-Merge only the entries you change into the existing `settings` block, then restart all services.
-
 ## Email settings
 
-Yorishiro does not send email, and the shipped configurations have no SMTP `mailer:` block. `MAILER_HOST` and related variables have no effect, so remove them from custom configurations. Invitation tokens are delivered by you; see [Access management](../guides/access-management/).
+Yorishiro does not send email, and the shipped configurations have no SMTP `mailer:` block. `MAILER_HOST` and related variables have no effect. Invitation tokens are delivered by you; see [Access management](../guides/access-management/).
 
 ## Configuration ownership
 

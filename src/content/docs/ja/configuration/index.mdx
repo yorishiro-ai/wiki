@@ -68,7 +68,7 @@ CommunityとライセンスのないEnterpriseは1テナントです。有効な
 
 productionのログはJSONです。通常は`LOG_LEVEL=info`を使い、調査中だけ`debug`にして、終わったら戻してください。`RUST_LOG`を設定するとそちらが優先されます。確認コマンドは[トラブルシューティング](../operations/queue-start-objectives/)に掲載しています。ログや設定を共有する前に認証情報を取り除いてください。
 
-ログは標準出力にだけ出力されます。`logger.file_appender`を設定した設定ファイルは起動時に拒否されるため、削除し、Docker、systemd（`journalctl`）、ログ収集の仕組みで出力を集めてください。タイムスタンプは[タイムゾーン](#タイムゾーン)の設定に従います。
+ログは標準出力にだけ出力されます。`logger.file_appender`を設定した設定ファイルは起動時に拒否されます。タイムスタンプは[タイムゾーン](#タイムゾーン)の設定に従います。
 
 ## タイムゾーン
 
@@ -91,11 +91,9 @@ productionの環境変数に`YORISHIRO_TIMEZONE=Asia/Tokyo`を設定するか、
 | `settings.http_timeouts.inference_request_seconds`   | `120`  | Enterpriseの推論の1回のリクエスト                                   |
 | `settings.http_timeouts.oauth_discovery_seconds`     | `10`   | OAuth/OIDCのdiscoveryまたはトークンの1回の呼び出し                  |
 
-変更する項目だけを既存の`settings`に追加し、すべてのサービスを再起動してください。
-
 ## メールの設定
 
-Yorishiroはメールを送信しません。同梱の設定にSMTPの`mailer:`ブロックはありません。`MAILER_HOST`などの変数は何の効果もないため、独自の設定からは削除してください。招待のトークンは自分で相手に渡します。[アクセス管理](../guides/access-management/)を参照してください。
+Yorishiroはメールを送信しません。同梱の設定にSMTPの`mailer:`ブロックはありません。`MAILER_HOST`などの変数は何の効果もありません。招待のトークンは自分で相手に渡します。[アクセス管理](../guides/access-management/)を参照してください。
 
 ## 設定の管理先
 
