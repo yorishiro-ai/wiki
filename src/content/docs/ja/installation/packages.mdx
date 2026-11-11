@@ -34,7 +34,7 @@ sudo systemctl enable --now yorishiro yorishiro-worker yorishiro-jobs yorishiro-
 sudo systemctl status yorishiro yorishiro-worker yorishiro-jobs yorishiro-scheduler
 ```
 
-`http://localhost:5150`で[初回起動](../first-run/)に進みます。埋め込みワーカーは初回に約1 GiBをダウンロードします。`sudo journalctl -u yorishiro-worker -f`で確認できます。
+`http://localhost:5150`で[初回起動](../first-run/)に進みます。埋め込みワーカーの初回起動は`sudo journalctl -u yorishiro-worker -f`で確認できます。
 
 ## インストール先
 

@@ -170,7 +170,7 @@ docker compose ps
 docker compose logs --tail 100 worker
 ```
 
-The embedding worker downloads about 1 GiB on its first start. The server and other services do not need to load that model. To try saving data without semantic search, run `YORISHIRO_EMBEDDING_PROVIDER=none docker compose up -d` instead.
+The server and other services do not need to load that model. To try saving data without semantic search, run `YORISHIRO_EMBEDDING_PROVIDER=none docker compose up -d` instead.
 
 Open [First run](../first-run/) and use `http://localhost:5150`. If users connect through another address, change `HOST` to their URL. Keep the same database and queue settings on all four services.
 

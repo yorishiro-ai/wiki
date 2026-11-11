@@ -24,7 +24,7 @@ sidebar:
 
 ## 索引の定期メンテナンス
 
-PostgreSQLでは、スケジューラーが`embedding_index_maintenance`タスクを実行し、ワークスペースごとの検索用索引を作成・削除します（[PostgreSQLでの検索の速さ](../embedding/#postgresqlでの検索の速さ)を参照）。同梱のproductionと開発用の設定では、起動時に1回、その後は10分ごとに実行します。`yorishiro scheduler`が動いている間だけ実行されます。スケジューラーがないとワークスペースの索引は作られません。検索は正しく動きますが、全件を調べる方式のままです。SQLiteでは何もしません。
+スケジューラーは`embedding_index_maintenance`タスクを実行し、PostgreSQLでワークスペースごとの検索用索引を作成・削除します。SQLiteでは何もしません。詳しくは[PostgreSQLでの検索の速さ](../embedding/#postgresqlでの検索の速さ)を参照してください。
 
 `recover_worker_dispatches`は索引のメンテナンスを実行しません。このタスクを名前で指定したスケジュールには、`embedding_index_maintenance`のジョブが別に必要です。
 
