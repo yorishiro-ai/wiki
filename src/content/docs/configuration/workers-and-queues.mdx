@@ -26,7 +26,7 @@ Use the same database, queue, and relevant provider settings on every service. I
 
 On PostgreSQL, the scheduler runs the `embedding_index_maintenance` task to create and remove per-workspace search indexes (see [Search speed on PostgreSQL](../embedding/#search-speed-on-postgresql)). The shipped production and development configurations run it once at start and every 10 minutes. It runs only while `yorishiro scheduler` is running. Without the scheduler, workspaces never get indexes; search stays correct but scans exactly, which gets slower as a workspace grows. On SQLite the task does nothing.
 
-Index maintenance used to be part of the `recover_worker_dispatches` task. If you copied your own schedule that runs `recover_worker_dispatches` by name, add a job for `embedding_index_maintenance` as well. Compare your configuration with the shipped example after upgrading.
+If you schedule `recover_worker_dispatches` by name in your own configuration, also add a job for `embedding_index_maintenance`. Compare your configuration with the shipped example after upgrading.
 
 ## Worker targets
 
