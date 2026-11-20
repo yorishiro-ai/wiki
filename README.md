@@ -41,6 +41,8 @@ pnpm generate:mcp                              # reads the inventory from the pr
 pnpm generate:mcp -- ../yorishiro/tests/fixtures/mcp-inventory.md   # or from a local checkout
 ```
 
+`<ProductFile path="…" />` (`src/components/ProductFile.astro`) shows a file from the `productVersion` tag, fetched at build time. It is used for `config/production.yaml` and the systemd units, so those pages follow the product without manual copying.
+
 ## Deployment
 
 Pushes to `main` build and deploy to GitHub Pages through GitHub Actions. Pull requests run `pnpm check`, build, and link validation only.

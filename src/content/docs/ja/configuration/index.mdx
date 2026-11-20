@@ -5,6 +5,8 @@ sidebar:
   order: 1
 ---
 
+import ProductFile from "../../../../components/ProductFile.astro";
+
 導入例は独自の設定ファイルなしで動きます。必要な項目だけ変更してください。ほかの方が運用する環境では、サーバー設定の変更を管理者に依頼します。MCPクライアントに必要なのはURLとAPIキーです。
 
 ## 設定ファイル
@@ -94,3 +96,9 @@ Yorishiroはメールを送信しません。同梱の設定にSMTPの`mailer:`�
 ## 設定の管理先
 
 このページにある環境変数を使う場合は、YAMLの対応する項目がその変数を参照していることを確認してください。固定値を指定した項目は、その環境変数では変更できません。利用している設定例の項目を確認して編集してください。パッケージでは`/etc/yorishiro/production.yaml`を使います。別の`yorishiro.env`は不要です。共有する設定例からは秘密値を取り除いてください。
+
+## 製品の設定ファイル
+
+次は、このwikiが対象とするリリースの`config/production.yaml`です。環境変数名、既定値、スケジューラーのタスクを確認できます。
+
+<ProductFile path="config/production.yaml" />

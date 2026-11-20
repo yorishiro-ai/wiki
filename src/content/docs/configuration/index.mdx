@@ -5,6 +5,8 @@ sidebar:
   order: 1
 ---
 
+import ProductFile from "../../../components/ProductFile.astro";
+
 The installation examples work without a custom configuration. Change only what you need. If someone else operates your server, ask them to change server settings; your MCP client only needs its URL and API key.
 
 ## Configuration files
@@ -94,3 +96,9 @@ Yorishiro does not send email, and the shipped configurations have no SMTP `mail
 ## Configuration ownership
 
 For the environment variables listed on this page, check that the corresponding YAML field reads the variable. A field set to a literal value cannot be changed through that environment variable. Check and edit the configuration example used by your installation. Packages use `/etc/yorishiro/production.yaml`; a separate `yorishiro.env` is unnecessary. Remove secrets from shared configuration examples.
+
+## Production configuration file
+
+This is `config/production.yaml` from the release this wiki documents. Use it to check variable names, defaults, and scheduler tasks.
+
+<ProductFile path="config/production.yaml" />
