@@ -60,4 +60,6 @@ Change these only after checking [Troubleshooting](../../operations/queue-start-
 | `YORISHIRO_QUEUE_REAPER_AGE_MINUTES` | `30`                                  | Recovery age for queue work left in processing   |
 | `DB_MAX_CONNECTIONS`                 | `10` for SQLite, `100` for PostgreSQL | Maximum connections per configured database pool |
 
+With SQLite and PostgreSQL queues, finished jobs are deleted after 7 days (completed or cancelled) or 30 days (failed), checked hourly; queued and processing jobs are never deleted. These ages are set under `queue.retention` in the YAML configuration.
+
 SQLite allows one writer at a time. Prefer PostgreSQL when concurrent writes become a problem rather than increasing SQLite worker counts. Enterprise can also [limit simultaneous work](../enterprise/#plan-policy-and-job-limits).

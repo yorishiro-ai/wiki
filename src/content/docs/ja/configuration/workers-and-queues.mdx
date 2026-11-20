@@ -60,4 +60,6 @@ IDには小文字とハイフンで表したテナントのUUIDを使います�
 | `YORISHIRO_QUEUE_REAPER_AGE_MINUTES` | `30`                             | 処理中のまま残ったキューの仕事を回収するまでの分数 |
 | `DB_MAX_CONNECTIONS`                 | SQLiteは`10`、PostgreSQLは`100`  | 設定したデータベースプールごとの最大接続数         |
 
+SQLiteとPostgreSQLのキューでは、終了した仕事を、完了・取り消しは7日後、失敗は30日後に削除します。確認は1時間ごとで、待機中と処理中の仕事は削除されません。この期間はYAML設定の`queue.retention`で変更できます。
+
 SQLiteは同時に1つしか書き込めません。同時書き込みが問題になる場合は、ワーカーを増やすよりPostgreSQLを選んでください。Enterpriseでは[同時実行数の制限](../enterprise/#プランポリシーとジョブの制限)も設定できます。
