@@ -15,7 +15,7 @@ A tenant is the account area for a person or organization. Workspaces separate t
 | Existing root user | `POST /auth/root/login` with `email` and `password`                                  |
 | Tenant user        | `POST /auth/tenant/login` with the `x-tenant-id` header, `user_name`, and `password` |
 
-Signing up creates the tenant and its root user without a key. Each login returns a tenant-scoped API key once. The key is not bound to a workspace; send `X-Workspace-Id` as described in [API keys](../api-keys/). A root account that belongs to no other tenant keeps working after its tenant is retired.
+Signing up creates the tenant and its root user without a key. Sign-in returns a tenant-scoped API key only if the account belongs to exactly one active tenant. Save the key when it is shown; for workspace operations, send `X-Workspace-Id` as described in [API keys](/wiki/guides/api-keys/). A root account is retained when its tenant is deleted, but cannot sign in without a tenant membership.
 
 ## Add and remove people
 
@@ -78,17 +78,17 @@ To change a manual cap, supply `replace_max_workspaces=true` with `max_workspace
 
 A new workspace without a schema shows `schema_pending`. Creating the first schema changes the status to `active` and records that version in `schema_id`. Ask your assistant to check the workspace details before saving information.
 
-Another workspace's embedding settings are not copied. Search may use the server's default provider if this workspace has no individual setting. Check the provider and whether search data is ready using [Embedding configuration](../../configuration/embedding/). Setting a workspace provider after items have been saved rebuilds their search data.
+Another workspace's embedding settings are not copied. Search may use the server's default provider if this workspace has no individual setting. Check the provider and whether search data is ready using [Embedding configuration](/wiki/configuration/embedding/). Setting a workspace provider after items have been saved rebuilds their search data.
 
-## What is operator-only
+## Management boundaries
 
-- Creating a tenant from the command line, server-wide tenant inventory, and physical deletion need the server operator. See [Tenant retirement](../../operations/tenant-retirement/).
+- Creating a tenant from the command line, server-wide tenant inventory, and physical deletion need the server operator. See [Tenant retirement](/wiki/operations/tenant-retirement/).
 - Server-wide user inventory and account deletion also belong to the operator, and leaving a tenant is separate.
-- Archiving a schema does not physically delete its data. The shared template library is separate from physical PostgreSQL schemas. See [Templates](../templates/#schema-versions-and-archival).
+- Archiving a schema does not physically delete its data. The shared template library is separate from physical PostgreSQL schemas. See [Templates](/wiki/guides/templates/#schema-versions-and-archival).
 - Not every REST action is available through MCP. Marketplace publishing, inference jobs, sign-in/OAuth, Stripe webhooks, and server maintenance use their own procedures. Provider configuration neither runs inference nor removes licence restrictions.
 
-`export_jsonl` maps to `GET /api/export.jsonl`; `import_jsonl` and `import_job_status` map to the import endpoints. See [Export and import](../import-export/) for limits.
+`export_jsonl` maps to `GET /api/export.jsonl`; `import_jsonl` and `import_job_status` map to the import endpoints. See [Export and import](/wiki/guides/import-export/) for limits.
 
 Through your assistant, use `capabilities` to inspect the key's permissions, `recall_context` to retrieve related information, `get_entity_drift` to compare an item with the active schema, or `discover_workspaces` to find accessible workspaces. `migration_dry_run` counts items that are current, behind without missing required values, or missing required values; it does not preview a proposed schema change.
 
-After access is revoked, already-authenticated requests may finish. Queued work rechecks permission before writes, but not every external call already in progress can be stopped. See [API keys](../api-keys/) for replacing credentials.
+After access is revoked, already-authenticated requests may finish. Queued work rechecks permission before writes, but not every external call already in progress can be stopped. See [API keys](/wiki/guides/api-keys/) for replacing credentials.

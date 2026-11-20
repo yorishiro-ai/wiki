@@ -31,7 +31,7 @@ export default defineConfig({
       sidebar,
       plugins: [
         starlightGroupPages(),
-        starlightLinksValidator({ errorOnRelativeLinks: false }),
+        starlightLinksValidator(),
         starlightKbd({
           globalPicker: false,
           types: [{ id: "linux", label: "Linux", default: true }],

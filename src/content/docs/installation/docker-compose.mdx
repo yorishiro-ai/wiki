@@ -5,7 +5,7 @@ sidebar:
   order: 3
 ---
 
-Use a configuration on this page to run your own Yorishiro server. If you already have a URL and API key, skip installation and [connect your assistant](../first-run/#4-connect-an-mcp-client).
+Use a configuration on this page to run your own Yorishiro server. If you already have a URL and API key, skip installation and [connect your assistant](/wiki/installation/first-run/#4-connect-an-mcp-client).
 
 Choose one setup below and save it as `compose.yml`. Replace `<VERSION>` with your chosen [release tag](https://github.com/yorishiro-ai/yorishiro/releases). These examples use Community; change the image suffix from `-ce` to `-ee` for Enterprise.
 
@@ -172,11 +172,11 @@ docker compose logs --tail 100 worker
 
 The server and other services do not need to load that model. To try saving data without semantic search, run `YORISHIRO_EMBEDDING_PROVIDER=none docker compose up -d` instead.
 
-Open [First run](../first-run/) and use `http://localhost:5150`. If users connect through another address, change `HOST` to their URL. Keep the same database and queue settings on all four services.
+Open [First run](/wiki/installation/first-run/) and use `http://localhost:5150`. If users connect through another address, change `HOST` to their URL. Keep the same database and queue settings on all four services.
 
 ## Keep your data
 
-`docker compose down` stops the installation without deleting its named volumes. Do not add `-v` unless you intend to delete those volumes and their data. Updating an image is not a backup; see [Update and back up](../../operations/queue-publisher-cutover/).
+`docker compose down` stops the installation without deleting its named volumes. Do not add `-v` unless you intend to delete those volumes and their data. Updating an image is not a backup; see [Update and back up](/wiki/operations/queue-publisher-cutover/).
 
 ## Use a local embedding model offline
 
@@ -189,4 +189,4 @@ models/multilingual-e5-base/tokenizer.json
 
 In the existing `x-yorishiro.volumes` list, replace `models:/app/models` with `./models:/app/models:ro`. Keep any other entries, including `data:/var/lib/yorishiro` in the SQLite example. Recreate the worker with `docker compose up -d worker`.
 
-The container user must be able to read both files. Providing only one prevents the embedding worker from starting. See [Embedding](../../configuration/embedding/) for provider options.
+The container user must be able to read both files. Providing only one prevents the embedding worker from starting. See [Embedding](/wiki/configuration/embedding/) for provider options.

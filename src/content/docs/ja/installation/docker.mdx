@@ -5,7 +5,7 @@ sidebar:
   order: 2
 ---
 
-初めて導入する場合は[Docker Compose](../docker-compose/)を使ってください。このページはコンテナを個別に管理したい方向けです。
+初めて導入する場合は[Docker Compose](/wiki/ja/installation/docker-compose/)を使ってください。このページはコンテナを個別に管理したい方向けです。
 
 ## コンテナを起動する
 
@@ -39,13 +39,13 @@ docker run -d --name yorishiro-scheduler --restart unless-stopped --no-healthche
   ghcr.io/yorishiro-ai/yorishiro:<VERSION>-ce scheduler
 ```
 
-4つのコンテナを起動したまま、`http://localhost:5150`で[初回起動](../first-run/)に進んでください。
+4つのコンテナを起動したまま、`http://localhost:5150`で[初回起動](/wiki/ja/installation/first-run/)に進んでください。
 
 ## データベースと設定
 
 この例はSQLiteを使います。すべてのコンテナでデータ用ボリュームを共有し、モデル用ボリュームは埋め込みワーカーだけが使います。コンテナを置き換える際にデータ用ボリュームを削除しないでください。
 
-PostgreSQLを使う場合は、4つすべてに同じ`DATABASE_URL`を設定します。Valkeyのキューも使う場合は、`YORISHIRO_QUEUE_KIND=Redis`と`QUEUE_URL`も4つすべてに設定します。データベース拡張を含む構成例は[Composeガイド](../docker-compose/#postgresqlとvalkey)を参照してください。
+PostgreSQLを使う場合は、4つすべてに同じ`DATABASE_URL`を設定します。Valkeyのキューも使う場合は、`YORISHIRO_QUEUE_KIND=Redis`と`QUEUE_URL`も4つすべてに設定します。データベース拡張を含む構成例は[Composeガイド](/wiki/ja/installation/docker-compose/#postgresqlとvalkey)を参照してください。
 
 イメージは`/app/config/production.yaml`を読み込みます。必要なら完全な設定ファイルをこの場所にマウントします。イメージ内のファイルとはマージされません。`HOST`には利用者が接続するURLを指定します。`BINDING=0.0.0.0`は公開したポートからコンテナ内のサーバーに接続するための設定です。
 
@@ -57,4 +57,4 @@ docker logs --tail 100 yorishiro-jobs
 docker stop yorishiro yorishiro-worker yorishiro-jobs yorishiro-scheduler
 ```
 
-検索に失敗する場合や処理が終わらない場合は[トラブルシューティング](../../operations/queue-start-objectives/)を参照してください。
+検索に失敗する場合や処理が終わらない場合は[トラブルシューティング](/wiki/ja/operations/queue-start-objectives/)を参照してください。

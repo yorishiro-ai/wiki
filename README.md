@@ -16,7 +16,7 @@ In VS Code, install the recommended extensions (Astro and Oxc). Format on save u
 pnpm install
 pnpm dev           # http://localhost:4321/wiki/
 pnpm format        # oxfmt
-pnpm check         # lint, format check, script tests, page structure and en/ja parity, types
+pnpm check         # lint, format check, tests, and types
 pnpm build         # outputs to dist/
 pnpm verify        # check and build (including link validation), as CI does
 pnpm preview
@@ -24,7 +24,7 @@ pnpm preview
 
 ## Add a page
 
-Add matching English and Japanese MDX files under an existing section (for example `src/content/docs/guides/backup.mdx` and `src/content/docs/ja/guides/backup.mdx`). A page needs `title`, `description`, and its body; set `sidebar.order` to control ordering. Pages are MDX, so write `{` and a bare `<` in prose as `&#123;` and `&lt;`, or put them in backticks. Use relative links between pages. Japanese pages use Japanese heading text in anchors.
+Add matching English and Japanese MDX files under an existing section (for example `src/content/docs/guides/backup.mdx` and `src/content/docs/ja/guides/backup.mdx`). Set `title`, `description`, and the page body; use `sidebar.order` to control ordering. Use site paths starting with `/wiki/` for English links and `/wiki/ja/` for Japanese links. Japanese pages use Japanese heading text in anchors. Check translation coverage in Lunaria at `/wiki/localization/`; `pnpm check` does not enforce translation parity.
 
 The sidebar, search, section overview pages (`starlight-group-pages`), and the translation dashboard (`/localization`, Lunaria) pick the page up automatically. `pnpm build` validates internal links and anchors (`starlight-links-validator`).
 

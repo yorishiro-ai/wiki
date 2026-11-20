@@ -5,20 +5,20 @@ sidebar:
   order: 1
 ---
 
-If someone already runs Yorishiro for you, ask them for the server URL and an API key. You do not need to install it yourself. Continue with [Connect an MCP client](first-run/#4-connect-an-mcp-client).
+If someone already runs Yorishiro for you, ask them for the server URL and an API key. You do not need to install it yourself. Continue with [Connect an MCP client](/wiki/installation/first-run/#4-connect-an-mcp-client).
 
 ## Choose an installation method
 
-| Method                            | When to use it                                      |
-| --------------------------------- | --------------------------------------------------- |
-| [Docker Compose](docker-compose/) | Includes all required services.                     |
-| [Packages (deb / rpm)](packages/) | Run on a Linux host managed with systemd.           |
-| [Docker](docker/)                 | Manage individual containers yourself.              |
-| [Build from source](build/)       | Build a version that is not available as a release. |
+| Method                                               | When to use it                                      |
+| ---------------------------------------------------- | --------------------------------------------------- |
+| [Docker Compose](/wiki/installation/docker-compose/) | Includes all required services.                     |
+| [Packages (deb / rpm)](/wiki/installation/packages/) | Run on a Linux host managed with systemd.           |
+| [Docker](/wiki/installation/docker/)                 | Manage individual containers yourself.              |
+| [Build from source](/wiki/installation/build/)       | Build a version that is not available as a release. |
 
-Start with SQLite for a personal installation. Choose PostgreSQL when you need several tenants or workers on different machines. See [SQLite mode](../guides/sqlite/).
+Start with SQLite for a personal installation. Choose PostgreSQL when you need several tenants or workers on different machines. See [SQLite mode](/wiki/guides/sqlite/).
 
-After installation, [create the first account and connect your AI assistant](first-run/).
+After installation, [create the first account and connect your AI assistant](/wiki/installation/first-run/).
 
 ## What runs
 
@@ -33,7 +33,7 @@ Keep these four services running. The Compose examples include all four; the pac
 
 ## Editions and versions
 
-Community (`ce`) runs without a licence and supports one tenant. Enterprise (`ee`) adds features such as external identity-provider sign-in and per-workspace providers. See [Enterprise configuration](../configuration/enterprise/).
+Community (`ce`) runs without a licence and supports one tenant. Enterprise (`ee`) adds features such as external identity-provider sign-in and per-workspace providers. See [Enterprise configuration](/wiki/configuration/enterprise/).
 
 Choose a tag from [Releases](https://github.com/yorishiro-ai/yorishiro/releases) wherever a command shows `<VERSION>`. This wiki documents Yorishiro `20261120-1`.
 

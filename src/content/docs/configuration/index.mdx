@@ -19,7 +19,7 @@ The installation examples work without a custom configuration. Change only what 
 
 The production example reads the environment variables listed here. If you replace a value with a literal in YAML, that entry no longer reads its environment variable. Restart the affected services after a change, keeping database and queue settings consistent across all four.
 
-A replacement `production.yaml` must be complete: it is not merged with the packaged file. A `production.local.yaml` beside the base configuration overrides selected values. `LOCO_CONFIG_FOLDER` selects a different configuration directory. See [Packages](../installation/packages/#configuration) for file permissions and database changes.
+A replacement `production.yaml` must be complete: it is not merged with the packaged file. A `production.local.yaml` beside the base configuration overrides selected values. `LOCO_CONFIG_FOLDER` selects a different configuration directory. See [Packages](/wiki/installation/packages/#configuration) for file permissions and database changes.
 
 ## Server address
 
@@ -31,7 +31,7 @@ A replacement `production.yaml` must be complete: it is not merged with the pack
 | `YORISHIRO_MCP_ALLOWED_HOSTS` | Unset              | Add allowed MCP hostnames, comma-separated, when using a restricted listener behind another hostname |
 | `YORISHIRO_ALLOWED_ORIGINS`   | `[]`               | Allow browser clients from exact origins, as a JSON array                                            |
 
-`HOST` does not change where the server listens. The [Docker examples](../installation/docker-compose/) explicitly set `BINDING=0.0.0.0` and `HOST=http://localhost:5150`.
+`HOST` does not change where the server listens. The [Docker examples](/wiki/installation/docker-compose/) explicitly set `BINDING=0.0.0.0` and `HOST=http://localhost:5150`.
 
 For browser clients on another origin, set `YORISHIRO_ALLOWED_ORIGINS`, for example `["https://assistant.example.com"]`. This is separate from MCP hostname validation and does not replace an API key. A wildcard listener (`0.0.0.0` or `::`) accepts any MCP Host; a restricted listener accepts loopback and its bind address plus explicitly allowed hosts.
 
@@ -45,7 +45,7 @@ For browser clients on another origin, set `YORISHIRO_ALLOWED_ORIGINS`, for exam
 
 Use SQLite with a separate SQLite queue file, PostgreSQL with a PostgreSQL queue, or either database with Valkey. The SQLite database and queue must not share a file. Do not place SQLite files on another host for remote workers.
 
-PostgreSQL needs the `vector` and `pg_trgm` extensions. The [Compose example](../installation/docker-compose/#postgresql-and-valkey) includes their setup. Changing a connection URL does not move existing data; see [Export and import](../guides/import-export/).
+PostgreSQL needs the `vector` and `pg_trgm` extensions. The [Compose example](/wiki/installation/docker-compose/#postgresql-and-valkey) includes their setup. Changing a connection URL does not move existing data; see [Export and import](/wiki/guides/import-export/).
 
 ## Tenants
 
@@ -61,11 +61,11 @@ The value must be positive. The sign-in window (`settings.rate_limit.auth_window
 
 ## API keys
 
-Administrators with credential permissions can issue least-privilege keys, inspect retained history, and revoke or rotate them. Creation defaults to `read`; audit is an independent grant. See [API keys](../guides/api-keys/) for scope, expiry, one-time secrets, and rotation procedures.
+Administrators with credential permissions can issue least-privilege keys, inspect retained history, and revoke or rotate them. Creation defaults to `read`; audit is an independent grant. See [API keys](/wiki/guides/api-keys/) for scope, expiry, one-time secrets, and rotation procedures.
 
 ## Logging
 
-Production logs are JSON. Use `LOG_LEVEL=info` normally; use `debug` while diagnosing a problem, then change it back. `RUST_LOG` takes priority if set. See [Troubleshooting](../operations/queue-start-objectives/) for commands to read logs. Remove credentials before sharing logs or configuration.
+Production logs are JSON. Use `LOG_LEVEL=info` normally; use `debug` while diagnosing a problem, then change it back. `RUST_LOG` takes priority if set. See [Troubleshooting](/wiki/operations/queue-start-objectives/) for commands to read logs. Remove credentials before sharing logs or configuration.
 
 Logs go to standard output only. A configuration that sets `logger.file_appender` is rejected at startup. Timestamps follow the [time zone](#time-zone) setting.
 

@@ -7,7 +7,7 @@ sidebar:
 
 Workers on the server prepare saved notes for search and run imports. As a client user, you do not need to start them yourself; contact the operator if work stops progressing. The following instructions are for people running their own server.
 
-If you use the [Compose example](../../installation/docker-compose/) or [packages](../../installation/packages/), run all four services. You do not need dedicated worker pools for a personal installation.
+If you use the [Compose example](/wiki/installation/docker-compose/) or [packages](/wiki/installation/packages/), run all four services. You do not need dedicated worker pools for a personal installation.
 
 ## Processes
 
@@ -24,7 +24,7 @@ Use the same database, queue, and relevant provider settings on every service. I
 
 ## Scheduled index maintenance
 
-The scheduler runs the `embedding_index_maintenance` task, which creates and removes per-workspace search indexes on PostgreSQL. It does nothing on SQLite. Details are in [Search speed on PostgreSQL](../embedding/#search-speed-on-postgresql).
+The scheduler runs the `embedding_index_maintenance` task, which creates and removes per-workspace search indexes on PostgreSQL. It does nothing on SQLite. Details are in [Search speed on PostgreSQL](/wiki/configuration/embedding/#search-speed-on-postgresql).
 
 `recover_worker_dispatches` does not run index maintenance. A schedule that runs it by name needs its own `embedding_index_maintenance` job.
 
@@ -44,7 +44,7 @@ Before assigning a workspace to a dedicated pool:
 
 1. Start the corresponding embedding and application-job workers with the same configuration as the server.
 2. Add the embedding target to `settings.worker_targets` on the server, keeping `worker-target:shared`. In production, `YORISHIRO_WORKER_TARGETS` accepts a JSON array, such as `["worker-target:shared","worker-target:official"]`.
-3. Restart the server with that declaration, then assign the workspace through `PUT /api/workspace/worker-class`. See [Enterprise configuration](../enterprise/#worker-class-per-workspace).
+3. Restart the server with that declaration, then assign the workspace through `PUT /api/workspace/worker-class`. See [Enterprise configuration](/wiki/configuration/enterprise/#worker-class-per-workspace).
 
 The declaration is not a health check. Monitor the processes yourself. To remove or change routing, stop new work and let the old workers finish pending work before replacing them.
 
@@ -52,7 +52,7 @@ One process may serve several targets of the same kind by separating them with c
 
 ## Worker settings
 
-Change these only after checking [Troubleshooting](../../operations/queue-start-objectives/). Adding workers will not fix an unavailable model or database.
+Change these only after checking [Troubleshooting](/wiki/operations/queue-start-objectives/). Adding workers will not fix an unavailable model or database.
 
 | Production variable                  | Default                               | Use                                              |
 | ------------------------------------ | ------------------------------------- | ------------------------------------------------ |
@@ -62,4 +62,4 @@ Change these only after checking [Troubleshooting](../../operations/queue-start-
 
 With SQLite and PostgreSQL queues, finished jobs are deleted after 7 days (completed or cancelled) or 30 days (failed), checked hourly; queued and processing jobs are never deleted. These ages are set under `queue.retention` in the YAML configuration.
 
-SQLite allows one writer at a time. Prefer PostgreSQL when concurrent writes become a problem rather than increasing SQLite worker counts. Enterprise can also [limit simultaneous work](../enterprise/#plan-policy-and-job-limits).
+SQLite allows one writer at a time. Prefer PostgreSQL when concurrent writes become a problem rather than increasing SQLite worker counts. Enterprise can also [limit simultaneous work](/wiki/configuration/enterprise/#plan-policy-and-job-limits).

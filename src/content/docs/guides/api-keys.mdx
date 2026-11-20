@@ -19,13 +19,14 @@ Use `create_api_key`. Choose `read` for reading, `write` for saving/editing, or 
 
 Names must contain 1 to 100 characters. For a time limit, set `expires_at` to a future RFC 3339 timestamp. A new key cannot exceed its issuer's scope, audit grant, binding, or expiry. The user's IAM permissions also limit access.
 
-The returned `full_key` is shown once. Store it in a password manager and configure your [MCP client](../../installation/first-run/#4-connect-an-mcp-client).
+The returned `full_key` is shown once. Store it in a password manager and configure your [MCP client](/wiki/installation/first-run/#4-connect-an-mcp-client).
 
-To use the API directly, replace the URL and `<api-key>` below. Unsupported security-sensitive fields are rejected.
+To use the API directly, replace the URL, `<api-key>`, and `<workspace-uuid>` below. Use a tenant-scoped key authorized to issue credentials.
 
 ```sh
 curl -X POST http://localhost:5150/api/api-keys \
   -H 'Authorization: Bearer <api-key>' \
+  -H 'X-Workspace-Id: <workspace-uuid>' \
   -H 'Content-Type: application/json' \
   -d '{"name":"Notes assistant","scope":"write","audit":false}'
 ```
@@ -34,9 +35,9 @@ curl -X POST http://localhost:5150/api/api-keys \
 
 By default, `create_api_key` and `POST /api/api-keys` issue a workspace-bound key (`tenant_scoped=false`). To select a workspace for each request, set `tenant_scoped=true`. Issuance requires credential-create permission and a tenant-scoped issuing credential. A workspace-bound key cannot issue one (REST `403`). Scope, independent audit access, and expiry remain capped by the issuer.
 
-The returned record has `workspace_id: null`; `full_key` is still shown only once. Listing, revocation, and rotation use the same operations as workspace-bound keys. The operator CLI task `create_tenant_api_key` remains available.
+The returned record has `workspace_id: null`; `full_key` is shown only once. Listing, revocation, and rotation use the same operations as workspace-bound keys.
 
-In REST and MCP, send the authorized workspace's UUID in `X-Workspace-Id` on every request. MCP uses this header for workspace selection, not a separate per-tool selection argument. Without the header, a tenant-scoped key selects the single reachable workspace when there is exactly one; with several, the request asks for the header. An explicit target never bypasses permission or resource restrictions.
+For workspace operations with a tenant-scoped key, send the authorized workspace UUID in `X-Workspace-Id` in REST and MCP. A workspace is never selected automatically, even if you can access only one. Specifying a workspace does not bypass access restrictions.
 
 ## Inspect grants and history
 
@@ -65,7 +66,7 @@ If you need the old key to work during the changeover, issue a separate key, upd
 | Replace | `POST /api/api-keys/{id}/rotate` | `rotate_api_key` |
 | Revoke  | `DELETE /api/api-keys/{id}`      | `revoke_api_key` |
 
-Removing tenant membership revokes the person's attributed tenant keys; revoking direct workspace access revokes affected bound keys. Disabling a tenant revokes all its keys while keeping data and history. Complete operator deletion removes key history too, retaining only secret-free retirement records. See [Tenant retirement](../../operations/tenant-retirement/).
+Removing tenant membership revokes the person's attributed tenant keys; revoking direct workspace access revokes affected bound keys. Disabling a tenant revokes all its keys while keeping data and history. Complete operator deletion removes key history too, retaining only secret-free retirement records. See [Tenant retirement](/wiki/operations/tenant-retirement/).
 
 ## Audit and error handling
 

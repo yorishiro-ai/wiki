@@ -5,7 +5,7 @@ sidebar:
   order: 4
 ---
 
-To move information to another workspace, export it to a file and import that file at the destination. Export includes the formats, saved items, and connections (schemas, entities, and relations) in the workspace your key accesses. It does not back up users, API keys, server settings, or the whole installation. See [Update and back up](../../operations/queue-publisher-cutover/) for a full backup.
+To move information to another workspace, export it to a file and import that file at the destination. Export includes the formats, saved items, and connections (schemas, entities, and relations) in the workspace your key accesses. It does not back up users, API keys, server settings, or the whole installation. See [Update and back up](/wiki/operations/queue-publisher-cutover/) for a full backup.
 
 ## Export workspace content
 
@@ -27,7 +27,7 @@ This requires `read` access. Keep the returned JSON Lines content unchanged for 
 
 Both REST and MCP exports are limited to 8 MiB and 10,000 total records, including schemas and relations. Exceeding either limit returns REST `422` or an MCP tool error, without a partial document. If your workspace exceeds these limits, ask the server operator to help plan the move. Paginated lists can help inspect the content, but they are not an import-ready export: schema lists omit full definitions, and moving relations also requires preserving connections between the destination items.
 
-The file contains schemas in name/version order, followed by entities and then relations. Changes made during export can leave the content inconsistent; the file does not capture one fixed point in time. For a consistent backup of your installation, ask the server operator to follow [Update and back up](../../operations/queue-publisher-cutover/).
+The file contains schemas in name/version order, followed by entities and then relations. Changes made during export can leave the content inconsistent; the file does not capture one fixed point in time. For a consistent backup of your installation, ask the server operator to follow [Update and back up](/wiki/operations/queue-publisher-cutover/).
 
 ## Import into a workspace
 
@@ -57,4 +57,4 @@ Ask your connected assistant:
 
 The assistant submits the content with `import_jsonl` and checks `import_job_status` using the returned ID. Both require `schema` access. Check the export's size against your client's limits before sending its full contents through chat.
 
-After import, search data may need rebuilding. Ask the administrator to run [resync_embeddings](../../configuration/embedding/#change-the-embedding-model) for the destination workspace if embeddings are missing. Verify imported items with a list or exact-ID read as well as a search.
+After import, search data may need rebuilding. Ask the administrator to run [resync_embeddings](/wiki/configuration/embedding/#change-the-embedding-model) for the destination workspace if embeddings are missing. Verify imported items with a list or exact-ID read as well as a search.

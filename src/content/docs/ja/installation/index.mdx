@@ -5,20 +5,20 @@ sidebar:
   order: 1
 ---
 
-すでにYorishiroを運用している方がいる場合は、サーバーのURLとAPIキーを受け取ってください。自分でインストールする必要はありません。[MCPクライアントの接続](first-run/#4-mcpクライアントを接続する)へ進んでください。
+すでにYorishiroを運用している方がいる場合は、サーバーのURLとAPIキーを受け取ってください。自分でインストールする必要はありません。[MCPクライアントの接続](/wiki/ja/installation/first-run/#4-mcpクライアントを接続する)へ進んでください。
 
 ## 導入方法を選ぶ
 
-| 方法                                 | 用途                                       |
-| ------------------------------------ | ------------------------------------------ |
-| [Docker Compose](docker-compose/)    | 必要なサービスがすべて含まれます。         |
-| [パッケージ（deb / rpm）](packages/) | systemdで管理するLinuxホストで動かします。 |
-| [Docker](docker/)                    | コンテナを個別に管理します。               |
-| [ソースからビルド](build/)           | リリースにないバージョンをビルドします。   |
+| 方法                                                       | 用途                                       |
+| ---------------------------------------------------------- | ------------------------------------------ |
+| [Docker Compose](/wiki/ja/installation/docker-compose/)    | 必要なサービスがすべて含まれます。         |
+| [パッケージ（deb / rpm）](/wiki/ja/installation/packages/) | systemdで管理するLinuxホストで動かします。 |
+| [Docker](/wiki/ja/installation/docker/)                    | コンテナを個別に管理します。               |
+| [ソースからビルド](/wiki/ja/installation/build/)           | リリースにないバージョンをビルドします。   |
 
-個人で使う場合はSQLiteから始められます。複数のテナントや別のマシンで動くワーカーが必要ならPostgreSQLを選んでください。[SQLiteモード](../guides/sqlite/)を参照してください。
+個人で使う場合はSQLiteから始められます。複数のテナントや別のマシンで動くワーカーが必要ならPostgreSQLを選んでください。[SQLiteモード](/wiki/ja/guides/sqlite/)を参照してください。
 
-導入後は[最初のアカウントを作成し、AIアシスタントを接続](first-run/)します。
+導入後は[最初のアカウントを作成し、AIアシスタントを接続](/wiki/ja/installation/first-run/)します。
 
 ## 起動するサービス
 
@@ -33,7 +33,7 @@ sidebar:
 
 ## エディションとバージョン
 
-Community（`ce`）はライセンスなしで1つのテナントを利用できます。Enterprise（`ee`）では外部の認証サービスによるログインやワークスペースごとのプロバイダー設定などが加わります。[Enterprise設定](../configuration/enterprise/)を参照してください。
+Community（`ce`）はライセンスなしで1つのテナントを利用できます。Enterprise（`ee`）では外部の認証サービスによるログインやワークスペースごとのプロバイダー設定などが加わります。[Enterprise設定](/wiki/ja/configuration/enterprise/)を参照してください。
 
 コマンドの`<VERSION>`には[Releases](https://github.com/yorishiro-ai/yorishiro/releases)から選んだタグを指定します。このwikiはYorishiro `20261120-1`の内容です。
 

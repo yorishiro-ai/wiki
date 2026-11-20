@@ -5,7 +5,7 @@ sidebar:
   order: 3
 ---
 
-自分でYorishiroを動かす場合は、このページの構成を使えます。すでにURLとAPIキーがあれば、インストールせず[AIアシスタントを接続](../first-run/#4-mcpクライアントを接続する)してください。
+自分でYorishiroを動かす場合は、このページの構成を使えます。すでにURLとAPIキーがあれば、インストールせず[AIアシスタントを接続](/wiki/ja/installation/first-run/#4-mcpクライアントを接続する)してください。
 
 構成を1つ選び、`compose.yml`に保存してください。`<VERSION>`を選んだ[リリースタグ](https://github.com/yorishiro-ai/yorishiro/releases)に置き換えます。例はCommunity向けです。Enterpriseではイメージ名の末尾を`-ce`から`-ee`に変えてください。
 
@@ -172,11 +172,11 @@ docker compose logs --tail 100 worker
 
 サーバーなど、ほかのサービスはモデルを読み込みません。意味による検索を使わず保存を試す場合は、代わりに`YORISHIRO_EMBEDDING_PROVIDER=none docker compose up -d`を実行してください。
 
-[初回起動](../first-run/)に進み、`http://localhost:5150`を使います。別のアドレスから接続する場合は、`HOST`を利用者向けのURLに変更してください。データベースとキューの設定は4つのサービスでそろえます。
+[初回起動](/wiki/ja/installation/first-run/)に進み、`http://localhost:5150`を使います。別のアドレスから接続する場合は、`HOST`を利用者向けのURLに変更してください。データベースとキューの設定は4つのサービスでそろえます。
 
 ## データを残す
 
-`docker compose down`は名前付きボリュームを削除せずに停止します。ボリュームとデータを削除する意図がない限り、`-v`を付けないでください。イメージの更新はバックアップの代わりにはなりません。[更新とバックアップ](../../operations/queue-publisher-cutover/)を参照してください。
+`docker compose down`は名前付きボリュームを削除せずに停止します。ボリュームとデータを削除する意図がない限り、`-v`を付けないでください。イメージの更新はバックアップの代わりにはなりません。[更新とバックアップ](/wiki/ja/operations/queue-publisher-cutover/)を参照してください。
 
 ## ローカルモデルをオフラインで使う
 
@@ -189,4 +189,4 @@ models/multilingual-e5-base/tokenizer.json
 
 既存の`x-yorishiro.volumes`リスト内で、`models:/app/models`を`./models:/app/models:ro`に置き換えます。SQLiteの`data:/var/lib/yorishiro`など、ほかの項目は残してください。`docker compose up -d worker`でワーカーを作り直します。
 
-コンテナのユーザーが両方のファイルを読める必要があります。片方だけだと埋め込みワーカーが起動しません。プロバイダーの選択は[埋め込み](../../configuration/embedding/)を参照してください。
+コンテナのユーザーが両方のファイルを読める必要があります。片方だけだと埋め込みワーカーが起動しません。プロバイダーの選択は[埋め込み](/wiki/ja/configuration/embedding/)を参照してください。
