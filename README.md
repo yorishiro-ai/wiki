@@ -34,12 +34,7 @@ Add one entry to `groups` in `wiki.config.mjs` (folder name, English label, Japa
 
 ## MCP tool reference
 
-`reference/mcp-tools` is generated from the tool inventory that the Yorishiro server tests produce (`tests/fixtures/mcp-inventory.md` in the Yorishiro repository). Do not edit it by hand:
-
-```sh
-pnpm generate:mcp                              # reads the inventory from the productVersion tag
-pnpm generate:mcp -- ../yorishiro/tests/fixtures/mcp-inventory.md   # or from a local checkout
-```
+`reference/mcp-tools` renders `src/components/McpTools.astro`, which fetches the tool inventory (`tests/fixtures/mcp-inventory.md`) from the `productVersion` tag at build time. Nothing is generated or committed; change `productVersion` in `wiki.config.mjs` to update it.
 
 `<ProductFile path="…" />` (`src/components/ProductFile.astro`) shows a file from the `productVersion` tag, fetched at build time. It is used for `config/production.yaml` and the systemd units, so those pages follow the product without manual copying.
 

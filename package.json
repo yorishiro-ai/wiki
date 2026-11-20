@@ -10,7 +10,6 @@
     "lint": "oxlint",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
-    "generate:mcp": "node scripts/generate-mcp-reference.mjs",
     "check:types": "astro check",
     "test": "node --test scripts/*.test.mjs",
     "check": "pnpm lint && pnpm format:check && pnpm test && pnpm check:types",
