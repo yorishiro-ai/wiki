@@ -1,6 +1,6 @@
 // Parses the MCP tool inventory markdown produced by the Yorishiro server tests.
 
-const SCOPE_RE = /\(requires (read|write|schema|migration) scope\b/;
+const SCOPE_RE = /\(requires [^)]*?\b(read|write|schema|migration) scope\b/;
 
 /** Escape prose examples for MDX while preserving inline code. */
 export function escapeMdxText(text) {
@@ -25,7 +25,9 @@ function parseTools(section) {
     const schema = JSON.parse(schemaJson);
     const scope =
       rawDescription.match(SCOPE_RE)?.[1] ??
-      (rawDescription.includes("requires the independent audit grant") ? "audit" : undefined);
+      (/\(requires [^)]*\bthe independent audit grant\b/.test(rawDescription)
+        ? "audit"
+        : undefined);
     if (!scope) throw new Error(`No scope found in description of ${name}`);
     const description = rawDescription
       .replace(/\s*\n\s*/g, " ")
