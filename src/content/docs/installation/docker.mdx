@@ -5,7 +5,7 @@ sidebar:
   order: 2
 ---
 
-For a first installation, use [Docker Compose](../docker-compose/). Use this page if you want to manage each container yourself.
+For a first installation, use [Docker Compose](/wiki/installation/docker-compose/). Use this page if you want to manage each container yourself.
 
 ## Start the containers
 
@@ -39,13 +39,13 @@ docker run -d --name yorishiro-scheduler --restart unless-stopped --no-healthche
   ghcr.io/yorishiro-ai/yorishiro:<VERSION>-ce scheduler
 ```
 
-Keep all four containers running. Continue with [First run](../first-run/) at `http://localhost:5150`.
+Keep all four containers running. Continue with [First run](/wiki/installation/first-run/) at `http://localhost:5150`.
 
 ## Database and configuration
 
 The example uses SQLite. All containers share the data volume; only the embedding worker needs the model volume. Do not delete the data volume when replacing containers.
 
-For PostgreSQL, set the same `DATABASE_URL` on all four containers. For a Valkey queue, also set `YORISHIRO_QUEUE_KIND=Redis` and `QUEUE_URL` on all four. The [Compose guide](../docker-compose/#postgresql-and-valkey) includes a complete example with database extensions.
+For PostgreSQL, set the same `DATABASE_URL` on all four containers. For a Valkey queue, also set `YORISHIRO_QUEUE_KIND=Redis` and `QUEUE_URL` on all four. The [Compose guide](/wiki/installation/docker-compose/#postgresql-and-valkey) includes a complete example with database extensions.
 
 The image reads `/app/config/production.yaml`. Mount a complete configuration there if needed. A replacement file is not merged with the image's file. Set `HOST` to the URL your users connect to; `BINDING=0.0.0.0` lets the published port reach the server inside the container.
 
@@ -57,4 +57,4 @@ docker logs --tail 100 yorishiro-jobs
 docker stop yorishiro yorishiro-worker yorishiro-jobs yorishiro-scheduler
 ```
 
-For search failures or jobs that do not finish, see [Troubleshooting](../../operations/queue-start-objectives/).
+For search failures or jobs that do not finish, see [Troubleshooting](/wiki/operations/queue-start-objectives/).

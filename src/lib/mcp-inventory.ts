@@ -1,23 +1,30 @@
 // Parses the MCP tool inventory markdown produced by the Yorishiro server tests.
 
-const SCOPE_RE = /\(requires (read|write|schema|migration) scope\b/;
+const SCOPE_RE = /\(requires [^)]*?\b(read|write|schema|migration) scope\b/;
 
-/** Escape prose examples for MDX while preserving inline code. */
-export function escapeMdxText(text) {
-  const entities = { "{": "&#123;", "}": "&#125;", "<": "&lt;" };
-  return text.replace(/(`+)([\s\S]*?)\1|[{}<]/g, (match, code) => (code ? match : entities[match]));
-}
-
-function typeLabel(p) {
+function typeLabel(p: any) {
   const base = Array.isArray(p.type)
-    ? p.type.filter((t) => t !== "null").join(" or ")
+    ? p.type.filter((t: string) => t !== "null").join(" or ")
     : (p.type ?? "any");
   const nullable = Array.isArray(p.type) && p.type.includes("null") ? " or null" : "";
   return `${base}${p.format ? ` (${p.format})` : ""}${nullable}`;
 }
 
-function parseTools(section) {
-  const tools = [];
+export interface Param {
+  name: string;
+  type: string;
+  required: boolean;
+  description: string;
+}
+export interface Tool {
+  name: string;
+  scope: string;
+  description: string;
+  params: Param[];
+}
+
+function parseTools(section: string): Tool[] {
+  const tools: Tool[] = [];
   for (const m of section.matchAll(
     /### `(\w+)`\n\n([\s\S]*?)\n\nInput schema:\n\n```json\n([\s\S]*?)\n```/g,
   )) {
@@ -25,14 +32,16 @@ function parseTools(section) {
     const schema = JSON.parse(schemaJson);
     const scope =
       rawDescription.match(SCOPE_RE)?.[1] ??
-      (rawDescription.includes("requires the independent audit grant") ? "audit" : undefined);
+      (/\(requires [^)]*\bthe independent audit grant\b/.test(rawDescription)
+        ? "audit"
+        : undefined);
     if (!scope) throw new Error(`No scope found in description of ${name}`);
     const description = rawDescription
       .replace(/\s*\n\s*/g, " ")
       .trim()
       .replace(/([^.。])$/, "$1.");
     const required = new Set(schema.required ?? []);
-    const params = Object.entries(schema.properties ?? {}).map(([key, p]) => ({
+    const params = Object.entries<any>(schema.properties ?? {}).map(([key, p]) => ({
       name: key,
       type: typeLabel(p),
       required: required.has(key),
@@ -48,7 +57,7 @@ function parseTools(section) {
 }
 
 /** Returns `{ community, enterprise }`, each a list of `{ name, scope, description, params }`. */
-export function parseInventory(text) {
+export function parseInventory(text: string) {
   const sections = text
     .replace(/\r\n/g, "\n")
     .match(
@@ -58,4 +67,16 @@ export function parseInventory(text) {
   const [, communityPart, enterprisePart] = sections;
   if (!communityPart.trim()) throw new Error("Invalid MCP inventory: empty community section.");
   return { community: parseTools(communityPart), enterprise: parseTools(enterprisePart) };
+}
+
+let inventory: Promise<{ community: Tool[]; enterprise: Tool[] }> | undefined;
+/** Fetches the inventory of the documented release once per build. */
+export function loadInventory(version: string) {
+  inventory ??= fetch(
+    `https://raw.githubusercontent.com/yorishiro-ai/yorishiro/${version}/tests/fixtures/mcp-inventory.md`,
+  ).then(async (response) => {
+    if (!response.ok) throw new Error(`Failed to fetch MCP inventory: HTTP ${response.status}`);
+    return parseInventory(await response.text());
+  });
+  return inventory;
 }

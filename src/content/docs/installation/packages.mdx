@@ -5,9 +5,11 @@ sidebar:
   order: 4
 ---
 
-Use these steps to install Yorishiro on your own Linux server. If an administrator has given you a URL and API key, skip installation and [connect your assistant](../first-run/#4-connect-an-mcp-client).
+import ProductFile from "../../../components/ProductFile.astro";
 
-Use packages on Ubuntu 24.04 or AlmaLinux 10, with glibc 2.39 or later. Releases provide `amd64` and `arm64` builds. Choose Community (`yorishiro-ce`) or Enterprise (`yorishiro-ee`); only one edition can be installed at a time.
+Use these steps to install Yorishiro on your own Linux server. If an administrator has given you a URL and API key, skip installation and [connect your assistant](/wiki/installation/first-run/#4-connect-an-mcp-client).
+
+Use packages on Ubuntu 26.04 or AlmaLinux 10, with glibc 2.39 or later. Releases provide `amd64` and `arm64` builds. Choose Community (`yorishiro-ce`) or Enterprise (`yorishiro-ee`); only one edition can be installed at a time.
 
 ## Install
 
@@ -34,7 +36,7 @@ sudo systemctl enable --now yorishiro yorishiro-worker yorishiro-jobs yorishiro-
 sudo systemctl status yorishiro yorishiro-worker yorishiro-jobs yorishiro-scheduler
 ```
 
-Continue with [First run](../first-run/) at `http://localhost:5150`. Check the first embedding-worker start with `sudo journalctl -u yorishiro-worker -f`.
+Continue with [First run](/wiki/installation/first-run/) at `http://localhost:5150`. Check the first embedding-worker start with `sudo journalctl -u yorishiro-worker -f`.
 
 ## Installed files
 
@@ -46,6 +48,18 @@ Continue with [First run](../first-run/) at `http://localhost:5150`. Check the f
 | `/var/lib/yorishiro`                     | SQLite data and queue files, and the `models/` directory |
 
 Enterprise also installs `/etc/yorishiro/LICENSE.enterprise`.
+
+## systemd units
+
+The package registers these units, shown from the release this wiki documents.
+
+<ProductFile path=".github/packaging/yorishiro.service" lang="ini" />
+
+<ProductFile path=".github/packaging/yorishiro-worker.service" lang="ini" />
+
+<ProductFile path=".github/packaging/yorishiro-jobs.service" lang="ini" />
+
+<ProductFile path=".github/packaging/yorishiro-scheduler.service" lang="ini" />
 
 ## Configuration
 
@@ -64,7 +78,7 @@ Keep the file readable by the `yorishiro` service user. The permissions above ke
 
 For PostgreSQL, set `database.uri` to its connection URI. Replace the entire conditional queue section with a single `queue:` block: retain the options for your selected provider, set `kind: Postgres` and its `uri`, and remove the other branches and template condition lines. For Valkey, select `kind: Redis` and a `redis://` or `rediss://` URI instead. Editing only `database.uri` does not change the example's queue selection.
 
-To allow connections from another machine, change `server.binding` from `localhost` to `0.0.0.0`, and set `server.host` to the URL users connect to. See [Configuration](../../configuration/).
+To allow connections from another machine, change `server.binding` from `localhost` to `0.0.0.0`, and set `server.host` to the URL users connect to. See [Configuration](/wiki/configuration/).
 
 After editing:
 
@@ -72,4 +86,4 @@ After editing:
 sudo systemctl restart yorishiro yorishiro-worker yorishiro-jobs yorishiro-scheduler
 ```
 
-The services can write only under `/var/lib/yorishiro`; keep writable SQLite and model files there. If a unit fails repeatedly, see [Troubleshooting](../../operations/queue-start-objectives/).
+The services can write only under `/var/lib/yorishiro`; keep writable SQLite and model files there. If a unit fails repeatedly, see [Troubleshooting](/wiki/operations/queue-start-objectives/).

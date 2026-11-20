@@ -1,0 +1,96 @@
+---
+import AnchorHeading from "@astrojs/starlight/components/AnchorHeading.astro";
+import { productVersion } from "../../wiki.config.mjs";
+import { loadInventory } from "../lib/mcp-inventory.ts";
+
+interface Props {
+  locale: "en" | "ja";
+}
+
+const text = {
+  en: {
+    count: (c: number, e: number) =>
+      `Yorishiro ${productVersion} lists ${c} Community tools and ${e} additional Enterprise tools. Check your MCP client for the tools your server offers.`,
+    head: ["Tool", "Edition", "Scope", "Purpose"],
+    editions: ["Community", "Enterprise"],
+    sections: ["Community tools", "Enterprise tools"],
+    note: "These tools are available in the Enterprise edition only.",
+    params: ["Parameter", "Type", "Required", "Description"],
+    yes: "Yes",
+    no: "No",
+    scope: "Required scope",
+    none: "This tool takes no parameters.",
+  },
+  ja: {
+    count: (c: number, e: number) =>
+      `Yorishiro ${productVersion} のCommunity共通${c}件とEnterprise専用${e}件を掲載しています。接続先で使えるツールはMCPクライアントで確認してください。`,
+    head: ["ツール", "エディション", "スコープ", "用途"],
+    editions: ["Community", "Enterprise"],
+    sections: ["Communityのツール", "Enterpriseのツール"],
+    note: "これらのツールはEnterprise版でのみ使えます。",
+    params: ["パラメーター", "型", "必須", "説明"],
+    yes: "はい",
+    no: "いいえ",
+    scope: "必要なスコープ",
+    none: "このツールにパラメーターはありません。",
+  },
+}[Astro.props.locale];
+
+const { community, enterprise } = await loadInventory(productVersion);
+const groups = [community, enterprise];
+---
+
+<p>{text.count(community.length, enterprise.length)}</p>
+
+<table>
+  <thead><tr>{text.head.map((h) => <th>{h}</th>)}</tr></thead>
+  <tbody>
+    {
+      groups.flatMap((tools, i) =>
+        tools.map((t) => (
+          <tr>
+            <td><a href={`#${t.name}`}><code>{t.name}</code></a></td>
+            <td>{text.editions[i]}</td>
+            <td><code>{t.scope}</code></td>
+            <td>{t.description.split(/(?<=\.)\s/)[0]}</td>
+          </tr>
+        )),
+      )
+    }
+  </tbody>
+</table>
+
+{
+  groups.map((tools, i) => (
+    <>
+      <AnchorHeading level="2" id={i ? "enterprise-tools" : "community-tools"}>
+        {text.sections[i]}
+      </AnchorHeading>
+      {i === 1 && <p>{text.note}</p>}
+      {tools.map((t) => (
+        <>
+          <AnchorHeading level="3" id={t.name}>{t.name}</AnchorHeading>
+          <p>{t.description}</p>
+          <p>{text.scope}: <code>{t.scope}</code></p>
+          {t.params.length === 0 ? (
+            <p>{text.none}</p>
+          ) : (
+            <table>
+              <thead><tr>{text.params.map((h) => <th>{h}</th>)}</tr></thead>
+              <tbody>
+                {t.params.map((p) => (
+                  <tr>
+                    <td><code>{p.name}</code></td>
+                    <td>{p.type}</td>
+                    <td>{p.required ? text.yes : text.no}</td>
+                    <td>{p.description}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </>
+      ))}
+    </>
+  ))
+}

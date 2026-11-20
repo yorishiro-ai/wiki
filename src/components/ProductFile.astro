@@ -1,0 +1,17 @@
+---
+import { Code } from "@astrojs/starlight/components";
+import { productVersion } from "../../wiki.config.mjs";
+
+interface Props {
+  path: string;
+  lang?: string;
+}
+
+// Fetch the file from the documented release tag at build time so the page cannot drift from the product.
+const { path, lang = "yaml" } = Astro.props;
+const url = `https://raw.githubusercontent.com/yorishiro-ai/yorishiro/${productVersion}/${path}`;
+const response = await fetch(url);
+if (!response.ok) throw new Error(`Failed to fetch ${url}: HTTP ${response.status}`);
+---
+
+<Code code={(await response.text()).trimEnd()} {lang} title={path} />

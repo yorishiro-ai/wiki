@@ -1,10 +1,11 @@
 ---
 title: Configuration
 description: Change connection addresses, storage, access settings, and time zone.
-pageList: configuration
 sidebar:
   order: 1
 ---
+
+import ProductFile from "../../../components/ProductFile.astro";
 
 The installation examples work without a custom configuration. Change only what you need. If someone else operates your server, ask them to change server settings; your MCP client only needs its URL and API key.
 
@@ -18,7 +19,7 @@ The installation examples work without a custom configuration. Change only what 
 
 The production example reads the environment variables listed here. If you replace a value with a literal in YAML, that entry no longer reads its environment variable. Restart the affected services after a change, keeping database and queue settings consistent across all four.
 
-A replacement `production.yaml` must be complete: it is not merged with the packaged file. A `production.local.yaml` beside the base configuration overrides selected values. `LOCO_CONFIG_FOLDER` selects a different configuration directory. See [Packages](../installation/packages/#configuration) for file permissions and database changes.
+A replacement `production.yaml` must be complete: it is not merged with the packaged file. A `production.local.yaml` beside the base configuration overrides selected values. `LOCO_CONFIG_FOLDER` selects a different configuration directory. See [Packages](/wiki/installation/packages/#configuration) for file permissions and database changes.
 
 ## Server address
 
@@ -30,7 +31,7 @@ A replacement `production.yaml` must be complete: it is not merged with the pack
 | `YORISHIRO_MCP_ALLOWED_HOSTS` | Unset              | Add allowed MCP hostnames, comma-separated, when using a restricted listener behind another hostname |
 | `YORISHIRO_ALLOWED_ORIGINS`   | `[]`               | Allow browser clients from exact origins, as a JSON array                                            |
 
-`HOST` does not change where the server listens. The [Docker examples](../installation/docker-compose/) explicitly set `BINDING=0.0.0.0` and `HOST=http://localhost:5150`.
+`HOST` does not change where the server listens. The [Docker examples](/wiki/installation/docker-compose/) explicitly set `BINDING=0.0.0.0` and `HOST=http://localhost:5150`.
 
 For browser clients on another origin, set `YORISHIRO_ALLOWED_ORIGINS`, for example `["https://assistant.example.com"]`. This is separate from MCP hostname validation and does not replace an API key. A wildcard listener (`0.0.0.0` or `::`) accepts any MCP Host; a restricted listener accepts loopback and its bind address plus explicitly allowed hosts.
 
@@ -44,29 +45,27 @@ For browser clients on another origin, set `YORISHIRO_ALLOWED_ORIGINS`, for exam
 
 Use SQLite with a separate SQLite queue file, PostgreSQL with a PostgreSQL queue, or either database with Valkey. The SQLite database and queue must not share a file. Do not place SQLite files on another host for remote workers.
 
-PostgreSQL needs the `vector` and `pg_trgm` extensions. The [Compose example](../installation/docker-compose/#postgresql-and-valkey) includes their setup. Changing a connection URL does not move existing data; see [Export and import](../guides/import-export/).
+PostgreSQL needs the `vector` and `pg_trgm` extensions. The [Compose example](/wiki/installation/docker-compose/#postgresql-and-valkey) includes their setup. Changing a connection URL does not move existing data; see [Export and import](/wiki/guides/import-export/).
 
 ## Tenants
 
 Community and unlicensed Enterprise allow one tenant. With a valid Enterprise licence, `YORISHIRO_MAX_TENANTS` sets a higher limit; `0` means unlimited and disables first-run setup. Negative values are invalid. SQLite always allows only one tenant.
 
-## Search and sign-in limits
+## Sign-in limits
 
-| Production variable                     | Default  | Meaning                                                |
-| --------------------------------------- | -------- | ------------------------------------------------------ |
-| `YORISHIRO_SEARCH_TOKENS_PER_MINUTE`    | `100000` | Shared API/MCP search budget per workspace per minute  |
-| `YORISHIRO_AUTH_RATE_LIMIT_MAX`         | `10`     | Sign-in and sign-up requests per client IP in a window |
-| `YORISHIRO_AUTH_RATE_LIMIT_WINDOW_SECS` | `60`     | Sign-in window in seconds                              |
+| Production variable             | Default | Meaning                                                |
+| ------------------------------- | ------- | ------------------------------------------------------ |
+| `YORISHIRO_AUTH_RATE_LIMIT_MAX` | `10`    | Sign-in and sign-up requests per client IP in a window |
 
-The search budget uses an estimate based on query size, not a provider's token bill. If requests are rate-limited, reduce frequency before raising the limit. Sign-in values must be positive.
+The value must be positive. The sign-in window (`settings.rate_limit.auth_window_seconds`) and the search budget (`settings.rate_limit.search_tokens_per_minute`) are set only in the YAML configuration. The search budget uses an estimate based on query size, not a provider's token bill.
 
 ## API keys
 
-Tenant Admin/Owner can issue least-privilege keys, inspect retained history, and revoke or rotate them. Creation defaults to `read`; audit is an independent grant. See [API keys](../guides/api-keys/) for scope, expiry, one-time secrets, and rotation procedures.
+Administrators with credential permissions can issue least-privilege keys, inspect retained history, and revoke or rotate them. Creation defaults to `read`; audit is an independent grant. See [API keys](/wiki/guides/api-keys/) for scope, expiry, one-time secrets, and rotation procedures.
 
 ## Logging
 
-Production logs are JSON. Use `LOG_LEVEL=info` normally; use `debug` while diagnosing a problem, then change it back. `RUST_LOG` takes priority if set. See [Troubleshooting](../operations/queue-start-objectives/) for commands to read logs. Remove credentials before sharing logs or configuration.
+Production logs are JSON. Use `LOG_LEVEL=info` normally; use `debug` while diagnosing a problem, then change it back. `RUST_LOG` takes priority if set. See [Troubleshooting](/wiki/operations/queue-start-objectives/) for commands to read logs. Remove credentials before sharing logs or configuration.
 
 Logs go to standard output only. A configuration that sets `logger.file_appender` is rejected at startup. Timestamps follow the [time zone](#time-zone) setting.
 
@@ -82,7 +81,6 @@ These optional values go under `settings` in your YAML configuration; they have 
 
 | Setting                                              | Default | Use                                                                              |
 | ---------------------------------------------------- | ------- | -------------------------------------------------------------------------------- |
-| `settings.limits.invite_ttl_hours`                   | `72`    | Invitation lifetime when an operator creates one without specifying hours        |
 | `settings.limits.maintenance_retry_after_seconds`    | `300`   | `Retry-After` sent while maintenance is on, when the caller does not name a time |
 | `settings.http_timeouts.embedding_request_seconds`   | `30`    | One request to an external embedding service                                     |
 | `settings.http_timeouts.local_embedding_seconds`     | `30`    | One batch through the local embedding model                                      |
@@ -93,8 +91,14 @@ These optional values go under `settings` in your YAML configuration; they have 
 
 ## Email settings
 
-Yorishiro does not send email, and the shipped configurations have no SMTP `mailer:` block. `MAILER_HOST` and related variables have no effect. Invitations are covered in [Access management](../guides/access-management/).
+Yorishiro does not send email, and the shipped configurations have no SMTP `mailer:` block. `MAILER_HOST` and related variables have no effect.
 
 ## Configuration ownership
 
 For the environment variables listed on this page, check that the corresponding YAML field reads the variable. A field set to a literal value cannot be changed through that environment variable. Check and edit the configuration example used by your installation. Packages use `/etc/yorishiro/production.yaml`; a separate `yorishiro.env` is unnecessary. Remove secrets from shared configuration examples.
+
+## Production configuration file
+
+This is `config/production.yaml` from the release this wiki documents. Use it to check variable names, defaults, and scheduler tasks.
+
+<ProductFile path="config/production.yaml" />

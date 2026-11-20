@@ -35,7 +35,7 @@ Check `/_ping`, an authenticated read, and a search before resuming clients. Do 
 
 ## Update packages
 
-Stop new work, stop all four services, and take a backup. Install the new package using the [package installation commands](../../installation/packages/). Compare your configuration with the new `/etc/yorishiro/production.yaml.example`, then restart:
+Stop new work, stop all four services, and take a backup. Install the new package using the [package installation commands](/wiki/installation/packages/). Compare your configuration with the new `/etc/yorishiro/production.yaml.example`, then restart:
 
 ```sh
 sudo systemctl restart yorishiro yorishiro-worker yorishiro-jobs yorishiro-scheduler
@@ -49,8 +49,8 @@ You still need the backup and update precautions above. This protection does not
 
 ## Restore or change storage
 
-Test restoration separately before replacing your installation. A database migration may prevent an older binary from reading an upgraded database; changing the image tag back is not a recovery plan. Follow release-specific guidance and restore the matching backup when required.
+Test restoration separately before replacing your installation. Restore the matching backup rather than only changing the image tag back.
 
-For moving workspace content, use [Export and import](../../guides/import-export/). Changing `DATABASE_URL` or `QUEUE_URL` does not migrate data or pending jobs. Do not switch queues while work is pending without a tested migration procedure.
+For moving workspace content, use [Export and import](/wiki/guides/import-export/). Changing `DATABASE_URL` or `QUEUE_URL` does not migrate data or pending jobs. Do not switch queues while work is pending.
 
 Publisher-epoch cutover commands are not available in the current product; do not use them for an update.

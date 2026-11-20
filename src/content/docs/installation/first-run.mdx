@@ -5,7 +5,7 @@ sidebar:
   order: 6
 ---
 
-Install Yorishiro with [Docker Compose](../docker-compose/) or [packages](../packages/) first. Steps 1 to 3 are for the person setting up the server. If an administrator has already given you a server URL and API key, skip to [step 4](#4-connect-an-mcp-client).
+Install Yorishiro with [Docker Compose](/wiki/installation/docker-compose/) or [packages](/wiki/installation/packages/) first. Steps 1 to 3 are for the person setting up the server. If an administrator has already given you a server URL and API key, skip to [step 4](#4-connect-an-mcp-client).
 
 These examples use `http://localhost:5150`. Replace it with your server URL when connecting to another installation. Account creation uses the API, not a web setup screen.
 
@@ -33,7 +33,7 @@ curl -X POST http://localhost:5150/setup \
   -d '{"email":"you@example.com","password":"choose-a-password","display_name":"You"}'
 ```
 
-Save the returned `api_key` in your password manager. It is shown only once. The response also includes your user, tenant, and workspace IDs.
+Save the returned `api_key` in your password manager. It is shown only once. The response also includes your user, tenant, and workspace IDs. The key is tenant-scoped: for workspace operations, send `X-Workspace-Id` with the returned `workspace_id` (see step 4).
 
 If setup returns `409`, the installation already has a tenant. Ask its administrator for access. Setup is disabled when `YORISHIRO_MAX_TENANTS=0`.
 
@@ -60,11 +60,11 @@ In an MCP client that supports remote HTTP servers and custom headers, add:
 
 Use your server's address instead of `localhost` if the client runs on another machine. For a hosted instance, use the HTTPS URL supplied by its administrator. Client configuration screens differ; the `/mcp` URL and bearer header remain the same.
 
-If your administrator gave you a tenant-scoped key for several workspaces, also send `X-Workspace-Id` with the UUID of an allowed workspace on every request. See [API keys](../../guides/api-keys/#inspect-grants-and-history).
+If you use a tenant-scoped key, also configure `X-Workspace-Id` with the UUID of an allowed workspace. See [API keys](/wiki/guides/api-keys/#inspect-grants-and-history).
 
 Reconnect the client and ask it to list the available schemas. If it can call `list_schemas`, the connection works. An empty list is normal for a new workspace.
 
-Continue with [Use Yorishiro with your AI assistant](../../guides/using-yorishiro/) to save and search your first note. For errors, see [Troubleshooting](../../operations/queue-start-objectives/).
+Continue with [Use Yorishiro with your AI assistant](/wiki/guides/using-yorishiro/) to save and search your first note. For errors, see [Troubleshooting](/wiki/operations/queue-start-objectives/).
 
 ## Inspect the connected context
 
@@ -72,6 +72,6 @@ Once connected, ask your assistant:
 
 > Check which tenant and workspace I am connected to, and whether I can save notes. Do not change anything yet.
 
-Ask your assistant to use `whoami` for the connected context and `capabilities` for key permissions. Use UUIDs, not names, to tell workspaces apart. For details on workspace candidates and selection, see [API keys](../../guides/api-keys/#inspect-grants-and-history).
+Ask your assistant to use `whoami` for the connected context and `capabilities` for key permissions. Use UUIDs, not names, to tell workspaces apart. For details on workspace candidates and selection, see [API keys](/wiki/guides/api-keys/#inspect-grants-and-history).
 
-For collaboration, continue to [Access management](../../guides/access-management/). If you cannot sign in, see [Troubleshooting](../../operations/queue-start-objectives/#login-recovery).
+For collaboration, continue to [Access management](/wiki/guides/access-management/). If you cannot sign in, see [Troubleshooting](/wiki/operations/queue-start-objectives/#sign-in-problems).

@@ -5,7 +5,7 @@ sidebar:
   order: 2
 ---
 
-Search can find notes with similar meaning even when the words differ. The standard installation uses a local model, so you do not need an external API key. If someone else runs your server, ask them to choose or change the service on this page. Server operators must keep the [embedding worker](../workers-and-queues/) running.
+Search can find notes with similar meaning even when the words differ. The standard installation uses a local model, so you do not need an external API key. If someone else runs your server, ask them to choose or change the service on this page. Server operators must keep the [embedding worker](/wiki/configuration/workers-and-queues/) running.
 
 ## Choose a provider
 
@@ -23,9 +23,9 @@ For Docker Compose, add settings to the shared `x-yorishiro.environment` block. 
 
 The default model supports multiple languages, including Japanese. On first startup, the embedding worker downloads about 1 GiB into `models/multilingual-e5-base/` under its working directory. Docker uses `/app/models/`; packages use `/var/lib/yorishiro/models/`. Preserve this directory to avoid downloading again.
 
-For offline use, put both `model.safetensors` and `tokenizer.json` in that directory. The worker must be able to read them. Providing only one prevents startup. See the [Compose mounting instructions](../../installation/docker-compose/#use-a-local-embedding-model-offline).
+For offline use, put both `model.safetensors` and `tokenizer.json` in that directory. The worker must be able to read them. Providing only one prevents startup. See the [Compose mounting instructions](/wiki/installation/docker-compose/#use-a-local-embedding-model-offline).
 
-`YORISHIRO_LOCAL_MODEL` defaults to `multilingual-e5-base`, the supported local model. `YORISHIRO_LOCAL_MAX_SEQUENCE_LENGTH` defaults to `512` and accepts `16` to `512`. Leave these unchanged unless you need to limit input length.
+`YORISHIRO_LOCAL_MODEL` defaults to `multilingual-e5-base`, the supported local model. `settings.embedding.local_max_sequence_length` in the YAML configuration defaults to `512` and accepts `16` to `512`. Leave these unchanged unless you need to limit input length.
 
 ## External service
 
@@ -38,8 +38,10 @@ Use an OpenAI-compatible embeddings service, such as an appropriately configured
 | `YORISHIRO_EMBEDDING_API_KEY`               | Service credential; leave empty if not required                                   |
 | `YORISHIRO_EMBEDDING_DIMENSIONS`            | Output vector size; default `768`. Must match the model.                          |
 | `YORISHIRO_EMBEDDING_SEND_DIMENSIONS_PARAM` | Default `false`. Enable only if the service expects a `dimensions` request field. |
+| `YORISHIRO_EMBEDDING_QUERY_INSTRUCTION`     | Text placed before each search query before it is embedded; default empty.        |
+| `YORISHIRO_EMBEDDING_DOCUMENT_PREFIX`       | Text placed before each saved item before it is embedded; default empty.          |
 
-Inside Docker, `localhost` means that container, not the host or another service. Use an address reachable from the container. Enterprise can also [choose a provider per workspace](../enterprise/#per-workspace-embedding-provider).
+Inside Docker, `localhost` means that container, not the host or another service. Use an address reachable from the container. Enterprise can also [choose a provider per workspace](/wiki/configuration/enterprise/#per-workspace-embedding-provider).
 
 ### Ollama
 
@@ -133,7 +135,7 @@ Merge this into the existing configuration; do not replace the whole file or rem
 
 ## Change the embedding model
 
-Back up your data before changing the provider or model. Restart with the new settings. Yorishiro schedules reindexing when it detects a changed workspace model; keep the embedding worker and scheduler running.
+Back up your data before changing the provider, model, or document prefix. Restart with the new settings and keep the embedding worker and scheduler running. If Yorishiro detects that existing embeddings used a different model or document prefix, it schedules a reindex. Changing only `YORISHIRO_EMBEDDING_QUERY_INSTRUCTION` does not require rebuilding saved embeddings.
 
 To request a full reindex yourself:
 
@@ -149,7 +151,7 @@ Search in the workspace returns `503` during reindexing and becomes available af
 
 New or updated items can take time to appear in similarity results. You can still retrieve an item by ID. Search returns `503` if the worker or provider cannot produce the query embedding in time; it does not silently become text-only search.
 
-The production variable `YORISHIRO_QUERY_EMBEDDING_TIMEOUT_MS` defaults to `15000` and supports up to `120000`. Check worker logs and provider connectivity before increasing it. See [Troubleshooting](../../operations/queue-start-objectives/).
+The production variable `YORISHIRO_QUERY_EMBEDDING_TIMEOUT_MS` defaults to `15000` and supports up to `120000`. Check worker logs and provider connectivity before increasing it. See [Troubleshooting](/wiki/operations/queue-start-objectives/).
 
 ## Search speed on PostgreSQL
 
@@ -157,7 +159,7 @@ Embedding widths from 1 to 4,096 dimensions are supported. Searching stays corre
 
 - Below 2,000 embedded items, a workspace is searched exactly. SQLite always searches this way and never builds an index.
 - On PostgreSQL, a workspace that reaches 2,000 embedded items gets its own search index. It keeps the index if the count later falls below 2,000.
-- The task that builds indexes runs only while the [scheduler](../workers-and-queues/#scheduled-index-maintenance) is running. Without it, search still works but scans exactly.
+- The task that builds indexes runs only while the [scheduler](/wiki/configuration/workers-and-queues/#scheduled-index-maintenance) is running. Without it, search still works but scans exactly.
 - The index selects at most 1,000 candidates per search. The final order is calculated from the stored full-precision vectors for those candidates, so ranking among them is exact.
 - Nothing needs to be configured for this. There is no separate search graph or table to tune or clean up.
 

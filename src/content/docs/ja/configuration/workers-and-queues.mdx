@@ -7,7 +7,7 @@ sidebar:
 
 保存したメモが検索に出るまでの処理やインポートは、サーバー上のワーカーが担当します。通常の利用では自分で起動する必要はありません。処理が進まない場合は運用者に確認してください。以下は自分でサーバーを運用する方向けの手順です。
 
-[Composeの例](../../installation/docker-compose/)や[パッケージ](../../installation/packages/)を使う場合は、4つのサービスを起動してください。個人利用では専用のワーカープールは不要です。
+[Composeの例](/wiki/ja/installation/docker-compose/)や[パッケージ](/wiki/ja/installation/packages/)を使う場合は、4つのサービスを起動してください。個人利用では専用のワーカープールは不要です。
 
 ## プロセス
 
@@ -24,7 +24,7 @@ sidebar:
 
 ## 索引の定期メンテナンス
 
-スケジューラーは`embedding_index_maintenance`タスクを実行し、PostgreSQLでワークスペースごとの検索用索引を作成・削除します。SQLiteでは何もしません。詳しくは[PostgreSQLでの検索の速さ](../embedding/#postgresqlでの検索の速さ)を参照してください。
+スケジューラーは`embedding_index_maintenance`タスクを実行し、PostgreSQLでワークスペースごとの検索用索引を作成・削除します。SQLiteでは何もしません。詳しくは[PostgreSQLでの検索の速さ](/wiki/ja/configuration/embedding/#postgresqlでの検索の速さ)を参照してください。
 
 `recover_worker_dispatches`は索引のメンテナンスを実行しません。このタスクを名前で指定したスケジュールには、`embedding_index_maintenance`のジョブが別に必要です。
 
@@ -44,7 +44,7 @@ IDには小文字とハイフンで表したテナントのUUIDを使います�
 
 1. サーバーと同じ設定で、対応する埋め込みワーカーとアプリケーションジョブを起動します。
 2. サーバーの`settings.worker_targets`に埋め込みの対象を追加し、`worker-target:shared`も残します。productionの`YORISHIRO_WORKER_TARGETS`には`["worker-target:shared","worker-target:official"]`のようなJSON配列を指定できます。
-3. 対象を宣言した設定でサーバーを再起動し、`PUT /api/workspace/worker-class`でワークスペースに割り当てます。[Enterprise設定](../enterprise/#ワークスペースごとのワーカークラス)を参照してください。
+3. 対象を宣言した設定でサーバーを再起動し、`PUT /api/workspace/worker-class`でワークスペースに割り当てます。[Enterprise設定](/wiki/ja/configuration/enterprise/#ワークスペースごとのワーカークラス)を参照してください。
 
 この宣言では稼働状態を確認しません。プロセスの監視は別途必要です。割り当てを削除、変更する場合は、新しい処理の受付を止め、古いワーカーの処理が完了してから置き換えてください。
 
@@ -52,7 +52,7 @@ IDには小文字とハイフンで表したテナントのUUIDを使います�
 
 ## ワーカーの設定
 
-変更する前に[トラブルシューティング](../../operations/queue-start-objectives/)を確認してください。モデルやデータベースに接続できない問題は、ワーカーの数を増やしても解決しません。
+変更する前に[トラブルシューティング](/wiki/ja/operations/queue-start-objectives/)を確認してください。モデルやデータベースに接続できない問題は、ワーカーの数を増やしても解決しません。
 
 | productionの環境変数                 | 既定値                           | 用途                                               |
 | ------------------------------------ | -------------------------------- | -------------------------------------------------- |
@@ -60,4 +60,6 @@ IDには小文字とハイフンで表したテナントのUUIDを使います�
 | `YORISHIRO_QUEUE_REAPER_AGE_MINUTES` | `30`                             | 処理中のまま残ったキューの仕事を回収するまでの分数 |
 | `DB_MAX_CONNECTIONS`                 | SQLiteは`10`、PostgreSQLは`100`  | 設定したデータベースプールごとの最大接続数         |
 
-SQLiteは同時に1つしか書き込めません。同時書き込みが問題になる場合は、ワーカーを増やすよりPostgreSQLを選んでください。Enterpriseでは[同時実行数の制限](../enterprise/#プランポリシーとジョブの制限)も設定できます。
+SQLiteとPostgreSQLのキューでは、終了した仕事を、完了・取り消しは7日後、失敗は30日後に削除します。確認は1時間ごとで、待機中と処理中の仕事は削除されません。この期間はYAML設定の`queue.retention`で変更できます。
+
+SQLiteは同時に1つしか書き込めません。同時書き込みが問題になる場合は、ワーカーを増やすよりPostgreSQLを選んでください。Enterpriseでは[同時実行数の制限](/wiki/ja/configuration/enterprise/#プランポリシーとジョブの制限)も設定できます。

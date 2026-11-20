@@ -5,11 +5,11 @@ sidebar:
   order: 3
 ---
 
-Before stopping use, [export the information you need](../../guides/import-export/) and arrange a [backup](../queue-publisher-cutover/) with the server operator. Disabling a tenant does not erase its data. Ask the operator separately if you need permanent deletion.
+Before stopping use, [export the information you need](/wiki/guides/import-export/) and arrange a [backup](/wiki/operations/queue-publisher-cutover/) with the server operator. Disabling a tenant does not erase its data. Ask the operator separately if you need permanent deletion.
 
 ## Inspect before disabling
 
-As the tenant Owner, ask your connected assistant:
+As the tenant root user, or a user allowed to read and update the tenant with a tenant-scoped key, ask your connected assistant:
 
 > I want to stop using this tenant. Check retained data, unfinished work, and effects on schema copies in other workspaces. Do not disable anything yet.
 
@@ -17,7 +17,7 @@ Use `tenant_retirement_inventory` to review retained records, unfinished work, s
 
 ## Disable and retain data
 
-Only an Owner can disable a tenant; a tenant Admin cannot. Check the name and UUID with `whoami`, save what you need, then request `disable_tenant`. Supply the target tenant UUID as `confirmed_tenant_id`. With the API, send the same value to `POST /api/tenants/current/disable`.
+Disabling needs tenant update permission and a tenant-scoped key. Check the name and UUID with `whoami`, save what you need, then request `disable_tenant`. Supply the target tenant UUID as `confirmed_tenant_id`. With the API, send the same value to `POST /api/tenants/current/disable`.
 
 Disablement revokes every tenant key, including the one used for the request, so clients lose access. Pending work is cancelled, but data and occupied capacity remain. This is not a way to free space under a plan quota or manual cap.
 
@@ -37,12 +37,12 @@ The operator selects the intended installation's configuration and uses the oper
 
 Actual cleanup releases the occupied tenant capacity. It removes API-key history too, but preserves shared user accounts and secret-free retirement records.
 
-## Separate user identity cleanup
+## Delete an account
 
-Leaving a tenant and deleting an account are different. Removing membership revokes the person's attributed tenant keys, but leaves the shared account. Tenant administrators cannot delete someone's identity in other tenants.
+Leaving a tenant and deleting an account are different. Removing membership revokes the person's attributed tenant keys; a tenant user's account is deleted with its membership. Tenant administrators cannot delete the root user's account, which may belong to other tenants.
 
-Ask the server operator to delete the account itself. The operator checks the target with `list_users`, verifies that it has no tenant memberships, then uses `delete_user`. The same UUID is required in `user_id` and `confirmed_user_id`. Remaining attributed keys are revoked before attribution is cleared and the account is deleted.
+Ask the server operator to delete a root account. The operator checks the target with `list_users`, then uses `delete_user` with the same UUID in `user_id` and `confirmed_user_id`. Deleting the root account of an active tenant schedules that tenant for deletion after seven days, and the scheduler's `delete_due_tenants` task then deletes it. If the tenant is already disabled, it is deleted immediately. Root accounts that belong to no other tenant are retained when their tenant is deleted.
 
 ## Check limits
 
-Retained usage after disablement, plan quotas, and manual caps are separate. If you only need to change a limit, see [Enterprise configuration](../../configuration/enterprise/#plan-policy-and-job-limits) rather than retiring the tenant.
+Retained usage after disablement, plan quotas, and manual caps are separate. If you only need to change a limit, see [Enterprise configuration](/wiki/configuration/enterprise/#plan-policy-and-job-limits) rather than retiring the tenant.

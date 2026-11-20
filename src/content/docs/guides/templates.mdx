@@ -5,7 +5,7 @@ sidebar:
   order: 2
 ---
 
-Choose a template that matches what you want to save. Ask your assistant to list the built-in templates with `list_templates`, then create a schema with `create_schema` and its `template_id`. Creating the schema needs `schema` access. See [Use Yorishiro with your AI assistant](../using-yorishiro/) for a first example.
+Choose a template that matches what you want to save. Ask your assistant to list the built-in templates with `list_templates`, then create a schema with `create_schema` and its `template_id`. Creating the schema needs `schema` access. See [Use Yorishiro with your AI assistant](/wiki/guides/using-yorishiro/) for a first example.
 
 | Template                  | For                                                                                                            | Entity types                                                                |
 | ------------------------- | -------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
@@ -46,8 +46,8 @@ The workspace's `schema_id` remains bound to its first activated schema version;
 
 ## Tenant template library
 
-Use your tenant's template library to reuse a format across your organization. Ask a tenant Admin/Owner to create, edit, delete, or copy a shared definition. Each tool's scope requirement also applies.
+Use your tenant's template library to reuse a format across your organization. Ask a tenant administrator with template-library permissions to create, edit, delete, or copy a shared definition. Each tool's scope requirement also applies.
 
 The tools are `create_template_library_item`, `update_template_library_item`, `delete_template_library_item`, and `fork_template_library_item`. Editing or deleting a library definition leaves existing workspace copies and their versions separate.
 
-This library shares information formats; it is not a physical PostgreSQL schema. For copying a schema from another workspace and following its changes in Enterprise, see [Enterprise configuration](../../configuration/enterprise/#template-updates-and-schema-forks). Marketplace publishing is a separate operation too.
+This library shares information formats; it is not a physical PostgreSQL schema. For copying a schema from another workspace and following its changes in Enterprise, see [Enterprise configuration](/wiki/configuration/enterprise/#template-updates-and-schema-forks). Marketplace publishing is a separate operation too.

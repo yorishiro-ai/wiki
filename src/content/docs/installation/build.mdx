@@ -5,16 +5,16 @@ sidebar:
   order: 5
 ---
 
-This page is for people who need to build their own executable instead of using a release. If you already have a URL and API key, skip the build and [connect your assistant](../first-run/#4-connect-an-mcp-client).
+This page is for people who need to build their own executable instead of using a release. If you already have a URL and API key, skip the build and [connect your assistant](/wiki/installation/first-run/#4-connect-an-mcp-client).
 
-Use a [package](../packages/) or [Docker Compose](../docker-compose/) unless you need a custom build. Source builds require Rust through [rustup](https://rustup.rs/), Python 3, a C/C++ toolchain, and the platform dependencies described in the [contributing guide](https://github.com/yorishiro-ai/yorishiro/blob/develop/CONTRIBUTING.md). Linux builds use `mold` and `sccache`.
+Use a [package](/wiki/installation/packages/) or [Docker Compose](/wiki/installation/docker-compose/) unless you need a custom build. Source builds require Rust through [rustup](https://rustup.rs/), Python 3, a C/C++ toolchain, and the platform dependencies described in the [contributing guide](https://github.com/yorishiro-ai/yorishiro/blob/develop/CONTRIBUTING.md). Linux builds use `mold` and `sccache`.
 
 ## Build
 
 ```sh
 git clone https://github.com/yorishiro-ai/yorishiro
 cd yorishiro
-git switch develop
+git switch --detach 20261120-1
 python3 patches/loco-rs/verify.py --prepare
 cargo build --locked --release --bin yorishiro --no-default-features --features community
 ```
@@ -32,6 +32,6 @@ target/release/yorishiro start --worker=job-target:shared
 target/release/yorishiro scheduler
 ```
 
-Source runs use `config/development.yaml` by default. To use production settings, set `LOCO_ENV=production` consistently for all four commands and configure writable data paths. See [Configuration](../../configuration/).
+Source runs use `config/development.yaml` by default. To use production settings, set `LOCO_ENV=production` consistently for all four commands and configure writable data paths. See [Configuration](/wiki/configuration/).
 
-Continue with [First run](../first-run/) at `http://localhost:5150`. The embedding worker downloads its model on first start. Do not run all four commands sequentially in one terminal: the first keeps running.
+Continue with [First run](/wiki/installation/first-run/) at `http://localhost:5150`. The embedding worker downloads its model on first start. Do not run all four commands sequentially in one terminal: the first keeps running.

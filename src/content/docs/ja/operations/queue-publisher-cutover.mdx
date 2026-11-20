@@ -35,7 +35,7 @@ docker compose logs --tail 100 app worker jobs scheduler
 
 ## パッケージを更新する
 
-新しい処理を止め、4つのサービスを停止してバックアップを取ります。[パッケージの導入コマンド](../../installation/packages/)で新しいパッケージをインストールしてください。設定を新しい`/etc/yorishiro/production.yaml.example`と比較してから再起動します。
+新しい処理を止め、4つのサービスを停止してバックアップを取ります。[パッケージの導入コマンド](/wiki/ja/installation/packages/)で新しいパッケージをインストールしてください。設定を新しい`/etc/yorishiro/production.yaml.example`と比較してから再起動します。
 
 ```sh
 sudo systemctl restart yorishiro yorishiro-worker yorishiro-jobs yorishiro-scheduler
@@ -49,8 +49,8 @@ sudo systemctl restart yorishiro yorishiro-worker yorishiro-jobs yorishiro-sched
 
 ## 復元や保存先の変更
 
-環境を置き換える前に、別の環境で復元を試してください。データベースの移行後は、古いバイナリで読めない場合があります。イメージタグを戻すだけで復旧できるとは限りません。リリースごとの手順に従い、必要なら対応するバックアップを復元します。
+環境を置き換える前に、別の環境で復元を試してください。イメージタグを戻すだけでなく、対応するバックアップを復元してください。
 
-ワークスペースの情報を移す場合は[エクスポートとインポート](../../guides/import-export/)を使います。`DATABASE_URL`や`QUEUE_URL`を変更しても、データや待機中のジョブは移りません。検証済みの移行手順がないまま、処理が残るキューを切り替えないでください。
+ワークスペースの情報を移す場合は[エクスポートとインポート](/wiki/ja/guides/import-export/)を使います。`DATABASE_URL`や`QUEUE_URL`を変更しても、データや待機中のジョブは移りません。処理が残るキューを切り替えないでください。
 
 発行エポックの切替タスクは現在の製品にはありません。更新に使わないでください。

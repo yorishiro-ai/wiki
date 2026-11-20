@@ -11,7 +11,7 @@ Enterprise adds sign-in through an identity provider and a choice of AI services
 
 In the production configuration, set `YORISHIRO_LICENSE_KEY`, or edit `initializers.licence_key` in the configuration file. Without a valid, unexpired licence, Enterprise allows only one tenant. SQLite remains limited to one tenant even with a licence.
 
-For packages, keep secrets in the protected `production.yaml`; you do not need an extra environment file. See [Packages](../../installation/packages/#configuration).
+For packages, keep secrets in the protected `production.yaml`; you do not need an extra environment file. See [Packages](/wiki/installation/packages/#configuration).
 
 ## OAuth2 and OIDC sign-in
 
@@ -26,19 +26,19 @@ Register Yorishiro with your identity provider and configure:
 
 Set an explicit public redirect URI ending in `/auth/oauth/callback`, and register exactly that URI with the provider. Use HTTPS except for local loopback testing. The default redirect is only for local testing and follows the configured listener; `HOST` does not configure it. MCP clients still use API keys.
 
-Sign in through the browser authorization flow, not MCP tools. If you have several workspaces, check their UUIDs as well as their names. Invitation acceptance uses your persisted identity; changing an unverified email alone does not allow acceptance. For sign-in problems, see [Login recovery](../../operations/queue-start-objectives/#login-recovery).
+Sign in through the browser authorization flow, not MCP tools. If you have several workspaces, check their UUIDs as well as their names. For sign-in problems, see [Sign-in problems](/wiki/operations/queue-start-objectives/#sign-in-problems).
 
 ## Per-workspace embedding provider
 
 Use `PUT /api/workspace/embedding-key` to give a workspace its own service. Supply `base_url`, `model`, `api_key`, and the model's `dimensions`; use `send_dimensions_param` only if the provider expects it. Reading the settings does not return the API key.
 
-Changing the model requires rebuilding search data. Follow [Embedding](../embedding/#change-the-embedding-model) and keep the embedding worker running.
+Changing the model requires rebuilding search data. Follow [Embedding](/wiki/configuration/embedding/#change-the-embedding-model) and keep the embedding worker running.
 
 ## Worker class per workspace
 
 `PUT /api/workspace/worker-class` selects `shared`, `official`, or `tenant_private` with the `worker_class` field. Leave it at `shared` unless you have provisioned dedicated workers.
 
-Before choosing another class, start both kinds of worker for its target and declare the embedding route on the server. See [Worker targets](../workers-and-queues/#worker-targets). Declaring a target does not start or monitor workers.
+Before choosing another class, start both kinds of worker for its target and declare the embedding route on the server. See [Worker targets](/wiki/configuration/workers-and-queues/#worker-targets). Declaring a target does not start or monitor workers.
 
 ## Asynchronous infer-fill
 
@@ -52,11 +52,11 @@ Infer-fill proposes missing field values with an LLM. It does not apply suggesti
 
 Confirmation is also asynchronous: it returns a new `job_id`. Poll `GET /api/inference-jobs/confirmations/{job_id}` before treating changes as applied. Keep `job-target:shared` running for inference and confirmation. Listing needs `read` access; reviewing actions and confirmation status need `schema` access.
 
-Review failures and stale proposals rather than assuming every suggestion was applied. Do not resubmit a job merely because it is still queued; check [Troubleshooting](../../operations/queue-start-objectives/).
+Review failures and stale proposals rather than assuming every suggestion was applied. Do not resubmit a job merely because it is still queued; check [Troubleshooting](/wiki/operations/queue-start-objectives/).
 
 ## Template updates and schema forks
 
-For a schema linked to a template, ask your assistant to use `list_upstream_changes`, then `merge_preview`. Review the preview before `merge_apply`, especially if you changed local fields. Conflicts leave the update pending. See [Built-in templates](../../guides/templates/).
+For a schema linked to a template, ask your assistant to use `list_upstream_changes`, then `merge_preview`. Review the preview before `merge_apply`, especially if you changed local fields. Conflicts leave the update pending. See [Built-in templates](/wiki/guides/templates/).
 
 `POST /api/schema-forks` copies an active schema from another workspace in the same tenant. The copy has its own history. Following its source again through `PUT /api/schema-forks/{fork_id}` can discard local changes and requires `force=true` when it would do so; review those changes first.
 
@@ -66,7 +66,7 @@ Leave `YORISHIRO_PLAN_POLICY_ENABLED=false` unless you operate plan-based hostin
 
 Plan-based limits require EE, a currently valid authenticated licence, and `YORISHIRO_PLAN_POLICY_ENABLED=true`. The plan is chosen from a recognized active server licence plan, then tenant billing, then Free. If a manual cap also exists, the stricter of that cap and the plan quota applies. Stripe does not overwrite manual caps. Disabling plan limits does not bypass authentication or explicit operational caps.
 
-`get_tenant_overview` reports billing metadata, usage, stored manual caps, and separate `active_plan` / `effective_max_workspaces`. Workspace details separately report `effective_max_entities`. Overview requires tenant Admin/Owner and does not change billing.
+`get_tenant_overview` reports billing metadata, usage, stored manual caps, and separate `active_plan` / `effective_max_workspaces`. Workspace details separately report `effective_max_entities`. Overview needs tenant read and user-list permissions with a tenant-scoped key and does not change billing.
 
 | Production variable                           | Default | Limit                                                 |
 | --------------------------------------------- | ------- | ----------------------------------------------------- |
@@ -96,4 +96,4 @@ Registered provider secrets cannot be retrieved. Resetting a worker assignment r
 
 Fork updates check the expected latest state, history, and cycles. Following the source while discarding local edits requires `force`, so review the differences first. Deleting a fork leaves its source intact and is guarded when entities reference it.
 
-Choosing a provider does not run inference or remove its licence requirement. Use the separate procedures for Marketplace publishing, inference jobs, OAuth/Stripe, and server maintenance; these are not management MCP actions. Content export is available through REST and MCP; see [Export and import](../../guides/import-export/). See also [Management boundaries](../../guides/access-management/#management-boundaries).
+Choosing a provider does not run inference or remove its licence requirement. Use the separate procedures for Marketplace publishing, inference jobs, OAuth/Stripe, and server maintenance; these are not management MCP actions. Content export is available through REST and MCP; see [Export and import](/wiki/guides/import-export/). See also [Management boundaries](/wiki/guides/access-management/#management-boundaries).

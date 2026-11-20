@@ -5,9 +5,11 @@ sidebar:
   order: 4
 ---
 
-自分のLinuxサーバーにYorishiroを導入するための手順です。管理者からURLとAPIキーを受け取っている場合は、インストールせず[AIアシスタントを接続](../first-run/#4-mcpクライアントを接続する)してください。
+import ProductFile from "../../../../components/ProductFile.astro";
 
-Ubuntu 24.04かAlmaLinux 10で使えます。glibc 2.39以降が必要です。`amd64`と`arm64`向けがあり、Community（`yorishiro-ce`）とEnterprise（`yorishiro-ee`）から選びます。同時にインストールできるのは片方だけです。
+自分のLinuxサーバーにYorishiroを導入するための手順です。管理者からURLとAPIキーを受け取っている場合は、インストールせず[AIアシスタントを接続](/wiki/ja/installation/first-run/#4-mcpクライアントを接続する)してください。
+
+Ubuntu 26.04かAlmaLinux 10で使えます。glibc 2.39以降が必要です。`amd64`と`arm64`向けがあり、Community（`yorishiro-ce`）とEnterprise（`yorishiro-ee`）から選びます。同時にインストールできるのは片方だけです。
 
 ## インストールする
 
@@ -34,7 +36,7 @@ sudo systemctl enable --now yorishiro yorishiro-worker yorishiro-jobs yorishiro-
 sudo systemctl status yorishiro yorishiro-worker yorishiro-jobs yorishiro-scheduler
 ```
 
-`http://localhost:5150`で[初回起動](../first-run/)に進みます。埋め込みワーカーの初回起動は`sudo journalctl -u yorishiro-worker -f`で確認できます。
+`http://localhost:5150`で[初回起動](/wiki/ja/installation/first-run/)に進みます。埋め込みワーカーの初回起動は`sudo journalctl -u yorishiro-worker -f`で確認できます。
 
 ## インストール先
 
@@ -46,6 +48,18 @@ sudo systemctl status yorishiro yorishiro-worker yorishiro-jobs yorishiro-schedu
 | `/var/lib/yorishiro`                     | SQLiteのデータとキューのファイル、`models/`ディレクトリ |
 
 Enterpriseには`/etc/yorishiro/LICENSE.enterprise`も含まれます。
+
+## systemdユニット
+
+パッケージが登録するユニットです。このwikiが対象とするリリースのファイルを表示しています。
+
+<ProductFile path=".github/packaging/yorishiro.service" lang="ini" />
+
+<ProductFile path=".github/packaging/yorishiro-worker.service" lang="ini" />
+
+<ProductFile path=".github/packaging/yorishiro-jobs.service" lang="ini" />
+
+<ProductFile path=".github/packaging/yorishiro-scheduler.service" lang="ini" />
 
 ## 設定
 
@@ -64,7 +78,7 @@ sudoedit /etc/yorishiro/production.yaml
 
 PostgreSQLでは`database.uri`に接続URIを指定します。キューの条件分岐全体は1つの`queue:`ブロックに置き換えます。選んだプロバイダーの項目を残し、`kind: Postgres`と`uri`を指定して、ほかの分岐とテンプレートの条件行を削除してください。Valkeyでは代わりに`kind: Redis`と`redis://`または`rediss://`のURIを使います。`database.uri`だけを編集しても、例のキュー選択は変わりません。
 
-別のマシンから接続する場合は、`server.binding`を`localhost`から`0.0.0.0`に変更し、`server.host`に利用者が接続するURLを指定します。[設定](../../configuration/)を参照してください。
+別のマシンから接続する場合は、`server.binding`を`localhost`から`0.0.0.0`に変更し、`server.host`に利用者が接続するURLを指定します。[設定](/wiki/ja/configuration/)を参照してください。
 
 編集後に再起動します。
 
@@ -72,4 +86,4 @@ PostgreSQLでは`database.uri`に接続URIを指定します。キューの条�
 sudo systemctl restart yorishiro yorishiro-worker yorishiro-jobs yorishiro-scheduler
 ```
 
-サービスが書き込めるのは`/var/lib/yorishiro`だけです。書き込みが必要なSQLiteやモデルのファイルはここに置いてください。起動に繰り返し失敗する場合は[トラブルシューティング](../../operations/queue-start-objectives/)を参照してください。
+サービスが書き込めるのは`/var/lib/yorishiro`だけです。書き込みが必要なSQLiteやモデルのファイルはここに置いてください。起動に繰り返し失敗する場合は[トラブルシューティング](/wiki/ja/operations/queue-start-objectives/)を参照してください。
