@@ -25,7 +25,7 @@ The default model supports multiple languages, including Japanese. On first star
 
 For offline use, put both `model.safetensors` and `tokenizer.json` in that directory. The worker must be able to read them. Providing only one prevents startup. See the [Compose mounting instructions](../../installation/docker-compose/#use-a-local-embedding-model-offline).
 
-`YORISHIRO_LOCAL_MODEL` defaults to `multilingual-e5-base`, the supported local model. `YORISHIRO_LOCAL_MAX_SEQUENCE_LENGTH` defaults to `512` and accepts `16` to `512`. Leave these unchanged unless you need to limit input length.
+`YORISHIRO_LOCAL_MODEL` defaults to `multilingual-e5-base`, the supported local model. `settings.embedding.local_max_sequence_length` in the YAML configuration defaults to `512` and accepts `16` to `512`. Leave these unchanged unless you need to limit input length.
 
 ## External service
 
@@ -38,6 +38,8 @@ Use an OpenAI-compatible embeddings service, such as an appropriately configured
 | `YORISHIRO_EMBEDDING_API_KEY`               | Service credential; leave empty if not required                                   |
 | `YORISHIRO_EMBEDDING_DIMENSIONS`            | Output vector size; default `768`. Must match the model.                          |
 | `YORISHIRO_EMBEDDING_SEND_DIMENSIONS_PARAM` | Default `false`. Enable only if the service expects a `dimensions` request field. |
+| `YORISHIRO_EMBEDDING_QUERY_INSTRUCTION`     | Text placed before each search query before it is embedded; default empty.        |
+| `YORISHIRO_EMBEDDING_DOCUMENT_PREFIX`       | Text placed before each saved item before it is embedded; default empty.          |
 
 Inside Docker, `localhost` means that container, not the host or another service. Use an address reachable from the container. Enterprise can also [choose a provider per workspace](../enterprise/#per-workspace-embedding-provider).
 

@@ -49,19 +49,17 @@ PostgreSQLには`vector`と`pg_trgm`拡張が必要です。[Composeの例](../i
 
 CommunityとライセンスのないEnterpriseは1テナントです。有効なEnterpriseライセンスがあれば、`YORISHIRO_MAX_TENANTS`で上限を増やせます。`0`は無制限で、初回セットアップが無効になります。負の値は使えません。SQLiteは常に1テナントだけです。
 
-## 検索とログインの制限
+## ログインの制限
 
-| productionの環境変数                    | 既定値   | 意味                                               |
-| --------------------------------------- | -------- | -------------------------------------------------- |
-| `YORISHIRO_SEARCH_TOKENS_PER_MINUTE`    | `100000` | ワークスペースごとの1分間の検索量。APIとMCPで共有  |
-| `YORISHIRO_AUTH_RATE_LIMIT_MAX`         | `10`     | クライアントIPごとの時間枠内のログインと登録の回数 |
-| `YORISHIRO_AUTH_RATE_LIMIT_WINDOW_SECS` | `60`     | ログインの時間枠の秒数                             |
+| productionの環境変数            | 既定値 | 意味                                               |
+| ------------------------------- | ------ | -------------------------------------------------- |
+| `YORISHIRO_AUTH_RATE_LIMIT_MAX` | `10`   | クライアントIPごとの時間枠内のログインと登録の回数 |
 
-検索量は検索文の大きさに基づく概算で、プロバイダーの請求トークン数ではありません。制限に達する場合は、上限を増やす前にリクエストの頻度を下げてください。ログインの値には正の数を指定します。
+値には正の数を指定します。ログインの時間枠（`settings.rate_limit.auth_window_seconds`）と検索量（`settings.rate_limit.search_tokens_per_minute`）はYAML設定でだけ変更できます。検索量は検索文の大きさに基づく概算で、プロバイダーの請求トークン数ではありません。
 
 ## APIキー
 
-テナントのAdmin/Ownerは必要最小限のキーを発行し、履歴の確認、失効、ローテーションを行えます。発行時の既定値は`read`で、auditは独立した権限です。スコープ、期限、一度だけ返される秘密値、ローテーションの手順は[APIキー](../guides/api-keys/)を参照してください。
+認証情報の権限を持つ管理者は必要最小限のキーを発行し、履歴の確認、失効、ローテーションを行えます。発行時の既定値は`read`で、auditは独立した権限です。スコープ、期限、一度だけ返される秘密値、ローテーションの手順は[APIキー](../guides/api-keys/)を参照してください。
 
 ## ログ
 
@@ -81,7 +79,6 @@ productionの環境変数に`YORISHIRO_TIMEZONE=Asia/Tokyo`を設定するか、
 
 | 設定                                                 | 既定値 | 用途                                                                |
 | ---------------------------------------------------- | ------ | ------------------------------------------------------------------- |
-| `settings.limits.invite_ttl_hours`                   | `72`   | operatorが時間を指定せずに招待を作成したときの招待の有効時間        |
 | `settings.limits.maintenance_retry_after_seconds`    | `300`  | メンテナンス中に、呼び出し側が時間を指定しなければ返す`Retry-After` |
 | `settings.http_timeouts.embedding_request_seconds`   | `30`   | 外部の埋め込みサービスへの1回のリクエスト                           |
 | `settings.http_timeouts.local_embedding_seconds`     | `30`   | ローカルの埋め込みモデルによる1バッチの処理                         |
@@ -92,7 +89,7 @@ productionの環境変数に`YORISHIRO_TIMEZONE=Asia/Tokyo`を設定するか、
 
 ## メールの設定
 
-Yorishiroはメールを送信しません。同梱の設定にSMTPの`mailer:`ブロックはありません。`MAILER_HOST`などの変数は何の効果もありません。招待については[アクセス管理](../guides/access-management/)を参照してください。
+Yorishiroはメールを送信しません。同梱の設定にSMTPの`mailer:`ブロックはありません。`MAILER_HOST`などの変数は何の効果もありません。
 
 ## 設定の管理先
 

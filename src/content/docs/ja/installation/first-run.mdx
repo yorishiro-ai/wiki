@@ -33,7 +33,7 @@ curl -X POST http://localhost:5150/setup \
   -d '{"email":"you@example.com","password":"choose-a-password","display_name":"You"}'
 ```
 
-返された`api_key`をパスワードマネージャーなどに保存してください。表示されるのはこのときだけです。レスポンスにはユーザー、テナント、ワークスペースのIDも含まれます。
+返された`api_key`をパスワードマネージャーなどに保存してください。表示されるのはこのときだけです。レスポンスにはユーザー、テナント、ワークスペースのIDも含まれます。このキーはテナントに紐付くため、ワークスペースの操作には返された`workspace_id`を`X-Workspace-Id`に指定します（手順4を参照）。
 
 `409`が返る場合は、すでにテナントがあります。管理者にアクセスを依頼してください。`YORISHIRO_MAX_TENANTS=0`の場合はセットアップを利用できません。
 
@@ -74,4 +74,4 @@ curl http://localhost:5150/api/api-keys \
 
 アシスタントに`whoami`で接続先、`capabilities`でキーの権限情報を確認するよう依頼してください。名前ではなくUUIDでワークスペースを区別してください。詳しくは[APIキー](../../guides/api-keys/#権限と履歴を確認する)を参照してください。
 
-共同利用を始めるときは[アクセス管理](../../guides/access-management/)、ログインできないときは[トラブルシューティング](../../operations/queue-start-objectives/#ログインの復旧)へ進んでください。
+共同利用を始めるときは[アクセス管理](../../guides/access-management/)、ログインできないときは[トラブルシューティング](../../operations/queue-start-objectives/#サインインできない)へ進んでください。

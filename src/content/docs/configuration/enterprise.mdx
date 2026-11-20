@@ -26,7 +26,7 @@ Register Yorishiro with your identity provider and configure:
 
 Set an explicit public redirect URI ending in `/auth/oauth/callback`, and register exactly that URI with the provider. Use HTTPS except for local loopback testing. The default redirect is only for local testing and follows the configured listener; `HOST` does not configure it. MCP clients still use API keys.
 
-Sign in through the browser authorization flow, not MCP tools. If you have several workspaces, check their UUIDs as well as their names. Invitation acceptance uses your persisted identity; changing an unverified email alone does not allow acceptance. For sign-in problems, see [Login recovery](../../operations/queue-start-objectives/#login-recovery).
+Sign in through the browser authorization flow, not MCP tools. If you have several workspaces, check their UUIDs as well as their names. For sign-in problems, see [Sign-in problems](../../operations/queue-start-objectives/#sign-in-problems).
 
 ## Per-workspace embedding provider
 
@@ -66,7 +66,7 @@ Leave `YORISHIRO_PLAN_POLICY_ENABLED=false` unless you operate plan-based hostin
 
 Plan-based limits require EE, a currently valid authenticated licence, and `YORISHIRO_PLAN_POLICY_ENABLED=true`. The plan is chosen from a recognized active server licence plan, then tenant billing, then Free. If a manual cap also exists, the stricter of that cap and the plan quota applies. Stripe does not overwrite manual caps. Disabling plan limits does not bypass authentication or explicit operational caps.
 
-`get_tenant_overview` reports billing metadata, usage, stored manual caps, and separate `active_plan` / `effective_max_workspaces`. Workspace details separately report `effective_max_entities`. Overview requires tenant Admin/Owner and does not change billing.
+`get_tenant_overview` reports billing metadata, usage, stored manual caps, and separate `active_plan` / `effective_max_workspaces`. Workspace details separately report `effective_max_entities`. Overview needs tenant read and user-list permissions with a tenant-scoped key and does not change billing.
 
 | Production variable                           | Default | Limit                                                 |
 | --------------------------------------------- | ------- | ----------------------------------------------------- |

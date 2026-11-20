@@ -33,7 +33,7 @@ curl -X POST http://localhost:5150/setup \
   -d '{"email":"you@example.com","password":"choose-a-password","display_name":"You"}'
 ```
 
-Save the returned `api_key` in your password manager. It is shown only once. The response also includes your user, tenant, and workspace IDs.
+Save the returned `api_key` in your password manager. It is shown only once. The response also includes your user, tenant, and workspace IDs. The key is tenant-scoped: for workspace operations, send `X-Workspace-Id` with the returned `workspace_id` (see step 4).
 
 If setup returns `409`, the installation already has a tenant. Ask its administrator for access. Setup is disabled when `YORISHIRO_MAX_TENANTS=0`.
 
@@ -74,4 +74,4 @@ Once connected, ask your assistant:
 
 Ask your assistant to use `whoami` for the connected context and `capabilities` for key permissions. Use UUIDs, not names, to tell workspaces apart. For details on workspace candidates and selection, see [API keys](../../guides/api-keys/#inspect-grants-and-history).
 
-For collaboration, continue to [Access management](../../guides/access-management/). If you cannot sign in, see [Troubleshooting](../../operations/queue-start-objectives/#login-recovery).
+For collaboration, continue to [Access management](../../guides/access-management/). If you cannot sign in, see [Troubleshooting](../../operations/queue-start-objectives/#sign-in-problems).

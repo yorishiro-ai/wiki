@@ -49,19 +49,17 @@ PostgreSQL needs the `vector` and `pg_trgm` extensions. The [Compose example](..
 
 Community and unlicensed Enterprise allow one tenant. With a valid Enterprise licence, `YORISHIRO_MAX_TENANTS` sets a higher limit; `0` means unlimited and disables first-run setup. Negative values are invalid. SQLite always allows only one tenant.
 
-## Search and sign-in limits
+## Sign-in limits
 
-| Production variable                     | Default  | Meaning                                                |
-| --------------------------------------- | -------- | ------------------------------------------------------ |
-| `YORISHIRO_SEARCH_TOKENS_PER_MINUTE`    | `100000` | Shared API/MCP search budget per workspace per minute  |
-| `YORISHIRO_AUTH_RATE_LIMIT_MAX`         | `10`     | Sign-in and sign-up requests per client IP in a window |
-| `YORISHIRO_AUTH_RATE_LIMIT_WINDOW_SECS` | `60`     | Sign-in window in seconds                              |
+| Production variable             | Default | Meaning                                                |
+| ------------------------------- | ------- | ------------------------------------------------------ |
+| `YORISHIRO_AUTH_RATE_LIMIT_MAX` | `10`    | Sign-in and sign-up requests per client IP in a window |
 
-The search budget uses an estimate based on query size, not a provider's token bill. If requests are rate-limited, reduce frequency before raising the limit. Sign-in values must be positive.
+The value must be positive. The sign-in window (`settings.rate_limit.auth_window_seconds`) and the search budget (`settings.rate_limit.search_tokens_per_minute`) are set only in the YAML configuration. The search budget uses an estimate based on query size, not a provider's token bill.
 
 ## API keys
 
-Tenant Admin/Owner can issue least-privilege keys, inspect retained history, and revoke or rotate them. Creation defaults to `read`; audit is an independent grant. See [API keys](../guides/api-keys/) for scope, expiry, one-time secrets, and rotation procedures.
+Administrators with credential permissions can issue least-privilege keys, inspect retained history, and revoke or rotate them. Creation defaults to `read`; audit is an independent grant. See [API keys](../guides/api-keys/) for scope, expiry, one-time secrets, and rotation procedures.
 
 ## Logging
 
@@ -81,7 +79,6 @@ These optional values go under `settings` in your YAML configuration; they have 
 
 | Setting                                              | Default | Use                                                                              |
 | ---------------------------------------------------- | ------- | -------------------------------------------------------------------------------- |
-| `settings.limits.invite_ttl_hours`                   | `72`    | Invitation lifetime when an operator creates one without specifying hours        |
 | `settings.limits.maintenance_retry_after_seconds`    | `300`   | `Retry-After` sent while maintenance is on, when the caller does not name a time |
 | `settings.http_timeouts.embedding_request_seconds`   | `30`    | One request to an external embedding service                                     |
 | `settings.http_timeouts.local_embedding_seconds`     | `30`    | One batch through the local embedding model                                      |
@@ -92,7 +89,7 @@ These optional values go under `settings` in your YAML configuration; they have 
 
 ## Email settings
 
-Yorishiro does not send email, and the shipped configurations have no SMTP `mailer:` block. `MAILER_HOST` and related variables have no effect. Invitations are covered in [Access management](../guides/access-management/).
+Yorishiro does not send email, and the shipped configurations have no SMTP `mailer:` block. `MAILER_HOST` and related variables have no effect.
 
 ## Configuration ownership
 

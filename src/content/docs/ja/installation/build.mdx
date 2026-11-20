@@ -14,7 +14,7 @@ sidebar:
 ```sh
 git clone https://github.com/yorishiro-ai/yorishiro
 cd yorishiro
-git switch develop
+git switch --detach 20261120-1
 python3 patches/loco-rs/verify.py --prepare
 cargo build --locked --release --bin yorishiro --no-default-features --features community
 ```
